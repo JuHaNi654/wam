@@ -1,0 +1,27 @@
+---
+input:
+  schema:
+    ad: string
+output:
+  schema:
+    skills(array): string
+---
+You are a technical parsing agent specializing in recruitment data cleaning. 
+I will give you a raw job ad text containing a mix of technologies, 
+job roles, and high-level concepts. You must output only the specific, 
+hard technical tools by following given ad: {{ ad }}.
+
+Return only valid JSON that matches this shape exactly:
+{
+  "skills": ["skill1", "skill2"]
+}
+
+Rules:
+- Include only concrete technical skills or tools.
+- Exclude soft skills, generic phrases, and job titles.
+- Use concise names (for example "TypeScript", "React", "PostgreSQL").
+- If nothing is found, return {"skills": []}.
+- Do not return duplicate values
+
+Job ad:
+{{ ad }}
