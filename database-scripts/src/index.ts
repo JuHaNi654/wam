@@ -1,18 +1,22 @@
 import { Database } from "bun:sqlite";
 import { readFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
+import os from "node:os"
 
 const scriptPath = process.argv[2];
+const databasePath = ".local/share/wam"
+const database = "sqlite.db"
+
 
 if (!scriptPath) {
   console.error("Usage: bun database/run_migration.ts <path-to-sql-file>");
   process.exit(1);
 }
 
-const sqliteDir = resolve(import.meta.dir, "../../database");
+const sqliteDir = resolve(os.homedir(), databasePath);
 mkdirSync(sqliteDir, { recursive: true });
 
-const dbPath = resolve(sqliteDir, "wam.db");
+const dbPath = resolve(sqliteDir, database);
 const sqlPath = resolve(scriptPath);
 
 const sql = readFileSync(sqlPath, "utf-8");

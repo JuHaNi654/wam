@@ -26,7 +26,7 @@ func IntiSqlite() (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	} else if err != nil {
 		return nil, err
 	}
 
