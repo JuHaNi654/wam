@@ -1,0 +1,81 @@
+package parser
+
+import (
+	"errors"
+	"fmt"
+	"net/url"
+	"regexp"
+	"strings"
+
+	"golang.org/x/net/html"
+)
+
+func parse(url *url.URL, node *html.Node) (string, error) {
+	var b strings.Builder
+
+	for _, service := range Services {
+		if service.Host != url.Host {
+			continue
+		}
+
+		fmt.Println("Handling document from: ", service.Host)
+		if err := scanContent(&b, node, service); err != nil {
+			return "", err
+		}
+	}
+
+	return b.String(), nil
+}
+
+func scanContent(b *strings.Builder, page *html.Node, s Service) error {
+	target := s.FindTarget(page)
+	if target == nil {
+		return errors.New("target node not found")
+	}
+
+	var crawler func(*html.Node)
+	crawler = func(node *html.Node) {
+
+		if node.Type == html.TextNode && len(node.Data) > 1 {
+			b.WriteString("\n")
+			b.WriteString(getNodeText(node))
+			b.WriteString("\n")
+		} else {
+			switch node.Data {
+			case "p":
+				b.WriteString("\n")
+				b.WriteString(getNodeText(node))
+				b.WriteString("\n")
+			case "li":
+				b.WriteString("- ")
+				b.WriteString(getNodeText(node))
+				b.WriteString("\n")
+				return
+			}
+		}
+
+		for childNode := node.FirstChild; childNode != nil; childNode = childNode.NextSibling {
+			crawler(childNode)
+		}
+	}
+
+	crawler(target)
+	return nil
+}
+
+func getNodeText(node *html.Node) string {
+	text := ""
+	space := regexp.MustCompile(`\s+`)
+	var crawler func(*html.Node)
+	crawler = func(node *html.Node) {
+		if node.Type == html.TextNode && node.Data != "" {
+			text += strings.TrimSpace(node.Data)
+		}
+
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			crawler(child)
+		}
+	}
+	crawler(node)
+	return space.ReplaceAllString(text, " ")
+}
