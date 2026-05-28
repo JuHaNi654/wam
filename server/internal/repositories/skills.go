@@ -25,7 +25,6 @@ func NewSkillRepository(db *gorm.DB) *SkillRepository {
 
 func (r *SkillRepository) GetByJobID(jobID string) ([]models.Skill, error) {
 	var items []models.Skill
-	//result := r.db.Where("job_id = ?", jobID).Find(&items)
 
 	result := r.db.Table("application_skill").
 		Select("skill.id, skill.name").

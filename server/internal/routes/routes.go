@@ -2,8 +2,6 @@
 package routes
 
 import (
-	"net/http"
-	"server/internal/agent"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -12,38 +10,16 @@ import (
 
 var validate *validator.Validate
 
-func test(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	id := ctx.Param("id")
-	application, err := s.ApplicationRepository.GetByID(id)
-	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
-
-	result, err := agent.ListAdHardSkills(s.Agent, agent.ApplicationInput{
-		Ad: application.Ad,
-	})
-
-	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": map[string]any{
-			"id":     id,
-			"skills": result.Skills,
-		},
-	})
-	return nil
-}
-
 func Routes(s *services.Service) *gin.Engine {
 	// This function is intentionally left blank. The actual route definitions are in the individual route files (e.g., jobs.go, skills.go).
 	r := gin.Default()
 	r.Use(headers)
 
 	r.GET("/ping", Handler(s, ping))
-	r.GET("/test/:id", Handler(s, test))
-
+	r.GET("/api/initialized", Handler(s, checkProfile))
+	r.GET("/api/profile", Handler(s, getProfile))
+	r.POST("/api/profile", Handler(s, createProfile))
+	r.POST("/api/profile/skills", Handler(s, saveProfileSkills))
 	r.GET("/api/jobs", Handler(s, listApplications))
 	r.POST("/api/jobs", Handler(s, createApplication))
 	r.GET("/api/jobs/:id", Handler(s, getApplicationByID))
