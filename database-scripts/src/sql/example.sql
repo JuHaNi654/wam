@@ -2,24 +2,7 @@
 DELETE FROM application_skill;
 DELETE FROM actions;
 DELETE FROM job;
-DELETE FROM work_history;
 DELETE FROM skill;
-DELETE FROM resume;
-
--- resume
-INSERT INTO resume (id, introduction) VALUES
-  ('resume-1', 'Experienced full-stack developer with 6 years building web applications using TypeScript, React, and Node.js.'),
-  ('resume-2', 'Backend engineer specializing in distributed systems, API design, and cloud infrastructure.');
-
--- work_history (linked to resume-1)
-INSERT INTO work_history (id, resume_id, title, description, start_date, end_date) VALUES
-  ('wh-1', 'resume-1', 'Senior Frontend Developer', 'Led UI development for a SaaS platform serving 50k users. Migrated codebase from React class components to hooks.', 1614556800, 1730419200),
-  ('wh-2', 'resume-1', 'Junior Web Developer', 'Built and maintained internal tooling dashboards using Vue.js and REST APIs.', 1527811200, 1612137600);
-
--- work_history (linked to resume-2)
-INSERT INTO work_history (id, resume_id, title, description, start_date, end_date) VALUES
-  ('wh-3', 'resume-2', 'Backend Engineer', 'Designed microservices architecture on AWS. Reduced API response times by 40% through query optimization.', 1577836800, 1735689600),
-  ('wh-4', 'resume-2', 'Software Engineer Intern', 'Worked on data pipeline tooling in Python and contributed to internal CI/CD workflows.', 1559347200, 1575158400);
 
 -- jobs
 INSERT INTO job (id, name, job_title, company, homepage, link, status, create_date, job_ad, job_application) VALUES

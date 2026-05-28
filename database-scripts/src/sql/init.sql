@@ -1,17 +1,38 @@
+-- resume
+CREATE TABLE profile (
+  id           TEXT PRIMARY KEY,
+  introduction TEXT
+);
+
+-- profile_skill
+CREATE TABLE profile_skill (
+  profile_id  TEXT, 
+  skill_id    TEXT,
+
+  PRIMARY KEY (profile_id, skill_id),
+
+  FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
+  FOREIGN KEY (skill_id) REFERENCES skill(id) ON DELETE CASCADE
+);
+
 -- work_history
 CREATE TABLE work_history (
   id          TEXT PRIMARY KEY,
-  resume_id   TEXT NOT NULL REFERENCES resume(id) ON DELETE CASCADE,
+  resume_id   TEXT NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
   title       TEXT NOT NULL,
   description TEXT,
   start_date  BIGINT,
   end_date    BIGINT
 );
 
--- resume
-CREATE TABLE resume (
-  id           TEXT PRIMARY KEY,
-  introduction TEXT
+-- Education
+Create TABLE education (
+  id          TEXT PRIMARY KEY,
+  resume_id   TEXT NOT NULL REFERENCES resume(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  school      TEXT NOT NULL,
+  start_date  BIGINT NOT NULL,
+  end_date    BIGINT NOT NULL
 );
 
 -- job
