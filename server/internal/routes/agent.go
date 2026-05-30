@@ -1,12 +1,25 @@
 package routes
 
 import (
+	"context"
 	"net/http"
 	"server/internal/agent"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
+
+func getAgentServiceInfo(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	err := s.Agent.Ping()
+	if err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"data": "ok",
+	})
+	return nil
+}
 
 func generateSkillsFromAgent(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applicationID := ctx.Query("applicationId")
@@ -15,7 +28,8 @@ func generateSkillsFromAgent(ctx *gin.Context, s *services.Service) *ErrorRespon
 		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 	}
 
-	result, err := agent.ListAdHardSkills(s.Agent, agent.ApplicationInput{
+	c := context.Background()
+	result, err := agent.ListAdHardSkills(&c, s.Agent, agent.ApplicationInput{
 		Ad: application.Ad,
 	})
 

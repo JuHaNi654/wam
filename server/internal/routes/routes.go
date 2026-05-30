@@ -30,6 +30,7 @@ func Routes(s *services.Service) *gin.Engine {
 	r.POST("/api/jobs/:id/skills", Handler(s, addSkillsToTheApplication))
 
 	// AI agent endpoints
+	r.GET("/api/agent", Handler(s, getAgentServiceInfo))
 	r.GET("/api/agent/skills", Handler(s, generateSkillsFromAgent))
 
 	// Return 404 from invalid endpoint

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"server/internal/agent"
@@ -46,7 +47,8 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 	}
 
-	result, err := agent.ListAdHardSkills(s.Agent, agent.ApplicationInput{
+	c := context.Background()
+	result, err := agent.ListAdHardSkills(&c, s.Agent, agent.ApplicationInput{
 		Ad: requestBody.Ad,
 	})
 

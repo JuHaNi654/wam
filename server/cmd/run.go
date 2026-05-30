@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os/signal"
-	"server/internal/agent"
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
@@ -15,7 +14,7 @@ import (
 
 const PORT = "8000"
 
-func Run(agent *agent.Agent) error {
+func Run() error {
 	fmt.Printf("Starting server on port %s...\n", PORT)
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -31,7 +30,7 @@ func Run(agent *agent.Agent) error {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: routes.Routes(services.NewService(db, agent)),
+		Handler: routes.Routes(services.NewService(db)),
 	}
 
 	fmt.Printf("Server is running on port %s\n", PORT)

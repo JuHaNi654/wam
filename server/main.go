@@ -1,28 +1,26 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"fmt"
 	"server/cmd"
-	"server/internal/agent"
+	"server/internal/ollama"
+
+	"github.com/joho/godotenv"
 )
 
 //go:embed all:prompts
 var prompts embed.FS
 
 func main() {
-	ctx := context.Background()
-	g, model := agent.OllamaAgent(&ctx, prompts)
-
-	a := &agent.Agent{
-		Ctx:    ctx,
-		GenKit: g,
-		Model:  model,
+	if err := godotenv.Load(); err != nil {
+		fmt.Println(".env file not found")
 	}
 
+	ollama.Initalize(prompts)
+
 	fmt.Println("Starting server...")
-	if err := cmd.Run(a); err != nil {
+	if err := cmd.Run(); err != nil {
 		fmt.Printf("Error running server: %v\n", err)
 	}
 }

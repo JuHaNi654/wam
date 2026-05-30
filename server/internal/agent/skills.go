@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,15 +9,15 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 )
 
-func ListAdHardSkills(a *Agent, input ApplicationInput) (*Skills, error) {
+func ListAdHardSkills(ctx *context.Context, a Agent, input ApplicationInput) (*Skills, error) {
 	prompt := genkit.LookupDataPrompt[ApplicationInput, *Skills](
-		a.GenKit, "hard-skill",
+		a.Genkit(), "hard-skill",
 	)
 
 	skills, _, err := prompt.Execute(
-		a.Ctx,
+		(*ctx),
 		input,
-		ai.WithModel(a.Model),
+		ai.WithModel(a.Model()),
 	)
 
 	if err != nil {

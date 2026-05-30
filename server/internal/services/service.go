@@ -2,6 +2,7 @@ package services
 
 import (
 	"server/internal/agent"
+	"server/internal/ollama"
 	"server/internal/repositories"
 
 	"gorm.io/gorm"
@@ -14,10 +15,10 @@ type Service struct {
 	ProfileRepository     *repositories.ProfileRepository
 	HistoryRepository     *repositories.HistoryRepository
 	EducationRepository   *repositories.EducationRepository
-	Agent                 *agent.Agent
+	Agent                 agent.Agent
 }
 
-func NewService(db *gorm.DB, agent *agent.Agent) *Service {
+func NewService(db *gorm.DB) *Service {
 	return &Service{
 		ApplicationRepository: repositories.NewApplicationRepository(db),
 		ActionRepository:      repositories.NewActionRepository(db),
@@ -25,6 +26,6 @@ func NewService(db *gorm.DB, agent *agent.Agent) *Service {
 		ProfileRepository:     repositories.NewProfileRepository(db),
 		HistoryRepository:     repositories.NewHistoryRepository(db),
 		EducationRepository:   repositories.NewEducationRepository(db),
-		Agent:                 agent,
+		Agent:                 ollama.InitializedOllama,
 	}
 }
