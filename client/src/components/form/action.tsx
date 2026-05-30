@@ -53,7 +53,7 @@ export default function ActionForm(props: ActionFormProps) {
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="School"
+                placeholder="ex. Email received"
                 autoComplete="off"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -69,7 +69,7 @@ export default function ActionForm(props: ActionFormProps) {
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="Developer ..."
+                placeholder="Information about action ..."
                 autoComplete="off"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

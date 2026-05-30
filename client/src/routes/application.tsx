@@ -11,6 +11,9 @@ import Base from "@/components/base";
 import Skills from "@/components/skills";
 import { GET, POST } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { useDialog } from "@/context/dialog-context";
+import { useState } from "react";
+import { da } from "zod/v4/locales";
 
 interface ActionPatchPayload {
   title?: string;
@@ -35,6 +38,7 @@ type ApplicationDetails = {
 }
 
 export default function ApplicationDetail() {
+  const { openDialog } = useDialog()
   const { id } = useParams();
   const { data, isLoading } = useQuery({
     queryKey: ["application"],
@@ -79,10 +83,24 @@ export default function ApplicationDetail() {
               </header>
 
               <div className="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground 
-                uppercase tracking-wide">
-                  Skills
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground 
+                  uppercase tracking-wide">
+                    Skills
+                  </h3>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    openDialog({
+                      id: "agent-skills",
+                      title: "Generate list of skills",
+                      children: <AISkill applicationID={data.data.application.id} />,
+                      width: 420,
+                      height: 380
+                    })
+                  }}>
+                    AI
+                  </Button>
+
+                </div>
                 <Skills skills={data.data.skills} update={saveSkills} />
               </div>
 
@@ -120,5 +138,51 @@ export default function ApplicationDetail() {
         )}
       </Loading>
     </Base>
+  )
+}
+
+type AISkillProps = {
+  applicationID: string
+}
+type AIResponse = {
+  skills: string[]
+}
+
+function AISkill(props: AISkillProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [skills, setSkills] = useState<Array<string>>([])
+
+  const generate = async () => {
+    setIsLoading(true)
+    try {
+      const response = await GET<AIResponse>(`/api/agent/skills?applicationId=${props.applicationID}`, null)
+      setSkills(response.data.skills)
+    } catch (err: any) {
+      console.log(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <Button size="sm" onClick={generate}>
+          Generate
+        </Button>
+      </div>
+      <Loading isLoading={isLoading}>
+        <div>
+          <h3 className="font-bold">Result:</h3>
+          <ul className="flex flex-wrap gap-2 mt-1 text-sm">
+            {skills.map((skill) => (
+              <li key={skill} className="border border-gray-200 px-2 rounded">
+                {skill}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Loading>
+    </div>
   )
 }
