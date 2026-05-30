@@ -41,10 +41,22 @@ func getProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 	}
 
+	history, err := s.HistoryRepository.ListByProfileID(profile.ID)
+	if err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	education, err := s.EducationRepository.ListByProfileID(profile.ID)
+	if err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": map[string]any{
-			"profile": profile,
-			"skills":  skills,
+			"profile":   profile,
+			"skills":    skills,
+			"history":   history,
+			"education": education,
 		},
 	})
 	return nil

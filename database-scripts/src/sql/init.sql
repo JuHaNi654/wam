@@ -15,24 +15,28 @@ CREATE TABLE profile_skill (
   FOREIGN KEY (skill_id) REFERENCES skill(id) ON DELETE CASCADE
 );
 
--- work_history
-CREATE TABLE work_history (
+-- history
+CREATE TABLE history (
   id          TEXT PRIMARY KEY,
-  resume_id   TEXT NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+  company     TEXT NOT NULL,
   title       TEXT NOT NULL,
   description TEXT,
-  start_date  BIGINT,
-  end_date    BIGINT
+  start_date  BIGINT NOT NULL,
+  end_date    BIGINT NOT NULL,
+  current     BOOLEAN,
+
+  profile_id  TEXT NOT NULL REFERENCES profile(id) ON DELETE CASCADE
 );
 
 -- Education
 Create TABLE education (
   id          TEXT PRIMARY KEY,
-  resume_id   TEXT NOT NULL REFERENCES resume(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
+  program     TEXT NOT NULL,
   school      TEXT NOT NULL,
   start_date  BIGINT NOT NULL,
-  end_date    BIGINT NOT NULL
+  end_date    BIGINT NOT NULL,
+
+  profile_id  TEXT NOT NULL REFERENCES profile(id) ON DELETE CASCADE
 );
 
 -- job

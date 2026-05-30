@@ -46,3 +46,21 @@ export type Profile = {
   id: string;
   introduction: string;
 };
+
+export type History = {
+  id?: string;
+  company: string;
+  title: string;
+  description: string;
+  current: boolean;
+  start_date: number;
+  end_date: number;
+}
+
+export type Education = {
+  id?: string;
+  program: string;
+  school: string;
+  start_date: number;
+  end_date: number;
+}

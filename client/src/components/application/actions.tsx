@@ -3,10 +3,9 @@ import { Button } from "../ui/button"
 import { useDialog } from "@/context/dialog-context"
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { useState } from "react";
-import { POST } from "@/lib/api";
 import { RiEyeLine } from "@remixicon/react";
 import { renderDate } from "@/lib/date";
+import ActionForm from "../form/action";
 
 type ActionsProps = {
   applicationId: string,
@@ -24,10 +23,12 @@ export default function Actions(props: ActionsProps) {
           openDialog({
             id: "new-action-dialog",
             title: "New action",
-            children: (<NewActionForm
-              applicationId={props.applicationId}
-              onSuccess={() => closeDialog("new-action-dialog")}
-              onCancel={() => closeDialog("new-action-dialog")} />),
+            children: (
+              <ActionForm applicationId={props.applicationId}
+                onSubmit={() => closeDialog("new-action-dialog")}
+                onCancel={() => closeDialog("new-action-dialog")}
+              />
+            ),
             width: 420,
             height: 380
           })
@@ -103,72 +104,6 @@ function Action(props: ActionProps) {
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y"
           placeholder="Optional notes"
         />
-      </div>
-    </form>
-  )
-}
-
-type NewActionFormProps = {
-  applicationId: string;
-  onSuccess: () => void
-  onCancel: () => void
-}
-function NewActionForm(props: NewActionFormProps) {
-  const [title, setTitle] = useState("")
-  const [note, setNote] = useState("")
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault()
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await POST(`/api/jobs/${props.applicationId}/actions`, {
-        title,
-        note: note || ""
-      });
-      props.onSuccess();
-    } catch (err: any) {
-      setError(err.message ?? "Failed to create action");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="action-title">Title <span className="text-destructive">*</span></Label>
-        <Input
-          id="action-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Phone screen, Sent resume"
-          required
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="action-note">Note</Label>
-        <textarea
-          id="action-note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Optional notes..."
-          rows={3}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
-        />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="outline" onClick={props.onCancel}
-          disabled={submitting}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : "Save Action"}
-        </Button>
       </div>
     </form>
   )

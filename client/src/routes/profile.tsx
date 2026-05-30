@@ -2,20 +2,23 @@ import Base from "@/components/base";
 import Loading from "@/components/loading";
 import Skills from "@/components/skills";
 import WorkHistory from "@/components/workHistory";
+import EducationList from "@/components/education";
 import { GET, POST } from "@/lib/api";
-import type { Skill } from "@/types/api.types";
+import type { Skill, History, Profile, Education } from "@/types/api.types";
 import { useQuery } from "@tanstack/react-query";
 
-type Profile = {
+type Response = {
   profile: Profile;
   skills: Skill[];
+  history: History[];
+  education: Education[];
 }
 
 export default function Profile() {
   const { data, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      return await GET<Profile>('/api/profile', null)
+      return await GET<Response>('/api/profile', null)
     },
     retry: 0,
   })
@@ -45,7 +48,8 @@ export default function Profile() {
             <Skills skills={data?.data.skills || []} update={saveSkills} />
           </div>
 
-          <WorkHistory />
+          <EducationList data={data?.data.education || []} />
+          <WorkHistory data={data?.data.history || []} />
         </div>
       </Loading>
     </Base>

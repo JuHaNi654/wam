@@ -12,6 +12,8 @@ type Service struct {
 	ActionRepository      *repositories.ActionRepository
 	SkillRepository       *repositories.SkillRepository
 	ProfileRepository     *repositories.ProfileRepository
+	HistoryRepository     *repositories.HistoryRepository
+	EducationRepository   *repositories.EducationRepository
 	Agent                 *agent.Agent
 }
 
@@ -21,6 +23,8 @@ func NewService(db *gorm.DB, agent *agent.Agent) *Service {
 		ActionRepository:      repositories.NewActionRepository(db),
 		SkillRepository:       repositories.NewSkillRepository(db),
 		ProfileRepository:     repositories.NewProfileRepository(db),
+		HistoryRepository:     repositories.NewHistoryRepository(db),
+		EducationRepository:   repositories.NewEducationRepository(db),
 		Agent:                 agent,
 	}
 }

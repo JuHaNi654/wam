@@ -35,16 +35,28 @@ function isValidDate(date: Date | undefined) {
 
 type Props = {
   label: string
+  valueInUnix: number
   disabled?: boolean;
-  onDateChange?: (date: Date) => void
+  onChange?: (dateInUnix: number) => void
 }
 
 export function DatePickerInput(props: Props) {
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date>(
-    new Date("2025-06-01")
-  )
+  const [date, setDate] = useState<Date>(new Date(props.valueInUnix * 1000))
   const [month, setMonth] = useState<Date | undefined>(date)
+
+  const handleChange = (date: Date) => {
+    if (!isValidDate(date)) return
+
+    setDate(date)
+    setMonth(date)
+
+    if (props.onChange) {
+      let dateInUnix = date.getTime() / 1000
+      dateInUnix = Number(dateInUnix.toFixed(0))
+      props.onChange(dateInUnix)
+    }
+  }
 
   return (
     <Field>
@@ -55,14 +67,7 @@ export function DatePickerInput(props: Props) {
           id="date-required"
           value={formatDate(date)}
           placeholder="June 01, 2025"
-          onChange={(e) => {
-            const date = new Date(e.target.value)
-            if (props.onDateChange) props.onDateChange(date)
-            if (isValidDate(date)) {
-              setDate(date)
-              setMonth(date)
-            }
-          }}
+          onChange={(e) => handleChange(new Date(e.target.value))}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault()
@@ -95,11 +100,7 @@ export function DatePickerInput(props: Props) {
                 selected={date}
                 month={month}
                 onMonthChange={setMonth}
-                onSelect={(date) => {
-                  setDate(date as Date)
-                  setOpen(false)
-                  if (props.onDateChange) props.onDateChange(date as Date)
-                }}
+                onSelect={(date) => handleChange(date as Date)}
               />
             </PopoverContent>
           </Popover>

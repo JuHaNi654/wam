@@ -6,14 +6,17 @@ import { DatePickerInput } from "./date-picker"
 import { Checkbox } from "./ui/checkbox"
 import { useState, type ChangeEvent } from "react"
 import { Textarea } from "./ui/textarea"
+import { POST } from "@/lib/api"
+import type { History } from "@/types/api.types"
+import { RiEyeLine } from "@remixicon/react"
+import { renderDate } from "@/lib/date"
+import HistoryForm from "./form/history"
 
-export default function WorkHistory() {
+type Props = {
+  data: History[]
+}
+export default function WorkHistory(props: Props) {
   const { openDialog, closeDialog } = useDialog()
-
-  const handleSave = async (work: WorkItem) => {
-    console.log("Create new work item: ", work)
-    closeDialog('new-experience')
-  }
 
   return (
     <div className="bg-card border rounded-lg p-6">
@@ -23,7 +26,12 @@ export default function WorkHistory() {
           openDialog({
             id: "new-experience",
             title: "New work experience",
-            children: <CreateExperience handleSubmit={handleSave} />,
+            children: (
+              <HistoryForm
+                onCancel={() => closeDialog("new-experience")}
+                onSubmit={() => closeDialog("new-experience")}
+              />
+            ),
             width: 420,
             height: 380,
           })
@@ -31,81 +39,99 @@ export default function WorkHistory() {
           + Add work history
         </Button>
       </div>
+
+      {props.data.length === 0 && (
+        <p className="text-sm text-muted-foreground">No work history saved</p>
+      )}
+
+      {props.data.length > 0 && (
+        <div className="space-y-3">
+          {props.data.map((history) => (
+            <div key={history.id} className="flex gap-4 text-sm border-l-2 border-border pl-4">
+              <div className="flex-1">
+                <h3 className="font-semibold">{history.company}</h3>
+                <span>{history.title}</span>
+              </div>
+
+              <div className="space-y-2">
+                <Button type="button" variant="ghost"
+                  size="icon-sm"
+                  aria-label="View history"
+                  className="shrink-0 cursor-pointer"
+                  onClick={() => {
+                    openDialog({
+                      id: history.id,
+                      title: "Work history",
+                      children: <ViewHistory history={history} />,
+                      width: 520,
+                      height: 560,
+                    })
+                  }}
+                >
+                  <RiEyeLine />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   )
 }
 
-type WorkItem = {
-  company: string;
-  position: string;
-  starting_date: number;
-  ending_date?: number;
-  current: boolean
-  description: string;
+type ViewHistoryProps = {
+  history: History
 }
-
-type CreateExperienceProps = {
-  handleSubmit(work: WorkItem): void
-}
-
-function CreateExperience(props: CreateExperienceProps) {
-  const [work, setWork] = useState<WorkItem>({
-    company: "",
-    position: "",
-    starting_date: 0,
-    ending_date: 0,
-    current: false,
-    description: "",
-  })
-
-  const onInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setWork({ ...work, [e.target.name]: e.target.value })
-  }
-
-  const onPropertyChange = (name: string, value: any) => {
-    setWork({ ...work, [name]: value })
-  }
-
+function ViewHistory(props: ViewHistoryProps) {
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault()
-      props.handleSubmit(work)
-    }} className="space-y-4">
+    <form className="spac-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="company">Company</Label>
-        <Input id="company" name="company" value={work.company} placeholder="Company name"
-          onChange={onInputChange} required />
+        <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
+        <Input id="title" name="title"
+          value={props.history.title}
+          placeholder="Job title"
+          required disabled
+        />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="position">Position / Job title</Label>
-        <Input id="position" name="position" value={work.position} placeholder="ex. Senior developer"
-          onChange={onInputChange} required />
+        <Label htmlFor="company">Company <span className="text-destructive">*</span></Label>
+        <Input id="company" name="company"
+          value={props.history.company}
+          placeholder="Company"
+          required disabled
+        />
       </div>
 
-      <div className="space-y-1.5 flex gap-4">
-        <DatePickerInput label="Starting date"
-          onDateChange={(date) => onPropertyChange("starting_date", date.getTime() / 1000)} />
-        <DatePickerInput label="Ending date"
-          onDateChange={(date) => onPropertyChange("ending_date", date.getTime() / 1000)}
-          disabled={work.current} />
+      <div className="flex gap-4">
+        <div className="space-y-1.5">
+          <span className="text-muted-foreground">Start</span>
+          <p className="font-medium">
+            {renderDate(props.history.start_date)}
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <span className="text-muted-foreground">End</span>
+          <p className="font-medium">
+            {renderDate(props.history.end_date)}
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-1.5 flex flex-row-reverse gap-2 justify-end">
+
+      <div className="space-y-1.5">
         <Label htmlFor="current-position">Current position</Label>
-        <Checkbox id="current-position" checked={work.current}
-          onCheckedChange={(checked) => onPropertyChange("current", checked === true)} />
+        <Checkbox id="current-position" checked={props.history.current} />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
-        <Textarea id="description" name="description" value={work.description} onChange={onInputChange} />
-      </div>
-
-      <div className="flex justify-end gap-2 pt-1">
-        <Button type="submit">
-          Create
-        </Button>
+        <Label htmlFor="note">Description</Label>
+        <textarea id="note" value={props.history.description as string} rows={3} disabled
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y"
+          placeholder="Description ..."
+        />
       </div>
     </form>
   )
