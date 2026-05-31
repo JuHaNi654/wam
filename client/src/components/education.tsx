@@ -2,7 +2,7 @@ import { useDialog } from "@/context/dialog-context"
 import type { Education } from "@/types/api.types"
 import { Button } from "./ui/button"
 import { renderDate } from "@/lib/date"
-import EducationForm from "./form/education"
+import EducationForm, { type SavedEducation } from "./form/education"
 import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
 import { useState } from "react"
 import { DELETE } from "@/lib/api"
@@ -36,7 +36,10 @@ export default function Education(props: Props) {
             children: (
               <EducationForm
                 onCancel={() => closeDialog('new-education')}
-                onSubmit={() => closeDialog('new-education')} />
+                onSubmit={(data: SavedEducation) => {
+                  setEducations((prev) => [...prev, data])
+                  closeDialog('new-education')
+                }} />
             ),
             width: 420,
             height: 380,

@@ -14,28 +14,41 @@ func Routes(s *services.Service) *gin.Engine {
 	r := gin.Default()
 	r.Use(headers)
 
+	// System
 	r.GET("/ping", Handler(s, ping))
-	r.GET("/api/initialized", Handler(s, checkProfile))
+
+	// Profile
+	r.GET("/api/profile/initialized", Handler(s, checkProfile))
 	r.GET("/api/profile", Handler(s, getProfile))
 	r.POST("/api/profile", Handler(s, createProfile))
 	r.PUT("/api/profile", Handler(s, updateProfile))
+	r.POST("/api/profile/skills", Handler(s, saveProfileSkills))
+
+	// History
 	r.POST("/api/profile/history", Handler(s, createWorkHistory))
 	r.PUT("/api/profile/history/:id", Handler(s, updateHistory))
 	r.DELETE("/api/profile/history/:id", Handler(s, deleteHistory))
-	r.POST("/api/profile/skills", Handler(s, saveProfileSkills))
-	r.POST("/api/profile/education", Handler(s, createEducation))
-	r.DELETE("/api/profile/education/:id", Handler(s, deleteEducation))
-	r.GET("/api/jobs", Handler(s, listApplications))
-	r.POST("/api/jobs", Handler(s, createApplication))
-	r.GET("/api/jobs/:id", Handler(s, getApplicationByID))
-	r.PUT("/api/jobs/:id", Handler(s, updateApplication))
-	r.DELETE("/api/jobs/:id", Handler(s, deleteApplication))
+
+	// Skills
 	r.GET("/api/skills", Handler(s, listAllSkills))
 	r.POST("/api/skills", Handler(s, createSkill))
+
+	// Education
+	r.POST("/api/profile/education", Handler(s, createEducation))
+	r.DELETE("/api/profile/education/:id", Handler(s, deleteEducation))
+
+	// Applications
+	r.GET("/api/applications", Handler(s, listApplications))
+	r.POST("/api/applications", Handler(s, createApplication))
+	r.GET("/api/applications/:id", Handler(s, getApplicationByID))
+	r.PUT("/api/applications/:id", Handler(s, updateApplication))
+	r.DELETE("/api/applications/:id", Handler(s, deleteApplication))
+	r.POST("/api/applications/:id/skills", Handler(s, addSkillsToTheApplication))
+
+	// Actions
 	r.POST("/api/jobs/:id/actions", Handler(s, createAction))
 	r.PUT("/api/actions/:id", Handler(s, updateAction))
 	r.DELETE("/api/actions/:id", Handler(s, deleteAction))
-	r.POST("/api/jobs/:id/skills", Handler(s, addSkillsToTheApplication))
 
 	// AI agent endpoints
 	r.GET("/api/agent", Handler(s, getAgentServiceInfo))

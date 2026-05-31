@@ -20,7 +20,7 @@ const items: Links[] = [
   },
   {
     label: "New application",
-    path: "/job/new"
+    path: "/applications/new"
   },
   {
     label: "Profile",

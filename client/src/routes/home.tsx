@@ -32,13 +32,13 @@ export default function Home() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
-      return await GET<{ applications: ApplicationListing[] }>('/api/jobs', null)
+      return await GET<{ applications: ApplicationListing[] }>('/api/applications', null)
     },
   })
 
   const handleDelete = async (id: string) => {
     try {
-      await DELETE(`/api/jobs/${id}`)
+      await DELETE(`/api/applications/${id}`)
       refetch()
     } catch (err) {
       console.log(err)
@@ -76,7 +76,7 @@ export default function Home() {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" className="rounded-md" asChild size="sm">
-                      <Link to={`/application/${item.id}`}>
+                      <Link to={`/applications/${item.id}`}>
                         <RiEyeLine />
                       </Link>
                     </Button>

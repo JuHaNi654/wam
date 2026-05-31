@@ -14,14 +14,16 @@ const formSchema = z.object({
   end_date: z.number(),
 })
 
-type Education = z.infer<typeof formSchema>
-
+export type Education = z.infer<typeof formSchema>
+export type SavedEducation = {
+  id: string
+} & Education
 const getCurrentDateInUnix = () => new Date().getTime() / 1000
 
 
 type EducationFormProps = {
   onCancel?: () => void
-  onSubmit?: () => void
+  onSubmit?: (data: SavedEducation) => void
 }
 export default function EducationForm(props: EducationFormProps) {
   const form = useForm<Education>({
@@ -36,8 +38,10 @@ export default function EducationForm(props: EducationFormProps) {
 
   const handleSubmit = async (data: Education) => {
     try {
-      await POST(`/api/profile/education`, data)
-      if (props.onSubmit) props.onSubmit()
+      data.start_date = Number(data.start_date.toFixed(0))
+      data.end_date = Number(data.end_date.toFixed(0))
+      const response = await POST<SavedEducation>(`/api/profile/education`, data)
+      if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: any) {
       console.log(err)
     }

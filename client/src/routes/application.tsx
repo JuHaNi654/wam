@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import Loading from "@/components/loading";
-import type { Action, Application, Skill } from "@/types/api.types";
+import type { Application, Skill } from "@/types/api.types";
 import InlineEditDropdown from "../components/ui/edit/dropdown-edit";
 import Documents from "@/components/application/documents";
 import Actions from "@/components/application/actions";
@@ -13,13 +13,7 @@ import { GET, POST, PUT } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useDialog } from "@/context/dialog-context";
 import { useState } from "react";
-
-interface ActionPatchPayload {
-  title?: string;
-  date?: string;
-  note?: string | null;
-  description?: string | null;
-}
+import type { SavedAction } from "@/components/form/action";
 
 const statusOptions: string[] = [
   "saved",
@@ -32,7 +26,7 @@ const statusOptions: string[] = [
 
 type ApplicationDetails = {
   application: Application,
-  actions: Action[],
+  actions: SavedAction[],
   skills: Skill[]
 }
 
@@ -42,14 +36,14 @@ export default function ApplicationDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["application"],
     queryFn: async () => {
-      return await GET<ApplicationDetails>(`/api/jobs/${id}`, null)
+      return await GET<ApplicationDetails>(`/api/applications/${id}`, null)
     },
     retry: 0,
   })
 
   async function save(obj: { [key: string]: string }) {
     try {
-      await PUT(`/api/jobs/${data?.data.application.id}`, obj)
+      await PUT(`/api/applications/${data?.data.application.id}`, obj)
     } catch (err: any) {
       console.log(err)
     }
@@ -57,7 +51,7 @@ export default function ApplicationDetail() {
 
   const saveSkills = async (skills: Skill[]) => {
     try {
-      await POST<any>(`/api/jobs/${data?.data.application.id}/skills`, { skills })
+      await POST<any>(`/api/applications/${data?.data.application.id}/skills`, { skills })
     } catch (err) {
       console.log("Something went wrong while trying to save skills")
       console.log(err)

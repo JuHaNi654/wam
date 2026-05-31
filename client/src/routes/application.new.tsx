@@ -2,11 +2,11 @@ import { useNavigate } from "react-router";
 import Base from "@/components/base";
 import ApplicationForm, { type SavedApplication } from "@/components/form/application";
 
-export default function NewJobRoute() {
+export default function NewApplication() {
   const navigate = useNavigate();
 
   const handleSave = async (data: SavedApplication) => {
-    navigate(`/application/${data.id}`);
+    navigate(`/applications/${data.id}`);
   }
 
   return (

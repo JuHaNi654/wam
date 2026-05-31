@@ -27,7 +27,7 @@ const getCurrentDateInUnix = () => new Date().getTime() / 1000
 
 type HistoryFormProps = {
   onCancel?: () => void
-  onSubmit?: () => void
+  onSubmit?: (res: SavedWorkHistory) => void
 }
 
 export default function HistoryForm(props: HistoryFormProps) {
@@ -45,8 +45,10 @@ export default function HistoryForm(props: HistoryFormProps) {
 
   const handleSubmit = async (data: WorkHistory) => {
     try {
-      await POST(`/api/profile/history`, data)
-      if (props.onSubmit) props.onSubmit()
+      data.start_date = Number(data.start_date.toFixed(0))
+      data.end_date = Number(data.end_date.toFixed(0))
+      const response = await POST<SavedWorkHistory>(`/api/profile/history`, data)
+      if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: unknown) {
       console.log(err)
     }

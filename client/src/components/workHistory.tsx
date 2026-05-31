@@ -42,7 +42,10 @@ export default function WorkHistory(props: Props) {
             children: (
               <HistoryForm
                 onCancel={() => closeDialog("new-experience")}
-                onSubmit={() => closeDialog("new-experience")}
+                onSubmit={(data: SavedWorkHistory) => {
+                  setHistory((prev) => [...prev, data])
+                  closeDialog("new-experience")
+                }}
               />
             ),
             width: 420,

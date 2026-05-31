@@ -43,8 +43,11 @@ export default function Actions(props: Props) {
             title: "New action",
             children: (
               <ActionForm applicationId={props.applicationId}
-                onSubmit={() => closeDialog("new-action-dialog")}
                 onCancel={() => closeDialog("new-action-dialog")}
+                onSubmit={(data: SavedAction) => {
+                  setActions((prev) => [...prev, data])
+                  closeDialog("new-action-dialog")
+                }}
               />
             ),
             width: 420,

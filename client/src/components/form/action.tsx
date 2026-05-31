@@ -22,7 +22,7 @@ export type SavedAction = {
 type ActionFormProps = {
   applicationId: string;
   onCancel?: () => void;
-  onSubmit?: () => void;
+  onSubmit?: (data: SavedAction) => void;
 }
 
 export default function ActionForm(props: ActionFormProps) {
@@ -36,8 +36,8 @@ export default function ActionForm(props: ActionFormProps) {
 
   const handleSubmit = async (data: Action) => {
     try {
-      await POST(`/api/jobs/${props.applicationId}/actions`, data);
-      if (props.onSubmit) props.onSubmit()
+      const response = await POST<SavedAction>(`/api/jobs/${props.applicationId}/actions`, data);
+      if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: any) {
       console.log(err)
     }

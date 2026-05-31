@@ -10,7 +10,7 @@ export default function Welcome() {
   const { error, status } = useQuery({
     queryKey: ["initialized"],
     queryFn: async () => {
-      return await GET<any>('/api/initialized', null)
+      return await GET<any>('/api/profile/initialized', null)
     },
     retry: 0,
   })

@@ -7,7 +7,7 @@ import Welcome from './routes/welcome.tsx'
 import Error from './routes/error.tsx'
 import Home from './routes/home.tsx'
 import Profile from './routes/profile.tsx'
-import NewJobRoute from './routes/job.new.tsx'
+import NewApplication from './routes/application.new.tsx'
 import ApplicationDetail from './routes/application.tsx'
 import { loggingMiddleware, isInitialized } from './middlewares.ts'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -37,12 +37,12 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
-        path: "/job/new",
+        path: "/applications/new",
         middleware: [isInitialized],
-        element: <NewJobRoute />,
+        element: <NewApplication />,
       },
       {
-        path: "/application/:id",
+        path: "/applications/:id",
         middleware: [isInitialized],
         element: <ApplicationDetail />,
       }

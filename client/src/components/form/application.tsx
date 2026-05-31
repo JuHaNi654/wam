@@ -66,7 +66,7 @@ export default function ApplicationForm(props: ApplicationFormProps) {
     if (props.onSubmit) props.onSubmit()
 
     try {
-      const response = await POST<{ application: SavedApplication }>("/api/jobs", data);
+      const response = await POST<{ application: SavedApplication }>("/api/applications", data);
       if (props.onSuccess) props.onSuccess(response.data.application)
     } catch (err: any) {
       console.log(err)
