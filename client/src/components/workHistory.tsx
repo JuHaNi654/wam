@@ -4,6 +4,8 @@ import { RiEyeLine } from "@remixicon/react"
 import HistoryForm, { UpdateHistoryForm } from "./form/history"
 import type { SavedWorkHistory, WorkHistory } from "./form/history"
 import { useState } from "react"
+import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
+import { DELETE } from "@/lib/api"
 
 type Props = {
   data: SavedWorkHistory[]
@@ -13,14 +15,20 @@ export default function WorkHistory(props: Props) {
   const [history, setHistory] = useState(props.data)
 
   const handleSave = (id: string, data: WorkHistory) => {
-    const tmp = history
-    for (let i = 0; i < tmp.length; i++) {
-      if (tmp[i].id === id) {
-        Object.assign(tmp[i], data)
-      }
-    }
+    setHistory((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
+    )
+  }
 
-    setHistory(tmp)
+  const handleDelete = async (id: string) => {
+    try {
+      await DELETE(`/api/profile/history/${id}`)
+      setHistory((prev) => (
+        prev.filter((item) => item.id !== id)
+      ))
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (
@@ -45,13 +53,13 @@ export default function WorkHistory(props: Props) {
         </Button>
       </div>
 
-      {props.data.length === 0 && (
+      {history.length === 0 && (
         <p className="text-sm text-muted-foreground">No work history saved</p>
       )}
 
-      {props.data.length > 0 && (
+      {history.length > 0 && (
         <div className="space-y-3">
-          {props.data.map((history) => (
+          {history.map((history) => (
             <div key={history.id} className="flex gap-4 text-sm border-l-2 border-border pl-4">
               <div className="flex-1">
                 <h3 className="font-semibold">{history.company}</h3>
@@ -75,6 +83,11 @@ export default function WorkHistory(props: Props) {
                 >
                   <RiEyeLine />
                 </Button>
+                <DeleteConfirmationDialog buttonLabel="Delete work history"
+                  title="Are you sure, you want to delete selected item"
+                  description={`You are currently deleting (${history.title}) history.`}
+                  onConfirmation={() => handleDelete(history.id)}
+                />
               </div>
             </div>
           ))}

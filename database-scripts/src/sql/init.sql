@@ -65,8 +65,8 @@ CREATE TABLE actions (
 
 CREATE TABLE application_skill (
   id          TEXT PRIMARY KEY,
-  job_id      TEXT NOT NULL REFERENCES job(id),
-  skill_id    TEXT NOT NULL REFERENCES skill(id)
+  job_id      TEXT NOT NULL REFERENCES job(id) on DELETE CASCADE,
+  skill_id    TEXT NOT NULL REFERENCES skill(id) ON DELETE CASCADE
 );
 
 -- skill

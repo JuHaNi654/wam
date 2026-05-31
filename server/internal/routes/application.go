@@ -149,3 +149,13 @@ func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.JSON(http.StatusNoContent, gin.H{})
 	return nil
 }
+
+func deleteApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	id := ctx.Param("id")
+	if err := s.ApplicationRepository.Delete(id); err != nil {
+		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
+	return nil
+}

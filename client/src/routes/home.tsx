@@ -16,7 +16,8 @@ import { renderDate } from "@/lib/date";
 import Base from "@/components/base";
 import { RiEyeLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
-import { GET } from "@/lib/api";
+import { DELETE, GET } from "@/lib/api";
+import { DeleteConfirmationDialog } from "@/components/dialog/alert-dialog";
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link'> = {
   saved: "default",
@@ -28,12 +29,21 @@ const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destru
 };
 
 export default function Home() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
       return await GET<{ applications: ApplicationListing[] }>('/api/jobs', null)
     },
   })
+
+  const handleDelete = async (id: string) => {
+    try {
+      await DELETE(`/api/jobs/${id}`)
+      refetch()
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   return (
     <Base className="flex flex-col gap-4" showMenu>
@@ -65,11 +75,19 @@ export default function Home() {
                     {renderDate(item.create_date)}
                   </TableCell>
                   <TableCell>
-                    <Button className="rounded-md" asChild variant="outline" size="sm">
+                    <Button variant="ghost" className="rounded-md" asChild size="sm">
                       <Link to={`/application/${item.id}`}>
                         <RiEyeLine />
                       </Link>
                     </Button>
+
+
+                    <DeleteConfirmationDialog buttonLabel="Delete application"
+                      title="Are you sure, you want to delete selected item"
+                      description={`You are currently deleting (${item.name}).`}
+                      onConfirmation={() => handleDelete(item.id)}
+                    />
+
                   </TableCell>
                 </TableRow>
               ))}

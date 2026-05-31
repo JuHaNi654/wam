@@ -3,12 +3,25 @@ import type { Education } from "@/types/api.types"
 import { Button } from "./ui/button"
 import { renderDate } from "@/lib/date"
 import EducationForm from "./form/education"
+import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
+import { useState } from "react"
+import { DELETE } from "@/lib/api"
 
 type Props = {
   data: Education[]
 }
 export default function Education(props: Props) {
+  const [educations, setEducations] = useState(props.data)
   const { openDialog, closeDialog } = useDialog()
+
+  const handleDelete = async (id: string) => {
+    try {
+      await DELETE(`/api/profile/education/${id}`)
+      setEducations((prev) => prev.filter((item) => item.id !== id))
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   return (
     <div className="bg-card border rounded-lg p-6">
@@ -33,14 +46,14 @@ export default function Education(props: Props) {
         </Button>
       </div>
 
-      {props.data.length === 0 && (
+      {educations.length === 0 && (
         <p className="text-sm text-muted-foreground">No education saved</p>
       )}
 
-      {props.data.length > 0 && (
+      {educations.length > 0 && (
         <div className="space-y-3">
-          {props.data.map((education) => (
-            <div key={education.id} className="flex gap-4 text-sm border-l-2 border-border pl-4">
+          {educations.map((education) => (
+            <div key={education.id} className="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
               <div className="flex-1">
                 <h3 className="font-semibold">{education.program}</h3>
                 <span>{education.school}</span>
@@ -48,6 +61,11 @@ export default function Education(props: Props) {
               <div>
                 <span>{renderDate(education.start_date)} - {renderDate(education.end_date)}</span>
               </div>
+              <DeleteConfirmationDialog buttonLabel="Delete education"
+                title="Are you sure, you want to delete selected item"
+                description={`You are currently deleting (${education.school} - ${education.program}).`}
+                onConfirmation={() => handleDelete(education.id as string)}
+              />
             </div>
           ))}
         </div>

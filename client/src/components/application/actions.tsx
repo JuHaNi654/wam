@@ -6,6 +6,8 @@ import ActionForm from "../form/action";
 import { UpdateActionForm } from "../form/action";
 import type { Action, SavedAction } from "../form/action";
 import { useState } from "react";
+import { DeleteConfirmationDialog } from "../dialog/alert-dialog";
+import { DELETE } from "@/lib/api";
 
 type Props = {
   applicationId: string,
@@ -17,14 +19,18 @@ export default function Actions(props: Props) {
   const [actions, setActions] = useState<SavedAction[]>(props.actions)
 
   const handleUpdate = (actionId: string, action: Action) => {
-    const tmp = actions
-    for (let i = 0; i < tmp.length; i++) {
-      if (tmp[i].id === actionId) {
-        Object.assign(tmp[i], action)
-      }
-    }
+    setActions((prev) =>
+      prev.map((item) => (item.id === actionId ? { ...item, ...action } : item))
+    )
+  }
 
-    setActions(tmp)
+  const handleDelete = async (id: string) => {
+    try {
+      await DELETE(`/api/actions/${id}`)
+      setActions((prev) => prev.filter((item) => item.id !== id))
+    } catch (err: any) {
+      console.log(err)
+    }
   }
 
   return (
@@ -56,31 +62,35 @@ export default function Actions(props: Props) {
       {actions.length > 0 && (
         <div className="space-y-3">
           {actions.map((action) => (
-            <div key={action.id} className="flex gap-4 text-sm border-l-2 border-border pl-4">
-              <div className="shrink-0 text-muted-foreground w-24">
+            <div key={action.id} className="flex gap-4 items-center text-sm border-l-2 border-border pl-4">
+              <div className="shrink-0 text-muted-foreground">
                 {renderDate(action.date)}
               </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium">{action.title}</p>
+              <p className="flex-1 font-medium">{action.title}</p>
+              <div className="">
+                <Button type="button" variant="ghost"
+                  size="icon-sm"
+                  aria-label="View action"
+                  className="shrink-0 cursor-pointer"
+                  onClick={() => {
+                    openDialog({
+                      id: action.id,
+                      title: action.title,
+                      children: <UpdateActionForm onSave={handleUpdate} action={action} />,
+                      width: 520,
+                      height: 560,
+                    })
+                  }}
+                >
+                  <RiEyeLine />
+                </Button>
 
-                  <Button type="button" variant="ghost"
-                    size="icon-sm"
-                    aria-label="View action"
-                    className="shrink-0 cursor-pointer"
-                    onClick={() => {
-                      openDialog({
-                        id: action.id,
-                        title: action.title,
-                        children: <UpdateActionForm onSave={handleUpdate} action={action} />,
-                        width: 520,
-                        height: 560,
-                      })
-                    }}
-                  >
-                    <RiEyeLine />
-                  </Button>
-                </div>
+                <DeleteConfirmationDialog buttonLabel="Delete action"
+                  title="Are you sure, you want to delete selected item"
+                  description={`You are currently deleting (${action.title}).`}
+                  onConfirmation={() => handleDelete(action.id)}
+                />
+
               </div>
             </div>
           ))}

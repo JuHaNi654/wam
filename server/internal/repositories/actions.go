@@ -35,3 +35,9 @@ func (r *ActionRepository) Update(id string, action map[string]any) error {
 	_, err := gorm.G[map[string]any](r.db).Table("actions").Where("id = ?", id).Updates(ctx, action)
 	return err
 }
+
+func (r *ActionRepository) Delete(id string) error {
+	ctx := context.Background()
+	_, err := gorm.G[models.Action](r.db).Where("id = ?", id).Delete(ctx)
+	return err
+}

@@ -35,3 +35,9 @@ func (r *HistoryRepository) Update(id string, data map[string]any) error {
 	_, err := gorm.G[map[string]any](r.db).Table("history").Where("id = ?", id).Updates(ctx, data)
 	return err
 }
+
+func (r *HistoryRepository) Delete(id string) error {
+	ctx := context.Background()
+	_, err := gorm.G[models.History](r.db).Where("id = ?", id).Delete(ctx)
+	return err
+}

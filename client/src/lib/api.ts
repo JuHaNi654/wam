@@ -72,3 +72,20 @@ export const PATCH: APIFunction = async (endpoint: string, body: unknown) => {
   }
   return response.json();
 };
+
+
+export const DELETE = async (endpoint: string): Promise<null> => {
+  const response = await fetch(`${URL}${endpoint}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    const err = await response
+      .json()
+      .catch(() => ({ error: response.statusText }));
+    throw new ResponseError(err.error ?? response.statusText, response.status);
+  }
+
+  return null
+};
+
