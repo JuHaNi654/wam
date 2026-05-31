@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"server/internal/models"
 
 	"github.com/google/uuid"
@@ -26,4 +27,11 @@ func (r *HistoryRepository) ListByProfileID(profileID string) ([]models.History,
 
 	result := r.db.Where("profile_id = ?", profileID).Find(&items)
 	return items, result.Error
+}
+
+func (r *HistoryRepository) Update(id string, data map[string]any) error {
+	ctx := context.Background()
+
+	_, err := gorm.G[map[string]any](r.db).Table("history").Where("id = ?", id).Updates(ctx, data)
+	return err
 }

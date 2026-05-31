@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func createNewJobAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
+func createAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	jobID := ctx.Param("id")
 	requestBody := new(models.Action)
 	requestBody.JobID = jobID
@@ -24,6 +24,23 @@ func createNewJobAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.JSON(http.StatusCreated, gin.H{
 		"data": requestBody,
 	})
+
+	return nil
+}
+
+func updateAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	id := ctx.Param("id")
+	var requestBody map[string]any
+
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+	}
+
+	if err := s.ActionRepository.Update(id, requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
 
 	return nil
 }

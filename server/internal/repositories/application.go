@@ -58,3 +58,10 @@ func (r *ApplicationRepository) SetSkills(items []models.Skill, jobID string) ([
 	r.db.Create(savedSkills)
 	return savedSkills, nil
 }
+
+func (r *ApplicationRepository) Update(id string, data map[string]any) error {
+	ctx := context.Background()
+
+	_, err := gorm.G[map[string]any](r.db).Table("job").Where("id = ?", id).Updates(ctx, data)
+	return err
+}

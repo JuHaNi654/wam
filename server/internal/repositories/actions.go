@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"server/internal/models"
 	"time"
 
@@ -26,4 +27,11 @@ func (r *ActionRepository) Create(action *models.Action) error {
 	action.ID = uuid.New().String()
 	action.Date = time.Now().Unix()
 	return r.db.Create(action).Error
+}
+
+func (r *ActionRepository) Update(id string, action map[string]any) error {
+	ctx := context.Background()
+
+	_, err := gorm.G[map[string]any](r.db).Table("actions").Where("id = ?", id).Updates(ctx, action)
+	return err
 }

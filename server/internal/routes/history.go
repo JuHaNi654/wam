@@ -24,3 +24,18 @@ func createWorkHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	})
 	return nil
 }
+
+func updateHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	id := ctx.Param("id")
+	var requestBody map[string]any
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+	}
+
+	if err := s.HistoryRepository.Update(id, requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
+	return nil
+}

@@ -5,7 +5,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 import { DatePickerInput } from "../date-picker"
 import { Button } from "../ui/button"
-import { POST } from "@/lib/api"
+import { POST, PUT } from "@/lib/api"
 import { Checkbox } from "../ui/checkbox"
 import { Textarea } from "../ui/textarea"
 
@@ -19,7 +19,10 @@ const formSchema = z.object({
   current: z.boolean()
 })
 
-type WorkHistory = z.infer<typeof formSchema>
+export type WorkHistory = z.infer<typeof formSchema>
+export type SavedWorkHistory = {
+  id: string
+} & WorkHistory
 const getCurrentDateInUnix = () => new Date().getTime() / 1000
 
 type HistoryFormProps = {
@@ -144,6 +147,119 @@ export default function HistoryForm(props: HistoryFormProps) {
           </Button>
           <Button type="submit" form="work-history">
             Submit
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
+  )
+}
+
+type UpdateHistoryFormProps = {
+  history: SavedWorkHistory
+  onSave?: (id: string, history: WorkHistory) => void
+}
+export function UpdateHistoryForm(props: UpdateHistoryFormProps) {
+  const form = useForm<WorkHistory>({
+    resolver: zodResolver(formSchema),
+    defaultValues: props.history
+  })
+
+  const handleSubmit = async (data: WorkHistory) => {
+    try {
+      await PUT(`/api/profile/history/${props.history.id}`, data)
+      if (props.onSave) props.onSave(props.history.id, data)
+    } catch (err: any) {
+      console.log(err)
+    }
+  }
+
+  return (
+    <form id="work-history" onSubmit={form.handleSubmit(handleSubmit)}>
+      <FieldGroup>
+        <Controller name="company" control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Company</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                placeholder="Company name ..."
+                autoComplete="off"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller name="title" control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Job title</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                placeholder="Developer ..."
+                autoComplete="off"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <div className="flex gap-4">
+          <Controller name="start_date" control={form.control}
+            render={({ field }) => (
+              <DatePickerInput label="Start" valueInUnix={field.value}
+                onChange={(date) => field.onChange(date)}
+              />
+            )}
+          />
+          <Controller name="end_date" control={form.control}
+            render={({ field }) => (
+              <DatePickerInput label="End" valueInUnix={field.value}
+                onChange={(date) => field.onChange(date)} disabled={form.watch("current")}
+              />
+            )}
+          />
+        </div>
+
+        <Controller name="current" control={form.control}
+          render={({ field }) => (
+            <Field orientation="horizontal">
+              <Checkbox id="current" name={field.name} checked={field.value}
+                onCheckedChange={field.onChange} />
+              <FieldLabel htmlFor="current" className="font-normal">
+                Current workplace
+              </FieldLabel>
+            </Field>
+          )}
+        />
+
+
+        <Controller name="description" control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+              <Textarea
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                placeholder="Developer ..."
+                autoComplete="off"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </FieldGroup>
+
+
+      <FieldGroup className="mt-6">
+        <Field orientation="horizontal">
+          <Button type="submit" form="work-history">
+            Save
           </Button>
         </Field>
       </FieldGroup>

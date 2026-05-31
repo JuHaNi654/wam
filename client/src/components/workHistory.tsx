@@ -1,22 +1,27 @@
 import { useDialog } from "@/context/dialog-context"
 import { Button } from "./ui/button"
-import { Label } from "./ui/label"
-import { Input } from "./ui/input"
-import { DatePickerInput } from "./date-picker"
-import { Checkbox } from "./ui/checkbox"
-import { useState, type ChangeEvent } from "react"
-import { Textarea } from "./ui/textarea"
-import { POST } from "@/lib/api"
-import type { History } from "@/types/api.types"
 import { RiEyeLine } from "@remixicon/react"
-import { renderDate } from "@/lib/date"
-import HistoryForm from "./form/history"
+import HistoryForm, { UpdateHistoryForm } from "./form/history"
+import type { SavedWorkHistory, WorkHistory } from "./form/history"
+import { useState } from "react"
 
 type Props = {
-  data: History[]
+  data: SavedWorkHistory[]
 }
 export default function WorkHistory(props: Props) {
   const { openDialog, closeDialog } = useDialog()
+  const [history, setHistory] = useState(props.data)
+
+  const handleSave = (id: string, data: WorkHistory) => {
+    const tmp = history
+    for (let i = 0; i < tmp.length; i++) {
+      if (tmp[i].id === id) {
+        Object.assign(tmp[i], data)
+      }
+    }
+
+    setHistory(tmp)
+  }
 
   return (
     <div className="bg-card border rounded-lg p-6">
@@ -62,7 +67,7 @@ export default function WorkHistory(props: Props) {
                     openDialog({
                       id: history.id,
                       title: "Work history",
-                      children: <ViewHistory history={history} />,
+                      children: <UpdateHistoryForm history={history} onSave={handleSave} />,
                       width: 520,
                       height: 560,
                     })
@@ -77,62 +82,5 @@ export default function WorkHistory(props: Props) {
       )}
 
     </div>
-  )
-}
-
-type ViewHistoryProps = {
-  history: History
-}
-function ViewHistory(props: ViewHistoryProps) {
-  return (
-    <form className="spac-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
-        <Input id="title" name="title"
-          value={props.history.title}
-          placeholder="Job title"
-          required disabled
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="company">Company <span className="text-destructive">*</span></Label>
-        <Input id="company" name="company"
-          value={props.history.company}
-          placeholder="Company"
-          required disabled
-        />
-      </div>
-
-      <div className="flex gap-4">
-        <div className="space-y-1.5">
-          <span className="text-muted-foreground">Start</span>
-          <p className="font-medium">
-            {renderDate(props.history.start_date)}
-          </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <span className="text-muted-foreground">End</span>
-          <p className="font-medium">
-            {renderDate(props.history.end_date)}
-          </p>
-        </div>
-      </div>
-
-
-      <div className="space-y-1.5">
-        <Label htmlFor="current-position">Current position</Label>
-        <Checkbox id="current-position" checked={props.history.current} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="note">Description</Label>
-        <textarea id="note" value={props.history.description as string} rows={3} disabled
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y"
-          placeholder="Description ..."
-        />
-      </div>
-    </form>
   )
 }

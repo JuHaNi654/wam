@@ -76,6 +76,20 @@ func createProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	return nil
 }
 
+func updateProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	requestBody := new(models.Profile)
+	if err := ctx.ShouldBindJSON(requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+	}
+
+	if err := s.ProfileRepository.Update(requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
+	return nil
+}
+
 func saveProfileSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.UpdateSkills)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {

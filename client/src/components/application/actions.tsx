@@ -1,19 +1,31 @@
-import type { Action } from "@/types/api.types"
 import { Button } from "../ui/button"
 import { useDialog } from "@/context/dialog-context"
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { RiEyeLine } from "@remixicon/react";
 import { renderDate } from "@/lib/date";
 import ActionForm from "../form/action";
+import { UpdateActionForm } from "../form/action";
+import type { Action, SavedAction } from "../form/action";
+import { useState } from "react";
 
-type ActionsProps = {
+type Props = {
   applicationId: string,
-  actions: Action[]
+  actions: SavedAction[]
 }
 
-export default function Actions(props: ActionsProps) {
+export default function Actions(props: Props) {
   const { openDialog, closeDialog } = useDialog()
+  const [actions, setActions] = useState<SavedAction[]>(props.actions)
+
+  const handleUpdate = (actionId: string, action: Action) => {
+    const tmp = actions
+    for (let i = 0; i < tmp.length; i++) {
+      if (tmp[i].id === actionId) {
+        Object.assign(tmp[i], action)
+      }
+    }
+
+    setActions(tmp)
+  }
 
   return (
     <div className="bg-card border rounded-lg p-6">
@@ -37,13 +49,13 @@ export default function Actions(props: ActionsProps) {
         </Button>
       </div>
 
-      {props.actions.length === 0 && (
+      {actions.length === 0 && (
         <p className="text-sm text-muted-foreground">No actions recorded yet.</p>
       )}
 
-      {props.actions.length > 0 && (
+      {actions.length > 0 && (
         <div className="space-y-3">
-          {props.actions.map((action) => (
+          {actions.map((action) => (
             <div key={action.id} className="flex gap-4 text-sm border-l-2 border-border pl-4">
               <div className="shrink-0 text-muted-foreground w-24">
                 {renderDate(action.date)}
@@ -60,7 +72,7 @@ export default function Actions(props: ActionsProps) {
                       openDialog({
                         id: action.id,
                         title: action.title,
-                        children: <Action action={action} />,
+                        children: <UpdateActionForm onSave={handleUpdate} action={action} />,
                         width: 520,
                         height: 560,
                       })
@@ -75,36 +87,5 @@ export default function Actions(props: ActionsProps) {
         </div>
       )}
     </div>
-  )
-}
-
-type ActionProps = {
-  action: Action
-}
-function Action(props: ActionProps) {
-  return (
-    <form className="spac-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
-        <Input id="title"
-          value={props.action.title}
-          placeholder="Action title"
-          required disabled
-        />
-      </div>
-      <div className="space-y-1.5">
-        <span className="text-muted-foreground">Created</span>
-        <p className="font-medium">
-          {renderDate(props.action.date)}
-        </p>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="note">Note</Label>
-        <textarea id="note" value={props.action.note as string} rows={3} disabled
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y"
-          placeholder="Optional notes"
-        />
-      </div>
-    </form>
   )
 }

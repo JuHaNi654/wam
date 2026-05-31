@@ -3,14 +3,16 @@ import Loading from "@/components/loading";
 import Skills from "@/components/skills";
 import WorkHistory from "@/components/workHistory";
 import EducationList from "@/components/education";
+import Introduction from "@/components/introduction";
 import { GET, POST } from "@/lib/api";
-import type { Skill, History, Profile, Education } from "@/types/api.types";
+import type { Skill, Profile, Education } from "@/types/api.types";
 import { useQuery } from "@tanstack/react-query";
+import type { SavedWorkHistory } from "@/components/form/history";
 
 type Response = {
   profile: Profile;
   skills: Skill[];
-  history: History[];
+  history: SavedWorkHistory[];
   education: Education[];
 }
 
@@ -39,6 +41,7 @@ export default function Profile() {
       </header>
       <Loading isLoading={isLoading}>
         <div className="flex flex-col gap-6">
+          <Introduction introduction={data?.data.profile.introduction} />
 
           <div className="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
             <h3 className="text-sm font-semibold mb-3 text-muted-foreground 

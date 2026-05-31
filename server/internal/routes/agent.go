@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"server/internal/agent"
+	"server/internal/ollama"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,7 @@ func getAgentServiceInfo(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"data": "ok",
+		"data": ollama.InitializedOllama.ModelStatus,
 	})
 	return nil
 }

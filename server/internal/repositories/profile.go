@@ -36,6 +36,11 @@ func (r *ProfileRepository) Create() (*models.Profile, error) {
 	return profile, nil
 }
 
+func (r *ProfileRepository) Update(profile *models.Profile) error {
+	profile.ID = profileKey
+	return r.db.Save(profile).Error
+}
+
 func (r *ProfileRepository) Skills() ([]models.Skill, error) {
 	var items []models.Skill
 

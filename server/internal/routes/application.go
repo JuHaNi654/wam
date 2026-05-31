@@ -134,3 +134,18 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 	})
 	return nil
 }
+
+func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	applicationID := ctx.Param("id")
+	var requestBody map[string]any
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+	}
+
+	if err := s.ApplicationRepository.Update(applicationID, requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
+	return nil
+}

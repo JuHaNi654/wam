@@ -54,7 +54,6 @@ func (m OllamaModel) Genkit() *genkit.Genkit {
 }
 
 func (m *OllamaModel) Ping() error {
-
 	split := strings.Split(m.model.Name(), "/")
 	url := fmt.Sprintf("%s/api/ps", m.Config.ServerAddress)
 	resp, err := http.Get(url)

@@ -40,6 +40,24 @@ export const POST: APIFunction = async (endpoint: string, body: unknown) => {
   return response.json();
 };
 
+
+export const PUT: APIFunction = async (endpoint: string, body: unknown) => {
+  const response = await fetch(`${URL}${endpoint}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const err = await response
+      .json()
+      .catch(() => ({ error: response.statusText }));
+    throw new ResponseError(err.error ?? response.statusText, response.status);
+  }
+
+  if (response.status === 204) return null
+  return response.json();
+};
+
 export const PATCH: APIFunction = async (endpoint: string, body: unknown) => {
   const response = await fetch(`${URL}${endpoint}`, {
     method: "PATCH",

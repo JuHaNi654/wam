@@ -9,11 +9,10 @@ import Actions from "@/components/application/actions";
 import { renderDate } from "@/lib/date";
 import Base from "@/components/base";
 import Skills from "@/components/skills";
-import { GET, POST } from "@/lib/api";
+import { GET, POST, PUT } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useDialog } from "@/context/dialog-context";
 import { useState } from "react";
-import { da } from "zod/v4/locales";
 
 interface ActionPatchPayload {
   title?: string;
@@ -48,11 +47,13 @@ export default function ApplicationDetail() {
     retry: 0,
   })
 
-  async function save(data: { [key: string]: string }) {
-    console.log("Update")
-    console.log(data)
+  async function save(obj: { [key: string]: string }) {
+    try {
+      await PUT(`/api/jobs/${data?.data.application.id}`, obj)
+    } catch (err: any) {
+      console.log(err)
+    }
   }
-  async function saveAction(actionId: string, update: ActionPatchPayload) { }
 
   const saveSkills = async (skills: Skill[]) => {
     try {

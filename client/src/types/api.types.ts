@@ -64,3 +64,21 @@ export type Education = {
   start_date: number;
   end_date: number;
 }
+
+export type AIAgentStatus = {
+  name: string;
+  model: string;
+  size: number;
+  digest: string;
+  expires_at: string;
+  size_vram: number;
+  context_lengt: number;
+  details: {
+    parent_model: string;
+    format: string;
+    family: string;
+    families: Array<string>;
+    parameter_size: string;
+    quantization_level: string;
+  }
+}
