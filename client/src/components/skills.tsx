@@ -1,6 +1,6 @@
 import type { Skill } from "@/types/api.types"
 import { useQuery } from "@tanstack/react-query";
-import { GET } from "@/lib/api";
+import { GET, POST } from "@/lib/api";
 import {
   Combobox,
   ComboboxChip,
@@ -14,15 +14,32 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox"
 import { Fragment, useEffect, useState } from "react";
+import { RiAddLine } from "@remixicon/react";
 
 type Props = {
   skills: Skill[];
   update(skills: Skill[]): void
 }
 
+type ListView = {
+  creatable?: boolean
+} & Skill
+
+function listItems(input: string, skills?: Array<Skill>): Array<ListView> {
+  const transformed = input.trim().toLowerCase()
+  if (transformed.length === 0) return skills as ListView[]
+
+  const newItem: ListView = { name: input, creatable: true, id: `create:${transformed}` }
+  if (!skills || skills.length === 0) return [newItem]
+
+  const exists = skills.some((skill) => skill.name.toLowerCase().trim() === transformed)
+  return exists ? skills : [newItem, ...skills]
+}
+
 export default function Skills(props: Props) {
   const anchor = useComboboxAnchor()
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>(props.skills)
+  const [inputValue, setInputValue] = useState("")
 
   useEffect(() => {
     setSelectedSkills(props.skills)
@@ -36,20 +53,38 @@ export default function Skills(props: Props) {
     retry: 0,
   })
 
+  const createNewTag = async (name: string) => {
+    try {
+      const response = await POST<{ skill: Skill }>('/api/skills', { name })
+      setSelectedSkills((prev) => [...prev, response.data.skill])
+      props.update([...selectedSkills, response.data.skill])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleUpdate = async (items: Array<ListView | Skill>) => {
+    const newSkill = items.find((item: ListView) => item.creatable)
+    if (newSkill) {
+      createNewTag(newSkill.name)
+      return
+    }
+
+    setSelectedSkills(items)
+    props.update(items)
+  }
 
   return (
     <Combobox
       multiple
       autoHighlight
-      items={data?.data.skills ?? []}
+      items={listItems(inputValue, data?.data.skills)}
       value={selectedSkills}
       itemToStringLabel={(item) => item.name}
       itemToStringValue={(item) => item.id}
       isItemEqualToValue={(item, value) => item.id === value.id}
-      onValueChange={(value) => {
-        setSelectedSkills(value)
-        props.update(value)
-      }}
+      onValueChange={(value) => handleUpdate(value)}
+      onInputValueChange={setInputValue}
     >
       <ComboboxChips ref={anchor} className="w-full">
         <ComboboxValue>
@@ -64,12 +99,23 @@ export default function Skills(props: Props) {
         </ComboboxValue>
       </ComboboxChips>
       <ComboboxContent anchor={anchor}>
-        <ComboboxEmpty>No items found.</ComboboxEmpty>
+        <ComboboxEmpty>
+          No Results
+        </ComboboxEmpty>
         <ComboboxList>
-          {(item) => (
-            <ComboboxItem key={item.id} value={item}>
-              {item.name}
-            </ComboboxItem>
+          {(item: ListView) => (
+            !item.creatable ? (
+              <ComboboxItem key={item.id} value={item}>
+                {item.name}
+              </ComboboxItem>
+            ) : (
+              <ComboboxItem key={item.id} value={item}>
+                <span className="flex gap-2 items-center">
+                  <RiAddLine />
+                  Create ({item.name}) skill
+                </span>
+              </ComboboxItem>
+            )
           )}
         </ComboboxList>
       </ComboboxContent>
