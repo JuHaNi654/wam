@@ -74,7 +74,7 @@ export default function ApplicationDetail() {
                   onSave={save} options={statusOptions}
                 />
                 <h1 className="text-3xl mt-4">{data.data.application.name}</h1>
-                <span className="block text-muted-foreground">{data.data.application.job_title}</span>
+                <span className="block text-muted-foreground">{data.data.application.position}</span>
               </header>
 
               <div className="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">

@@ -1,15 +1,38 @@
 import { useDialog } from "@/context/dialog-context";
 import { Button } from "../ui/button";
 import type { Application } from "@/types/api.types";
+import { useState } from "react";
+import { Textarea } from "../ui/textarea";
 
 type DocumentProps = {
-  content?: string | null
+  editable?: boolean
+  content?: string
+  update?: (content: string) => void
 }
 function Document(props: DocumentProps) {
+  const [content, setContent] = useState(props.content ?? "No content yet")
+
+  if (!props.editable) {
+    return (
+      <div className="space-y-3 h-full flex flex-col">
+        <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed flex-1">
+          {content}
+        </div>
+      </div>
+    )
+  }
+
+  const handleSave = () => {
+    if (props.update) props.update(content)
+  }
+
   return (
-    <div className="space-y-3 h-full">
-      <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed">
-        {props.content && props.content.length > 0 ? props.content : "No content yet."}
+    <div className="space-y-3 h-full flex flex-col">
+      <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed flex-1">
+        <Textarea className="h-full" rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
+      </div>
+      <div className="flex justify-end">
+        <Button variant="default" onClick={handleSave}>Save</Button>
       </div>
     </div>
   )
@@ -22,10 +45,30 @@ type DocumentsProps = {
 export default function Documents(props: DocumentsProps) {
   const { openDialog } = useDialog()
 
-  const showDocument = (id: string, title: string) => {
+  const handleSave = async (application: string) => {
+    try {
+      console.log("Application: ", application)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const showAd = () => {
     openDialog({
-      id, title,
-      children: (<Document content={props.application.job_ad} />),
+      id: "job-ad",
+      title: "Job ad",
+      children: (<Document content={props.application.ad} />),
+      width: 560,
+      height: 480
+    })
+  }
+
+
+  const showApplication = () => {
+    openDialog({
+      id: "job-application",
+      title: "Job application",
+      children: (<Document update={handleSave} content={props.application.application} editable />),
       width: 560,
       height: 480
     })
@@ -38,7 +81,8 @@ export default function Documents(props: DocumentsProps) {
         Documents
       </h3>
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => showDocument('job-ad', "Job ad")}>View Job ad</Button>
+        <Button variant="outline" onClick={showAd}>View Job ad</Button>
+        <Button variant="outline" onClick={showApplication}>View Job application</Button>
       </div>
     </div>
   )

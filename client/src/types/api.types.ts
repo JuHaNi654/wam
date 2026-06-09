@@ -18,13 +18,13 @@ export type Application = {
   id: string;
   name: string;
   company: string;
+  position: string;
+  homepage: string;
+  link: string;
   status: ApplicationStatus;
   create_date: number;
-  homepage: string;
-  job_ad: string | null;
-  job_application: string | null;
-  job_title: string;
-  link: string;
+  ad?: string;
+  application?: string;
   skills: Skill[];
   actions: Action[];
 };
@@ -36,10 +36,10 @@ export type Skill = {
 
 export type Action = {
   id: string;
-  job_id: string;
-  note: string | null;
-  date: number;
   title: string;
+  note: string;
+  date: number;
+  application_id: string;
 };
 
 export type Profile = {
@@ -51,10 +51,10 @@ export type History = {
   id?: string;
   company: string;
   title: string;
-  description: string;
-  current: boolean;
+  description?: string;
   start_date: number;
   end_date: number;
+  current: boolean;
 }
 
 export type Education = {
