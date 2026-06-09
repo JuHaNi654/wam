@@ -13,12 +13,7 @@ import (
 var validate *validator.Validate
 
 func Routes(s *services.Service) *gin.Engine {
-	validate = validator.New()
-	err := validate.RegisterValidation("validate_status", models.ValidateApplicationStatus)
-	if err != nil {
-		fmt.Println(err)
-	}
-
+	initalizeValidator()
 	r := gin.Default()
 	r.Use(headers)
 
@@ -66,4 +61,12 @@ func Routes(s *services.Service) *gin.Engine {
 	r.NoRoute(noRoute)
 
 	return r
+}
+
+func initalizeValidator() {
+	validate = validator.New()
+	err := validate.RegisterValidation("validate_status", models.ValidateApplicationStatus)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

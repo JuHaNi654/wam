@@ -29,6 +29,7 @@ func listApplications(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Application)
+
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
 	}
