@@ -10,7 +10,7 @@ export default function Base({ showMenu, className, children }: BaseProps) {
   return (
     <div className="base-container">
       {showMenu && <Sidemenu />}
-      <div className={cn(className, (showMenu ? "col-span-10" : "col-span-12"))}>
+      <div className={cn(className, (showMenu ? "col-span-11" : "col-span-12"))}>
         {children}
       </div>
     </div>

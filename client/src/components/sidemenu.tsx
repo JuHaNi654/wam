@@ -5,40 +5,44 @@ import type { AIAgentStatus } from "@/types/api.types";
 import { GET } from "@/lib/api";
 import Loading from "./loading";
 import { Avatar, AvatarBadge } from "./ui/avatar";
-import { RiRobot2Fill } from "@remixicon/react";
+import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiUserFill } from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useEffect, useState } from "react";
 
 type Links = {
   label: string;
-  path: string
+  path: string;
+  icon: React.ReactElement;
 }
 const items: Links[] = [
   {
     label: "Home",
-    path: "/dashboard"
+    path: "/dashboard",
+    icon: <RiHome2Line />
   },
   {
     label: "New application",
-    path: "/applications/new"
+    path: "/applications/new",
+    icon: <RiAddBoxLine />
   },
   {
     label: "Profile",
-    path: "/profile"
+    path: "/profile",
+    icon: <RiUserFill />
   }
 ]
 
 export default function Sidemenu() {
   return (
-    <aside className="flex flex-col justify-between col-span-2 border rounded-lg p-4 border-gray-200">
-      <ul className="flex flex-col gap-2">
+    <aside className="flex flex-col items-stretch justify-between col-span-1 border rounded-lg p-4 border-gray-200">
+      <ul className="flex flex-col items-center justify-center gap-2">
         {items.map((item, i) => (
           <li key={i}>
-            <NavLink to={item.path} className={({ isActive }) => cn(
-              "block px-4 rounded-full py-2 text-sm border border-transparent hover:border-gray-300",
+            <NavLink aria-label={item.label} to={item.path} className={({ isActive }) => cn(
+              "p-3 aspect-square flex items-center rounded-full text-sm border border-transparent hover:border-gray-300",
               (isActive && "bg-gray-200")
             )}>
-              {item.label}
+              {item.icon}
             </NavLink>
           </li>
         ))}
@@ -66,7 +70,8 @@ function AIStatus() {
   })
 
   useEffect(() => {
-    if (data) {
+    console.log("Data", data)
+    if (data && data.data.name.length !== 0) {
       const expiresAt = new Date(data.data.expires_at).getTime()
       const current = new Date().getTime()
 
@@ -82,7 +87,7 @@ function AIStatus() {
   }, [data])
 
   return (
-    <div>
+    <div className="mx-auto">
       <Loading isLoading={isLoading}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -92,7 +97,7 @@ function AIStatus() {
             </Avatar>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{data ? data.data.name : "Unavailable"}</p>
+            <p>{data && data.data.name.length !== 0 ? data.data.name : "Unavailable"}</p>
           </TooltipContent>
         </Tooltip>
       </Loading>
