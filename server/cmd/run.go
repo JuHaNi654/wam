@@ -1,3 +1,4 @@
+// Package cmd
 package cmd
 
 import (
@@ -6,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os/signal"
+	"server/internal/database"
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
@@ -23,14 +25,14 @@ func Run() error {
 	)
 	defer stop()
 
-	db, err := services.IntiSqlite()
-	if err != nil {
+	client := database.NewSQLiteClient()
+	if err := client.Connect(); err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: routes.Routes(services.NewService(db)),
+		Handler: routes.Routes(services.NewService(client.GetSession())),
 	}
 
 	fmt.Printf("Server is running on port %s\n", PORT)

@@ -42,7 +42,7 @@ func (r *ApplicationRepository) SetSkills(items []models.Skill, jobID string) ([
 	savedSkills := []models.ApplicationSkill{}
 	ctx := context.Background()
 
-	_, err := gorm.G[models.ApplicationSkill](r.db).Where("job_id = ?", jobID).Delete(ctx)
+	_, err := gorm.G[models.ApplicationSkill](r.db).Where("application_id = ?", jobID).Delete(ctx)
 	if err != nil {
 		return nil, err
 	}
