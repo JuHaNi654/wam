@@ -49,9 +49,9 @@ func (r *ApplicationRepository) SetSkills(items []models.Skill, jobID string) ([
 
 	for _, curr := range items {
 		savedSkills = append(savedSkills, models.ApplicationSkill{
-			ID:      uuid.New().String(),
-			JobID:   jobID,
-			SkillID: curr.ID,
+			ID:            uuid.New().String(),
+			ApplicationID: jobID,
+			SkillID:       curr.ID,
 		})
 	}
 
@@ -69,12 +69,12 @@ func (r *ApplicationRepository) Update(id string, data map[string]any) error {
 func (r *ApplicationRepository) Delete(id string) error {
 	ctx := context.Background()
 
-	_, err := gorm.G[models.ApplicationSkill](r.db).Where("job_id = ?", id).Delete(ctx)
+	_, err := gorm.G[models.ApplicationSkill](r.db).Where("application_id = ?", id).Delete(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = gorm.G[models.Action](r.db).Where("job_id = ?", id).Delete(ctx)
+	_, err = gorm.G[models.Action](r.db).Where("application_id = ?", id).Delete(ctx)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,6 @@ func (r *ProfileRepository) Get() (*models.Profile, error) {
 	return item, result.Error
 }
 
-// TODO: Check if profile already exists
 func (r *ProfileRepository) Create() (*models.Profile, error) {
 	profile := new(models.Profile)
 	profile.ID = profileKey

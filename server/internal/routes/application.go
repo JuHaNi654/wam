@@ -33,19 +33,34 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
 	}
 
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{Code: http.StatusBadRequest, Errors: errors}
+	}
+
+	if err := s.ApplicationRepository.Create(requestBody); err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	// If job add link not received, then skip content scraping
+	if requestBody.Link == nil {
+		ctx.JSON(http.StatusCreated, gin.H{
+			"data": map[string]any{
+				"application": requestBody,
+			},
+		})
+		return nil
+	}
+
 	ad, err := parser.Run(&parser.Config{
-		URL: requestBody.Link,
+		URL: *requestBody.Link,
 	})
 
 	if err != nil {
 		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 	}
 
+	// TODO add update
 	requestBody.Ad = ad
-
-	if err := s.ApplicationRepository.Create(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
 
 	c := context.Background()
 	result, err := agent.ListAdHardSkills(&c, s.Agent, agent.ApplicationInput{

@@ -39,34 +39,34 @@ Create TABLE education (
   profile_id  TEXT NOT NULL REFERENCES profile(id) ON DELETE CASCADE
 );
 
--- job
-CREATE TABLE job (
+-- Application
+CREATE TABLE application (
   id               TEXT PRIMARY KEY,
   name             TEXT NOT NULL,
-  job_title        TEXT,
   company          TEXT,
+  position         TEXT,
   homepage         TEXT,
   link             TEXT,
   status           TEXT NOT NULL DEFAULT 'saved' CHECK (status IN ('saved', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn')),
   create_date      BIGINT NOT NULL,
-  job_ad           TEXT,
-  job_application  TEXT
+  ad               TEXT,
+  application      TEXT
 );
 
 -- actions
 CREATE TABLE actions (
   id          TEXT PRIMARY KEY,
-  job_id      TEXT NOT NULL REFERENCES job(id) ON DELETE CASCADE,
   title       TEXT NOT NULL,
-  description TEXT,
   date        BIGINT NOT NULL,
-  note        TEXT
+  note        TEXT,
+
+  application_id      TEXT NOT NULL REFERENCES application(id) ON DELETE CASCADE
 );
 
 CREATE TABLE application_skill (
-  id          TEXT PRIMARY KEY,
-  job_id      TEXT NOT NULL REFERENCES job(id) on DELETE CASCADE,
-  skill_id    TEXT NOT NULL REFERENCES skill(id) ON DELETE CASCADE
+  id              TEXT PRIMARY KEY,
+  application_id  TEXT NOT NULL REFERENCES application(id) on DELETE CASCADE,
+  skill_id        TEXT NOT NULL REFERENCES skill(id) ON DELETE CASCADE
 );
 
 -- skill

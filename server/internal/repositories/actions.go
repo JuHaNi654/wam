@@ -19,7 +19,7 @@ func NewActionRepository(db *gorm.DB) *ActionRepository {
 
 func (r *ActionRepository) GetByJobID(jobID string) ([]models.Action, error) {
 	var items []models.Action
-	result := r.db.Where("job_id = ?", jobID).Find(&items)
+	result := r.db.Where("application_id = ?", jobID).Find(&items)
 	return items, result.Error
 }
 

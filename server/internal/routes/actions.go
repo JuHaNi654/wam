@@ -11,7 +11,7 @@ import (
 func createAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	jobID := ctx.Param("id")
 	requestBody := new(models.Action)
-	requestBody.JobID = jobID
+	requestBody.ApplicationID = jobID
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}

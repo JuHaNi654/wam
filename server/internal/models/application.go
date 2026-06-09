@@ -1,35 +1,26 @@
 package models
 
-var ApplicationStatus = []string{
-	"saved",
-	"applied",
-	"interviewing",
-	"offered",
-	"rejected",
-	"withdrawn",
-}
-
 type Application struct {
-	ID          string `gorm:"primaryKey" json:"id"`
-	Name        string `json:"name"`
-	Company     string `json:"company"`
-	Title       string `json:"job_title" gorm:"column:job_title"`
-	Homepage    string `json:"homepage"`
-	Link        string `json:"link"`
-	Status      string `json:"status"`
-	CreateDate  int64  `gorm:"column:create_date" json:"create_date"`
-	Ad          string `json:"job_ad" gorm:"column:job_ad"`
-	Application string `json:"job_application" gorm:"column:job_application"`
+	ID          string            `json:"id,omitempty" gorm:"primaryKey"`
+	Name        string            `json:"name,omitempty" validate:"required"`
+	Company     string            `json:"company,omitempty" validate:"required"`
+	Position    string            `json:"position,omitempty" validate:"required"`
+	Homepage    *string           `json:"homepage,omitempty" validate:"omitempty,https_url,url"`
+	Link        *string           `json:"link,omitempty" validate:"omitempty,https_url,url"`
+	Status      ApplicationStatus `json:"status,omitempty" validate:"required,validate_status"`
+	CreateDate  int64             `json:"create_date,omitempty" gorm:"column:create_date"`
+	Ad          string            `json:"ad,omitempty"`
+	Application string            `json:"application,omitempty"`
 }
 
 func (Application) TableName() string {
-	return "job"
+	return "application"
 }
 
 type ApplicationSkill struct {
-	ID      string `gorm:"primaryKey" json:"id"`
-	JobID   string `gorm:"column:job_id" json:"job_id"`
-	SkillID string `gorm:"column:skill_id" json:"skill_id"`
+	ID            string `gorm:"primaryKey" json:"id"`
+	ApplicationID string `gorm:"column:application_id" json:"application_id"`
+	SkillID       string `gorm:"column:skill_id" json:"skill_id"`
 }
 
 func (ApplicationSkill) TableName() string {

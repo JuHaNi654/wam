@@ -2,6 +2,8 @@
 package routes
 
 import (
+	"fmt"
+	"server/internal/models"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,12 @@ import (
 var validate *validator.Validate
 
 func Routes(s *services.Service) *gin.Engine {
+	validate = validator.New()
+	err := validate.RegisterValidation("validate_status", models.ValidateApplicationStatus)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	r := gin.Default()
 	r.Use(headers)
 

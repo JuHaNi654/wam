@@ -29,7 +29,7 @@ func (r *SkillRepository) GetByJobID(jobID string) ([]models.Skill, error) {
 	result := r.db.Table("application_skill").
 		Select("skill.id, skill.name").
 		Joins("left join skill on skill.id = application_skill.skill_id").
-		Where("application_skill.job_id", jobID).
+		Where("application_skill.application_id", jobID).
 		Scan(&items)
 
 	return items, result.Error
