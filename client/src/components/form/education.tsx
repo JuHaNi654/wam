@@ -6,6 +6,7 @@ import { Input } from "../ui/input"
 import { DatePickerInput } from "../date-picker"
 import { Button } from "../ui/button"
 import { POST } from "@/lib/api"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   school: z.string().min(5),
@@ -43,7 +44,8 @@ export default function EducationForm(props: EducationFormProps) {
       const response = await POST<SavedEducation>(`/api/profile/education`, data)
       if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to save new education", { position: "bottom-right" })
     }
   }
 

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/combobox"
 import { Fragment, useEffect, useState } from "react";
 import { RiAddLine } from "@remixicon/react";
+import { toast } from "sonner"
 
 type Props = {
   skills: Skill[];
@@ -59,7 +60,8 @@ export default function Skills(props: Props) {
       setSelectedSkills((prev) => [...prev, response.data.skill])
       props.update([...selectedSkills, response.data.skill])
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong, while trying to create new skill", { position: "bottom-right" })
     }
   }
 

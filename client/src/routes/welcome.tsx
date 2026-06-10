@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { GET, POST, ResponseError } from "../lib/api";
 import { useQuery } from "@tanstack/react-query"
 import { useEffect } from "react";
+import { toast } from "sonner"
 
 export default function Welcome() {
   const navigate = useNavigate()
@@ -27,7 +28,8 @@ export default function Welcome() {
       await POST<Response>("/api/profile", {});
       navigate('/dashboard');
     } catch (err: unknown) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to initialize profile", { position: "bottom-right" })
     }
   }
 

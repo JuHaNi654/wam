@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { POST, PUT } from "@/lib/api"
 import { Checkbox } from "../ui/checkbox"
 import { Textarea } from "../ui/textarea"
-
+import { toast } from "sonner"
 
 const formSchema = z.object({
   company: z.string().min(3),
@@ -50,7 +50,8 @@ export default function HistoryForm(props: HistoryFormProps) {
       const response = await POST<SavedWorkHistory>(`/api/profile/history`, data)
       if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: unknown) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to save new work history", { position: "bottom-right" })
     }
   }
 

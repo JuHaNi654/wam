@@ -5,9 +5,10 @@ import { useState } from "react";
 import { Textarea } from "../ui/textarea";
 
 type DocumentProps = {
+  name?: string
   editable?: boolean
   content?: string
-  update?: (content: string) => void
+  update?: (content: { [key: string]: string }) => void
 }
 function Document(props: DocumentProps) {
   const [content, setContent] = useState(props.content ?? "No content yet")
@@ -23,7 +24,7 @@ function Document(props: DocumentProps) {
   }
 
   const handleSave = () => {
-    if (props.update) props.update(content)
+    if (props.update && props.name) props.update({ [props.name]: content })
   }
 
   return (
@@ -40,18 +41,11 @@ function Document(props: DocumentProps) {
 
 type DocumentsProps = {
   application: Application
+  onUpdate: (data: { [key: string]: string }) => void
 }
 
 export default function Documents(props: DocumentsProps) {
   const { openDialog } = useDialog()
-
-  const handleSave = async (application: string) => {
-    try {
-      console.log("Application: ", application)
-    } catch (err) {
-      console.log(err)
-    }
-  }
 
   const showAd = () => {
     openDialog({
@@ -68,7 +62,7 @@ export default function Documents(props: DocumentsProps) {
     openDialog({
       id: "job-application",
       title: "Job application",
-      children: (<Document update={handleSave} content={props.application.application} editable />),
+      children: (<Document name="application" update={props.onUpdate} content={props.application.application} editable />),
       width: 560,
       height: 480
     })

@@ -6,6 +6,7 @@ import EducationForm, { type SavedEducation } from "./form/education"
 import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
 import { useState } from "react"
 import { DELETE } from "@/lib/api"
+import { toast } from "sonner"
 
 type Props = {
   data: Education[]
@@ -18,8 +19,10 @@ export default function Education(props: Props) {
     try {
       await DELETE(`/api/profile/education/${id}`)
       setEducations((prev) => prev.filter((item) => item.id !== id))
+      toast.success("Selected education deleted successfully", { position: "bottom-right" })
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.success("Something went wrong while trying to delete education", { position: "bottom-right" })
     }
   }
 

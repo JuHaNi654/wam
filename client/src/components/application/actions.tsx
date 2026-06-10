@@ -8,6 +8,7 @@ import type { Action, SavedAction } from "../form/action";
 import { useState } from "react";
 import { DeleteConfirmationDialog } from "../dialog/alert-dialog";
 import { DELETE } from "@/lib/api";
+import { toast } from "sonner"
 
 type Props = {
   applicationId: string,
@@ -29,7 +30,8 @@ export default function Actions(props: Props) {
       await DELETE(`/api/actions/${id}`)
       setActions((prev) => prev.filter((item) => item.id !== id))
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to delete action", { position: "bottom-right" })
     }
   }
 

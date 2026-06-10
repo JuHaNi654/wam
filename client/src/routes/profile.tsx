@@ -8,6 +8,7 @@ import { GET, POST } from "@/lib/api";
 import type { Skill, Profile, Education } from "@/types/api.types";
 import { useQuery } from "@tanstack/react-query";
 import type { SavedWorkHistory } from "@/components/form/history";
+import { toast } from "sonner"
 
 type Response = {
   profile: Profile;
@@ -29,8 +30,8 @@ export default function Profile() {
     try {
       await POST<any>("/api/profile/skills", { skills })
     } catch (err) {
-      console.log("Something went wrong while trying to save profile skills")
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to update skills", { position: "bottom-right" })
     }
   }
 

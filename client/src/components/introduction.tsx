@@ -3,6 +3,7 @@ import { Textarea } from "./ui/textarea"
 import { Button } from "./ui/button"
 import { RiEditLine } from "@remixicon/react"
 import { PUT } from "@/lib/api"
+import { toast } from "sonner"
 
 const default_introduction = "Currently any of the introduction is not set"
 
@@ -17,12 +18,10 @@ export default function Introduction(props: Props) {
   const save = async () => {
     setDisabled(true)
     try {
-      const body = { introduction }
-      console.log(body)
-
-      await PUT("/api/profile", body)
+      await PUT("/api/profile", { introduction })
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.success("Could not update introduction", { position: "bottom-right" })
     } finally {
       setDisabled(false)
       setEdit(false)

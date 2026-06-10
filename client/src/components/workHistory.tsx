@@ -6,6 +6,7 @@ import type { SavedWorkHistory, WorkHistory } from "./form/history"
 import { useState } from "react"
 import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
 import { DELETE } from "@/lib/api"
+import { toast } from "sonner"
 
 type Props = {
   data: SavedWorkHistory[]
@@ -26,8 +27,10 @@ export default function WorkHistory(props: Props) {
       setHistory((prev) => (
         prev.filter((item) => item.id !== id)
       ))
+      toast.success("Work history deleted", { position: "bottom-right" })
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.success("Could not delete current work history", { position: "bottom-right" })
     }
   }
 

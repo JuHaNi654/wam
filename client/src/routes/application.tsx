@@ -13,6 +13,7 @@ import { GET, POST, PUT } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useDialog } from "@/context/dialog-context";
 import { useState } from "react";
+import { toast } from "sonner"
 import type { SavedAction } from "@/components/form/action";
 
 const statusOptions: string[] = [
@@ -44,8 +45,10 @@ export default function ApplicationDetail() {
   async function save(obj: { [key: string]: string }) {
     try {
       await PUT(`/api/applications/${data?.data.application.id}`, obj)
+      toast.success("Application updated", { position: "bottom-right" })
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to save application", { position: "bottom-right" })
     }
   }
 
@@ -53,8 +56,8 @@ export default function ApplicationDetail() {
     try {
       await POST<any>(`/api/applications/${data?.data.application.id}/skills`, { skills })
     } catch (err) {
-      console.log("Something went wrong while trying to save skills")
-      console.log(err)
+      toast.error("Something went wrong while trying to update skills", { position: "bottom-right" })
+      console.error(err)
     }
   }
 
@@ -99,7 +102,7 @@ export default function ApplicationDetail() {
                 <Skills skills={data.data.skills} update={saveSkills} />
               </div>
 
-              <Documents application={data.data.application} />
+              <Documents onUpdate={save} application={data.data.application} />
               <Actions applicationId={data.data.application.id} actions={data.data.actions} />
             </div>
             <div className="flex flex-col col-span-3 gap-2 border rounded-lg border-gray-200 p-4">

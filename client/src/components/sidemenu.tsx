@@ -70,7 +70,6 @@ function AIStatus() {
   })
 
   useEffect(() => {
-    console.log("Data", data)
     if (data && data.data.name.length !== 0) {
       const expiresAt = new Date(data.data.expires_at).getTime()
       const current = new Date().getTime()

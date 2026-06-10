@@ -7,6 +7,7 @@ import { Button } from "../ui/button"
 import { POST, PUT } from "@/lib/api"
 import { Textarea } from "../ui/textarea"
 import { renderDate } from "@/lib/date"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   title: z.string(),
@@ -39,7 +40,8 @@ export default function ActionForm(props: ActionFormProps) {
       const response = await POST<SavedAction>(`/api/jobs/${props.applicationId}/actions`, data);
       if (props.onSubmit) props.onSubmit(response.data)
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to create new action", { position: "bottom-right" })
     }
   }
 
@@ -111,8 +113,10 @@ export function UpdateActionForm(props: UpdateActionFormProps) {
     try {
       await PUT(`/api/actions/${props.action.id}`, data)
       if (props.onSave) props.onSave(props.action.id, data)
+      toast.success("Action updated", { position: "bottom-right" })
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to update action", { position: "bottom-right" })
     }
   }
 

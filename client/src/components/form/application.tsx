@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useState } from "react"
-
+import { toast } from "sonner"
 
 const statusOptions: Array<{ label: string, value: ApplicationStatus }> = [
   { label: "Saved", value: "saved" },
@@ -69,7 +69,8 @@ export default function ApplicationForm(props: ApplicationFormProps) {
       const response = await POST<{ application: SavedApplication }>("/api/applications", data);
       if (props.onSuccess) props.onSuccess(response.data.application)
     } catch (err: any) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to create new application", { position: "bottom-right" })
       setSubmitting(false)
     }
   }

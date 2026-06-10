@@ -18,6 +18,7 @@ import { RiEyeLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { DELETE, GET } from "@/lib/api";
 import { DeleteConfirmationDialog } from "@/components/dialog/alert-dialog";
+import { toast } from "sonner"
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link'> = {
   saved: "default",
@@ -41,7 +42,8 @@ export default function Home() {
       await DELETE(`/api/applications/${id}`)
       refetch()
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.error("Something went wrong while trying to delete application", { position: "bottom-right" })
     }
   }
 
