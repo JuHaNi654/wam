@@ -2,7 +2,7 @@ package services
 
 import (
 	"server/internal/agent"
-	"server/internal/ollama"
+	"server/internal/ai"
 	"server/internal/repositories"
 
 	"gorm.io/gorm"
@@ -26,6 +26,6 @@ func NewService(db *gorm.DB) *Service {
 		ProfileRepository:     repositories.NewProfileRepository(db),
 		HistoryRepository:     repositories.NewHistoryRepository(db),
 		EducationRepository:   repositories.NewEducationRepository(db),
-		Agent:                 ollama.InitializedOllama,
+		Agent:                 ai.InitializedAgent,
 	}
 }

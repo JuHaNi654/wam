@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"server/cmd"
-	"server/internal/ollama"
+	"server/internal/ai"
 
 	"github.com/joho/godotenv"
 )
@@ -32,7 +32,8 @@ func main() {
 
 	switch argsWithoutProg[0] {
 	case "start-server":
-		ollama.Initalize(prompts)
+		fmt.Println("Initializing agent")
+		ai.Initalize(prompts)
 
 		fmt.Println("Starting server...")
 		if err := cmd.Run(); err != nil {

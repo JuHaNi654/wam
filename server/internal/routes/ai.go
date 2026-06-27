@@ -1,15 +1,26 @@
 package routes
 
 import (
-	"context"
 	"net/http"
-	"server/internal/agent"
-	"server/internal/ollama"
+	"server/internal/ai"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
+func listModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	models, err := ai.InitializedAgent.Models()
+	if err != nil {
+		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"models": models,
+	})
+	return nil
+}
+
+/*
 func getAgentServiceInfo(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	err := s.Agent.Ping()
 	if err != nil {
@@ -17,7 +28,7 @@ func getAgentServiceInfo(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"data": ollama.InitializedOllama.ModelStatus,
+		"data": ai.InitializedOllama.ModelStatus,
 	})
 	return nil
 }
@@ -43,3 +54,4 @@ func generateSkillsFromAgent(ctx *gin.Context, s *services.Service) *ErrorRespon
 	})
 	return nil
 }
+*/

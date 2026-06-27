@@ -9,5 +9,4 @@ import (
 type Agent interface {
 	Model() ai.Model
 	Genkit() *genkit.Genkit
-	Ping() error
 }
