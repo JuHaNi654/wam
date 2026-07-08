@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { TooltipProvider } from './components/ui/tooltip.tsx'
 import { Toaster } from "@/components/ui/sonner"
+import Providers from './routes/llm.tsx'
 
 const queryClient = new QueryClient()
 const router = createBrowserRouter([
@@ -31,6 +32,11 @@ const router = createBrowserRouter([
         path: "/dashboard",
         middleware: [isInitialized],
         element: <Home />,
+      },
+      {
+        path: "/models",
+        middleware: [isInitialized],
+        element: <Providers />,
       },
       {
         path: "/profile",
