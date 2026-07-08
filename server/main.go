@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"server/cmd"
-	"server/internal/ai"
+	"server/internal/llm"
 
 	"github.com/joho/godotenv"
 )
@@ -33,7 +33,7 @@ func main() {
 	switch argsWithoutProg[0] {
 	case "start-server":
 		fmt.Println("Initializing agent")
-		ai.Initalize(prompts)
+		llm.Initalize(prompts)
 
 		fmt.Println("Starting server...")
 		if err := cmd.Run(); err != nil {

@@ -90,10 +90,13 @@ function AIStatus() {
       <Loading isLoading={isLoading}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Avatar>
-              <RiRobot2Fill className="m-auto" />
-              <AvatarBadge className={`${status}`} />
-            </Avatar>
+
+            <NavLink aria-label="Go ai settings page" to="/models">
+              <Avatar>
+                <RiRobot2Fill className="m-auto" />
+                <AvatarBadge className={`${status}`} />
+              </Avatar>
+            </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p>{data && data.data.name.length !== 0 ? data.data.name : "Unavailable"}</p>

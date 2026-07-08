@@ -4,7 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"server/internal/agent"
+	"server/internal/llm"
+	"server/internal/llm/skills"
 	"server/internal/models"
 	"server/internal/parser"
 	"server/internal/services"
@@ -64,7 +65,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody.Ad = ad
 
 	c := context.Background()
-	result, err := agent.ListAdHardSkills(&c, s.Agent, agent.ApplicationInput{
+	result, err := skills.ListAdHardSkills(&c, llm.InitializedAgent, skills.ApplicationInput{
 		Ad: requestBody.Ad,
 	})
 

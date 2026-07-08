@@ -54,9 +54,10 @@ func Routes(s *services.Service) *gin.Engine {
 	r.DELETE("/api/actions/:id", Handler(s, deleteAction))
 
 	// AI agent endpoints
-	r.GET("/api/ai/models", Handler(s, listModels))
-	//r.GET("/api/ai", Handler(s, getAgentServiceInfo))
-	//r.GET("/api/ai/skills", Handler(s, generateSkillsFromAgent))
+	r.GET("/api/llm/providers", Handler(s, listProviders))
+	r.GET("/api/llm/providers/:provider/models", Handler(s, listModels))
+	r.POST("/api/llm/providers/:provider/load", Handler(s, loadModel))
+	r.POST("/api/llm/providers/:provider/unload", Handler(s, unloadModel))
 
 	// Return 404 from invalid endpoint
 	r.NoRoute(noRoute)

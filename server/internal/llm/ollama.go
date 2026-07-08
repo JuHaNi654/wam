@@ -1,10 +1,14 @@
-// Package ai - ollama related code
-package ai
+// Package llm - ollama related code
+package llm
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/firebase/genkit/go/plugins/ollama"
+)
+
+var (
+	ollamaBaseURL = "http://127.0.0.1:11434"
 )
 
 type OllamaModelMeta struct {
@@ -29,15 +33,14 @@ type OllamaModels struct {
 	Models []OllamaModelMeta `json:"models"`
 }
 
-func getOllamaConfig() *ollama.Ollama {
-	serverAddr, err := getEnvValue("OLLAMA_SERVER")
-	if err != nil {
-		fmt.Println(err)
-		return nil
+func getOllamaPlugin() *ollama.Ollama {
+	url := os.Getenv("OLLAMA_URL")
+	if url == "" {
+		url = ollamaBaseURL
 	}
 
 	return &ollama.Ollama{
-		ServerAddress: serverAddr,
+		ServerAddress: url,
 		Timeout:       60,
 	}
 }
