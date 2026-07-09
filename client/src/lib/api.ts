@@ -37,6 +37,9 @@ export const POST: APIFunction = async (endpoint: string, body: unknown) => {
       .catch(() => ({ error: response.statusText }));
     throw new ResponseError(err.error ?? response.statusText, response.status);
   }
+
+  if (response.status == 204) return null
+
   return response.json();
 };
 

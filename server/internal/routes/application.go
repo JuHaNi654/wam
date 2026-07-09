@@ -39,59 +39,53 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{Code: http.StatusBadRequest, Errors: errors}
 	}
 
+	// If job add link not received, then skip content scraping
+	if requestBody.Link != nil {
+		ad, err := parser.Run(&parser.Config{
+			URL: *requestBody.Link,
+		})
+
+		if err != nil {
+			return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		}
+
+		requestBody.Ad = ad
+	}
+
 	if err := s.ApplicationRepository.Create(requestBody); err != nil {
 		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 	}
 
-	// If job add link not received, then skip content scraping
-	if requestBody.Link == nil {
-		ctx.JSON(http.StatusCreated, gin.H{
-			"data": map[string]any{
-				"application": requestBody,
-			},
+	if llm.InitializedAgent.Selected().Model != "" {
+		c := context.Background()
+		result, err := skills.ListAdHardSkills(&c, llm.InitializedAgent, skills.ApplicationInput{
+			Ad: requestBody.Ad,
 		})
-		return nil
-	}
 
-	ad, err := parser.Run(&parser.Config{
-		URL: *requestBody.Link,
-	})
-
-	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
-
-	// TODO add update
-	requestBody.Ad = ad
-
-	c := context.Background()
-	result, err := skills.ListAdHardSkills(&c, llm.InitializedAgent, skills.ApplicationInput{
-		Ad: requestBody.Ad,
-	})
-
-	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
-
-	savedSkills := []models.Skill{}
-	for _, skill := range result.Skills {
-		savedSkill := &models.Skill{
-			Name: skill,
-		}
-		err := s.SkillRepository.Create(savedSkill)
 		if err != nil {
-			log.Println(err)
-			continue
+			return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 		}
 
-		savedSkills = append(savedSkills, *savedSkill)
-	}
+		savedSkills := []models.Skill{}
+		for _, skill := range result.Skills {
+			savedSkill := &models.Skill{
+				Name: skill,
+			}
+			err := s.SkillRepository.Create(savedSkill)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
-	_, err = s.ApplicationRepository.SetSkills(savedSkills, requestBody.ID)
-	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
-	}
+			savedSkills = append(savedSkills, *savedSkill)
+		}
 
+		_, err = s.ApplicationRepository.SetSkills(savedSkills, requestBody.ID)
+		if err != nil {
+			return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		}
+
+	}
 	ctx.JSON(http.StatusCreated, gin.H{
 		"data": map[string]any{
 			"application": requestBody,

@@ -3,8 +3,9 @@ import Loading from "@/components/loading";
 import { AvatarBadge } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { GET } from "@/lib/api";
+import { GET, POST } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type Provider = {
   name: string;
@@ -13,10 +14,10 @@ type Provider = {
 }
 
 export default function Providers() {
-  const { data, isLoading } = useQuery({
+  const { data: response, isLoading } = useQuery({
     queryKey: ["llmProviders"],
     queryFn: async () => {
-      return await GET<{ providers: Provider[] }>('/api/ai/providers', null)
+      return await GET<{ providers: Provider[] }>('/api/llm/providers', null)
     }
   })
 
@@ -27,7 +28,7 @@ export default function Providers() {
       </header>
       <Loading isLoading={isLoading}>
         <div>
-          {data?.data.providers.map((provider, i) => (
+          {response?.data.providers.map((provider, i) => (
             <details key={i} className="border rounded">
               <summary className="flex justify-between items-center px-4 py-2">
                 <div className="flex flex-col">
@@ -44,6 +45,7 @@ export default function Providers() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
+                      <TableHead></TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -66,6 +68,15 @@ type Model = {
   status: string
 }
 
+type ModelResponse = {
+  models: Model[]
+  provider: string
+  in_use: {
+    model: string;
+    provider: string;
+  } | null
+}
+
 type ModelsProps = {
   provider: string
 }
@@ -74,10 +85,39 @@ function Models(props: ModelsProps) {
   const { data, refetch } = useQuery({
     queryKey: ["llmModels"],
     queryFn: async () => {
-      return await GET<{ models: Model[] }>(`/api/ai/providers/${props.provider}/models`, null)
+      return await GET<ModelResponse>(`/api/llm/providers/${props.provider}/models`, null)
     }
   })
 
+  const loadModel = async (model: string) => {
+    try {
+      await POST<any>(`/api/llm/providers/${props.provider}/load`, { model })
+      refetch()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Something went wrong while trying to load model", { position: "bottom-right" })
+    }
+  }
+
+  const unloadModel = async (model: string) => {
+    try {
+      await POST<any>(`/api/llm/providers/${props.provider}/unload`, { model })
+      refetch()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+    }
+  }
+
+  const enableModel = async (model: string) => {
+    try {
+      await POST<any>(`/api/llm/providers/${props.provider}/toggle`, { model })
+      refetch()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+    }
+  }
 
   return (
     <>
@@ -85,8 +125,22 @@ function Models(props: ModelsProps) {
         <TableRow key={model.id}>
           <TableCell>{model.id}</TableCell>
           <TableCell className="w-30 text-right">
-            <Button size="xs" variant={model.status != "unloaded" ? 'destructive' : 'secondary'}>
-              {model.status == "unloaded" ? "Connect" : "Disconnect"}
+            <Button
+              onClick={() => {
+                if (model.status === "unloaded") {
+                  loadModel(model.id)
+                } else {
+                  unloadModel(model.id)
+                }
+              }}
+              size="xs" variant={model.status != "unloaded" ? 'destructive' : 'secondary'}>
+              {model.status == "unloaded" ? "Load" : "Unload"}
+            </Button>
+          </TableCell>
+          <TableCell className="w-30 text-right">
+            <Button onClick={() => enableModel(model.id)}
+              size="xs" variant={data.data.in_use && data.data.in_use.model === model.id ? 'destructive' : 'success'}>
+              {data.data.in_use && data.data.in_use.model === model.id ? "Disable" : "Enable"}
             </Button>
           </TableCell>
         </TableRow>

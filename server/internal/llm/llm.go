@@ -15,63 +15,96 @@ var AvailableProviders = make(map[string]api.Plugin)
 
 type AgentInstance interface {
 	Genkit() *genkit.Genkit
-	Model() string
+	Selected() *Selected
+}
+
+type Selected struct {
+	Provider string `json:"provider"`
+	Model    string `json:"model"`
 }
 
 type Agent struct {
-	genkit           *genkit.Genkit
-	selectedProvider string
-	selectedModel    string
+	genkit   *genkit.Genkit
+	selected *Selected
 }
 
 func (a Agent) Genkit() *genkit.Genkit {
 	return a.genkit
 }
 
-func (a *Agent) SetProvider(provider string) {
-	a.selectedProvider = provider
+func (a Agent) Selected() *Selected {
+	return a.selected
 }
 
-func (a Agent) Provider() string {
-	return a.selectedProvider
+func (a *Agent) UseModel(provider string, model string) error {
+	models, err := ListModels(provider)
+	if err != nil {
+		return err
+	}
+
+	for _, m := range models {
+		if m.ID == model && m.Status == "unloaded" {
+			return fmt.Errorf("model (%s) is not loaded", model)
+		} else if m.ID == model {
+			a.selected = &Selected{Provider: provider, Model: model}
+			return nil
+		}
+	}
+
+	return fmt.Errorf("provider (%s) does not have any models available", provider)
 }
 
-func (a *Agent) SetModel(model string) {
-	a.selectedModel = model
+func (a *Agent) ClearSelected() {
+	a.selected = nil
 }
 
-func (a *Agent) Model() string {
-	return a.selectedModel
-}
+func (a *Agent) ProviderAvailability() (bool, error) {
+	if a.selected == nil {
+		return false, errors.New("provider is not currently selected")
+	}
 
-func (a *Agent) LoadModel(providerName string, model string) error {
-	provider, ok := AvailableProviders[providerName]
+	provider, ok := AvailableProviders[a.selected.Provider]
 	if !ok {
-		return errors.New("provider by given name is not available")
+		return false, fmt.Errorf("provider (%s) is not available", provider)
 	}
 
 	switch p := provider.(type) {
 	case *Llama:
-		return p.Load(model)
+		statusCode, err := get[any](fmt.Sprintf("%s/health", p.BaseURL), nil)
+		return statusCode == 200, err
 	default:
+		return false, nil // Should never happen, because we check if model is available
 	}
-
-	return nil
 }
 
-func (a *Agent) UnloadModel(providerName string, model string) error {
-	provider, ok := AvailableProviders[providerName]
+func (a *Agent) LoadModel(provider string, model string) error {
+	var err error
+	selectedProvider, ok := AvailableProviders[provider]
 	if !ok {
-		return errors.New("provider by given name is not available")
+		return fmt.Errorf("provider (%s) is not available", provider)
 	}
 
-	switch p := provider.(type) {
+	switch p := selectedProvider.(type) {
 	case *Llama:
-		return p.Unload(model)
-	default:
+		err = p.Load(model)
 	}
 
-	return nil
+	return err
+}
+
+func (a *Agent) UnloadModel(provider string, model string) error {
+	var err error
+	selectedProvider, ok := AvailableProviders[provider]
+	if !ok {
+		return fmt.Errorf("provider (%s) is not available", provider)
+	}
+
+	switch p := selectedProvider.(type) {
+	case *Llama:
+		err = p.Unload(model)
+	}
+
+	return err
 }
 
 func Initalize(embed fs.FS) {
@@ -122,18 +155,17 @@ func Providers() []ProviderInfo {
 	return providers
 }
 
-func ProviderModels(providerName string) []Model {
-	provider, ok := AvailableProviders[providerName]
+func ListModels(provider string) ([]Model, error) {
+	var models []Model
+	selectedProvider, ok := AvailableProviders[provider]
 	if !ok {
-		fmt.Printf("provider is not available (%s)\n", providerName)
-		return nil
+		return nil, fmt.Errorf("provider (%s) is not available", provider)
 	}
 
-	switch p := provider.(type) {
+	switch p := selectedProvider.(type) {
 	case *Llama:
-		return ListLlamaModels(fmt.Sprintf("%s/%s", p.BaseURL, "v1/models"))
-	default:
+		models = ListLlamaModels(fmt.Sprintf("%s/%s", p.BaseURL, "v1/models"))
 	}
 
-	return nil
+	return models, nil
 }

@@ -28,7 +28,7 @@ const statusOptions: string[] = [
 type ApplicationDetails = {
   application: Application,
   actions: SavedAction[],
-  skills: Skill[]
+  skills?: Skill[]
 }
 
 export default function ApplicationDetail() {
@@ -99,7 +99,7 @@ export default function ApplicationDetail() {
                   </Button>
 
                 </div>
-                <Skills skills={data.data.skills} update={saveSkills} />
+                <Skills skills={data.data.skills || []} update={saveSkills} />
               </div>
 
               <Documents onUpdate={save} application={data.data.application} />
@@ -153,7 +153,7 @@ function AISkill(props: AISkillProps) {
   const generate = async () => {
     setIsLoading(true)
     try {
-      const response = await GET<AIResponse>(`/api/agent/skills?applicationId=${props.applicationID}`, null)
+      const response = await GET<AIResponse>(`/api/llm/agent/hardskills?applicationId=${props.applicationID}`, null)
       setSkills(response.data.skills)
     } catch (err: any) {
       console.log(err)

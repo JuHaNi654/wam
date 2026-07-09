@@ -7,7 +7,6 @@ import Loading from "./loading";
 import { Avatar, AvatarBadge } from "./ui/avatar";
 import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiUserFill } from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { useEffect, useState } from "react";
 
 type Links = {
   label: string;
@@ -52,54 +51,30 @@ export default function Sidemenu() {
   )
 }
 
-
-const onlineStatus = {
-  online: "bg-green-600",
-  sleep: "bg-yellow-600",
-  offline: "bg-red-600"
-}
-
 function AIStatus() {
-  const [status, setStatus] = useState(onlineStatus.offline)
-  const { data, isLoading } = useQuery({
-    queryKey: ["ai-status"],
+  const { data, isFetching } = useQuery({
+    queryKey: ["llm-status"],
     queryFn: async () => {
-      return await GET<AIAgentStatus>('/api/agent', null)
+      return await GET<AIAgentStatus>('/api/llm/status', null)
     },
-    retry: 0,
+    refetchInterval: 5000
   })
-
-  useEffect(() => {
-    if (data && data.data.name.length !== 0) {
-      const expiresAt = new Date(data.data.expires_at).getTime()
-      const current = new Date().getTime()
-
-      if (expiresAt < current) {
-        setStatus(onlineStatus.sleep)
-        return
-      }
-      setStatus(onlineStatus.online)
-      return
-    }
-
-    setStatus(onlineStatus.offline)
-  }, [data])
 
   return (
     <div className="mx-auto">
-      <Loading isLoading={isLoading}>
+      <Loading isLoading={isFetching}>
         <Tooltip>
           <TooltipTrigger asChild>
 
             <NavLink aria-label="Go ai settings page" to="/models">
               <Avatar>
                 <RiRobot2Fill className="m-auto" />
-                <AvatarBadge className={`${status}`} />
+                <AvatarBadge className={data?.data.available ? "bg-green-600" : "bg-red-600"} />
               </Avatar>
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{data && data.data.name.length !== 0 ? data.data.name : "Unavailable"}</p>
+            <p>{data?.data.available ? data?.data.in_use?.model : "Unavailable"}</p>
           </TooltipContent>
         </Tooltip>
       </Loading>

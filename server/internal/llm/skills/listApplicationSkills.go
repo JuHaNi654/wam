@@ -20,11 +20,12 @@ type Skills struct {
 }
 
 func ListAdHardSkills(ctx *context.Context, a llm.AgentInstance, input ApplicationInput) (*Skills, error) {
-	provider, ok := llm.AvailableProviders[a.Model()]
-	if !ok {
-		return nil, errors.New("agent provider is not set")
+	selectedProvider := a.Selected()
+	if selectedProvider == nil {
+		return nil, errors.New("provider is not set")
 	}
 
+	provider := llm.AvailableProviders[selectedProvider.Provider]
 	prompt := genkit.LookupDataPrompt[ApplicationInput, *Skills](
 		a.Genkit(), "hard-skill",
 	)
