@@ -15,7 +15,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { TooltipProvider } from './components/ui/tooltip.tsx'
 import { Toaster } from "@/components/ui/sonner"
 import Providers from './routes/llm.tsx'
+import Notifications from './lib/sse.ts'
 
+Notifications.connect("http://localhost:8000/events")
 const queryClient = new QueryClient()
 const router = createBrowserRouter([
   {

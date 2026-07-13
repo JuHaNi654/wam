@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"server/internal/llm"
 	"server/internal/models"
@@ -94,7 +95,17 @@ func toggleModel(ctx *gin.Context, _ *services.Service) *ErrorResponse {
 	if llm.InitializedAgent.Selected() != nil {
 		llm.InitializedAgent.ClearSelected()
 	} else {
-		if err := llm.InitializedAgent.UseModel(provider, requestBody.Model); err != nil {
+		err := llm.InitializedAgent.UseModel(provider, requestBody.Model)
+
+		if errors.Is(err, llm.ErrModelNotLoaded) {
+			return &ErrorResponse{
+				Code:       http.StatusBadRequest,
+				LogMessage: err.Error(),
+				Errors: []ErrorGroup{
+					{Message: err.Error()},
+				},
+			}
+		} else {
 			return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
 		}
 	}

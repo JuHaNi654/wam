@@ -2,12 +2,19 @@ const URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8000";
 
 type APIFunction = <T>(endpoint: string, body: unknown) => Promise<{ data: T }>;
 
+type ErrorGroup = {
+  property?: string
+  title?: string
+  message?: string
+}
 export class ResponseError extends Error {
   statusCode: number
-  constructor(message: string, statusCode: number) {
+  body?: Array<ErrorGroup>
+  constructor(message: string, statusCode: number, body?: Array<ErrorGroup>) {
     super(message)
     this.name = "ResponseError"
     this.statusCode = statusCode
+    this.body = body
   }
 }
 
@@ -20,7 +27,7 @@ export const GET: APIFunction = async (endpoint: string) => {
     const err = await response
       .json()
       .catch(() => ({ error: response.statusText }));
-    throw new ResponseError(err.error ?? response.statusText, response.status);
+    throw new ResponseError(err.error ?? response.statusText, response.status, err.errors);
   }
   return response.json();
 };
@@ -35,7 +42,7 @@ export const POST: APIFunction = async (endpoint: string, body: unknown) => {
     const err = await response
       .json()
       .catch(() => ({ error: response.statusText }));
-    throw new ResponseError(err.error ?? response.statusText, response.status);
+    throw new ResponseError(err.error ?? response.statusText, response.status, err.errors);
   }
 
   if (response.status == 204) return null
@@ -54,7 +61,7 @@ export const PUT: APIFunction = async (endpoint: string, body: unknown) => {
     const err = await response
       .json()
       .catch(() => ({ error: response.statusText }));
-    throw new ResponseError(err.error ?? response.statusText, response.status);
+    throw new ResponseError(err.error ?? response.statusText, response.status, err.errors);
   }
 
   if (response.status === 204) return null
@@ -71,7 +78,7 @@ export const PATCH: APIFunction = async (endpoint: string, body: unknown) => {
     const err = await response
       .json()
       .catch(() => ({ error: response.statusText }));
-    throw new ResponseError(err.error ?? response.statusText, response.status);
+    throw new ResponseError(err.error ?? response.statusText, response.status, err.errors);
   }
   return response.json();
 };
@@ -86,7 +93,7 @@ export const DELETE = async (endpoint: string): Promise<null> => {
     const err = await response
       .json()
       .catch(() => ({ error: response.statusText }));
-    throw new ResponseError(err.error ?? response.statusText, response.status);
+    throw new ResponseError(err.error ?? response.statusText, response.status, err.errors);
   }
 
   return null

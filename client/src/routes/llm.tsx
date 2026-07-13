@@ -3,7 +3,7 @@ import Loading from "@/components/loading";
 import { AvatarBadge } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { GET, POST } from "@/lib/api";
+import { GET, POST, ResponseError } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -91,7 +91,7 @@ function Models(props: ModelsProps) {
 
   const loadModel = async (model: string) => {
     try {
-      await POST<any>(`/api/llm/providers/${props.provider}/load`, { model })
+      await POST(`/api/llm/providers/${props.provider}/load`, { model })
       refetch()
     } catch (err: any) {
       console.error(err)
@@ -101,7 +101,7 @@ function Models(props: ModelsProps) {
 
   const unloadModel = async (model: string) => {
     try {
-      await POST<any>(`/api/llm/providers/${props.provider}/unload`, { model })
+      await POST(`/api/llm/providers/${props.provider}/unload`, { model })
       refetch()
     } catch (err: any) {
       console.error(err)
@@ -111,11 +111,15 @@ function Models(props: ModelsProps) {
 
   const enableModel = async (model: string) => {
     try {
-      await POST<any>(`/api/llm/providers/${props.provider}/toggle`, { model })
+      await POST(`/api/llm/providers/${props.provider}/toggle`, { model })
       refetch()
     } catch (err: any) {
-      console.error(err)
-      toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+      if (err instanceof ResponseError) {
+        toast.error(err!.body![0].message, { position: "bottom-right" })
+      } else {
+        console.error(err)
+        toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+      }
     }
   }
 

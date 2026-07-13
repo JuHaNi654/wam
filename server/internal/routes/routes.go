@@ -64,6 +64,9 @@ func Routes(s *services.Service) *gin.Engine {
 	// Agent skill endpoints
 	r.GET("/api/llm/agent/hardskills", Handler(s, agentListSkills))
 
+	// SSE endpoints
+	r.GET("/events", Handler(s, sseHandler))
+
 	// Return 404 from invalid endpoint
 	r.NoRoute(noRoute)
 

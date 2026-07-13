@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/http"
 
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
@@ -44,14 +45,14 @@ func (a *Agent) UseModel(provider string, model string) error {
 
 	for _, m := range models {
 		if m.ID == model && m.Status == "unloaded" {
-			return fmt.Errorf("model (%s) is not loaded", model)
+			return ErrModelNotLoaded
 		} else if m.ID == model {
 			a.selected = &Selected{Provider: provider, Model: model}
 			return nil
 		}
 	}
 
-	return fmt.Errorf("provider (%s) does not have any models available", provider)
+	return ErrProviderNotAvailable
 }
 
 func (a *Agent) ClearSelected() {
@@ -65,13 +66,13 @@ func (a *Agent) ProviderAvailability() (bool, error) {
 
 	provider, ok := AvailableProviders[a.selected.Provider]
 	if !ok {
-		return false, fmt.Errorf("provider (%s) is not available", provider)
+		return false, ErrProviderNotAvailable
 	}
 
 	switch p := provider.(type) {
 	case *Llama:
 		statusCode, err := get[any](fmt.Sprintf("%s/health", p.BaseURL), nil)
-		return statusCode == 200, err
+		return statusCode == http.StatusOK, err
 	default:
 		return false, nil // Should never happen, because we check if model is available
 	}
@@ -81,7 +82,7 @@ func (a *Agent) LoadModel(provider string, model string) error {
 	var err error
 	selectedProvider, ok := AvailableProviders[provider]
 	if !ok {
-		return fmt.Errorf("provider (%s) is not available", provider)
+		return ErrProviderNotAvailable
 	}
 
 	switch p := selectedProvider.(type) {
@@ -96,7 +97,7 @@ func (a *Agent) UnloadModel(provider string, model string) error {
 	var err error
 	selectedProvider, ok := AvailableProviders[provider]
 	if !ok {
-		return fmt.Errorf("provider (%s) is not available", provider)
+		return ErrProviderNotAvailable
 	}
 
 	switch p := selectedProvider.(type) {
@@ -159,7 +160,7 @@ func ListModels(provider string) ([]Model, error) {
 	var models []Model
 	selectedProvider, ok := AvailableProviders[provider]
 	if !ok {
-		return nil, fmt.Errorf("provider (%s) is not available", provider)
+		return nil, ErrProviderNotAvailable
 	}
 
 	switch p := selectedProvider.(type) {
