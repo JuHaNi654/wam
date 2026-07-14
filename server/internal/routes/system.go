@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ping(ctx *gin.Context, _ *services.Service) *ErrorResponse {
+func ping(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "pong",
 	})
@@ -22,3 +22,4 @@ func noRoute(ctx *gin.Context) {
 		},
 	})
 }
+
