@@ -12,15 +12,18 @@ func createWorkHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.History)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.HistoryRepository.Create(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"data": requestBody,
+	ctx.JSON(http.StatusCreated, Response{
+		StatusCode: http.StatusCreated,
+		Data:       requestBody,
 	})
 	return nil
 }
@@ -29,11 +32,13 @@ func updateHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	var requestBody map[string]any
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.HistoryRepository.Update(id, requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	ctx.JSON(http.StatusNoContent, gin.H{})
@@ -43,7 +48,8 @@ func updateHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func deleteHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.HistoryRepository.Delete(id); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	ctx.JSON(http.StatusNoContent, gin.H{})

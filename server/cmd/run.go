@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/signal"
 	"server/internal/database"
+	"server/internal/logger"
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
@@ -30,9 +31,13 @@ func Run() error {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
+	service := services.NewService(
+		client.GetSession(),
+		&logger.EchoLogger{},
+	)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: routes.Routes(services.NewService(client.GetSession())),
+		Handler: routes.Routes(service),
 	}
 
 	fmt.Printf("Server is running on port %s\n", PORT)

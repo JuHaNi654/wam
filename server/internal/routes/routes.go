@@ -47,9 +47,9 @@ func Routes(s *services.Service) *gin.Engine {
 	r.PUT("/api/applications/:id", Handler(s, updateApplication))
 	r.DELETE("/api/applications/:id", Handler(s, deleteApplication))
 	r.POST("/api/applications/:id/skills", Handler(s, addSkillsToTheApplication))
+	r.POST("/api/applications/:id/actions", Handler(s, createAction))
 
 	// Actions
-	r.POST("/api/jobs/:id/actions", Handler(s, createAction))
 	r.PUT("/api/actions/:id", Handler(s, updateAction))
 	r.DELETE("/api/actions/:id", Handler(s, deleteAction))
 

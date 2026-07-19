@@ -3,12 +3,9 @@ package llm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -138,27 +135,6 @@ func ListLlamaModels(url string) []Model {
 
 	if statusCode != 200 {
 		fmt.Println("provider request was unsuccesfull")
-		return nil
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		fmt.Printf("cannot create new request: %s\n", err.Error())
-		return nil
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*10_000))
-	defer cancel()
-	req = req.WithContext(ctx)
-	c := &http.Client{}
-	res, err := c.Do(req)
-	if err != nil {
-		fmt.Printf("cannot do new request: %s\n", err.Error())
-		return nil
-	}
-	defer res.Body.Close()
-
-	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
 		return nil
 	}
 

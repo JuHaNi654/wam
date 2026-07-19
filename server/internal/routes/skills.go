@@ -13,13 +13,13 @@ import (
 func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	skills, err := s.SkillRepository.List()
 	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": map[string]any{
-			"skills": skills,
-		},
+	ctx.JSON(http.StatusOK, Response{
+		StatusCode: http.StatusOK,
+		Data:       skills,
 	})
 	return nil
 }
@@ -27,26 +27,26 @@ func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func createSkill(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Skill)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.SkillRepository.Create(requestBody); err != nil {
+		s.Logger.Error(err.Error())
 		if errors.Is(err, repositories.ErrSkillAlreadyExists) {
-			return &ErrorResponse{Code: http.StatusConflict, LogMessage: err.Error()}
+			return &ErrorResponse{StatusCode: http.StatusConflict, Message: "a skill with that name already exists"}
 		}
 
 		if errors.Is(err, repositories.ErrSkillNameRequired) {
-			return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+			return &ErrorResponse{StatusCode: http.StatusBadRequest}
 		}
 
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"data": map[string]any{
-			"skill": requestBody,
-		},
+	ctx.JSON(http.StatusCreated, Response{
+		StatusCode: http.StatusCreated,
+		Data:       requestBody,
 	})
-
 	return nil
 }

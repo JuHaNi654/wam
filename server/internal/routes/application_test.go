@@ -152,7 +152,7 @@ func TestApplicationRoutes(t *testing.T) {
 			t.Fatalf("expected error response, got %+v", errResp)
 		}
 
-		if recorder.Code == http.StatusBadRequest {
+		if recorder.Code != http.StatusBadRequest {
 			t.Fatalf("expected status %d, got %d", http.StatusBadRequest, recorder.Code)
 		}
 	})

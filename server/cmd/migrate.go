@@ -40,7 +40,7 @@ func Migrate() error {
 }
 
 func getApplicationRootPath() (string, error) {
-	if false {
+	if false { // TODO: fix this
 		ex, err := os.Executable()
 		if err != nil {
 			return "", err

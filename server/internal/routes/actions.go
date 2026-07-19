@@ -14,15 +14,18 @@ func createAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody.ApplicationID = jobID
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.ActionRepository.Create(requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"data": requestBody,
+	ctx.JSON(http.StatusCreated, Response{
+		StatusCode: http.StatusCreated,
+		Data:       requestBody,
 	})
 
 	return nil
@@ -33,11 +36,13 @@ func updateAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	var requestBody map[string]any
 
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.ActionRepository.Update(id, requestBody); err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	ctx.JSON(http.StatusNoContent, gin.H{})
@@ -48,7 +53,8 @@ func updateAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func deleteAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.ActionRepository.Delete(id); err != nil {
-		return &ErrorResponse{Code: http.StatusBadRequest, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	ctx.JSON(http.StatusNoContent, gin.H{})

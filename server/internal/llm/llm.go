@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"sync"
 
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
@@ -25,19 +26,25 @@ type Selected struct {
 }
 
 type Agent struct {
+	mu       sync.RWMutex
 	genkit   *genkit.Genkit
 	selected *Selected
 }
 
-func (a Agent) Genkit() *genkit.Genkit {
+func (a *Agent) Genkit() *genkit.Genkit {
 	return a.genkit
 }
 
-func (a Agent) Selected() *Selected {
+func (a *Agent) Selected() *Selected {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 	return a.selected
 }
 
 func (a *Agent) UseModel(provider string, model string) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	models, err := ListModels(provider)
 	if err != nil {
 		return err

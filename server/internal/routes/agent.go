@@ -15,7 +15,8 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	application, err := s.ApplicationRepository.GetByID(applicationID)
 	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	c := context.Background()
@@ -24,11 +25,13 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	})
 
 	if err != nil {
-		return &ErrorResponse{Code: http.StatusInternalServerError, LogMessage: err.Error()}
+		s.Logger.Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": result,
+	ctx.JSON(http.StatusOK, Response{
+		StatusCode: http.StatusOK,
+		Data:       result,
 	})
 	return nil
 }

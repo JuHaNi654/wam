@@ -10,6 +10,8 @@ import (
 	"golang.org/x/net/html"
 )
 
+var whitespaceRe = regexp.MustCompile(`\s+`)
+
 func parse(url *url.URL, node *html.Node) (string, error) {
 	var b strings.Builder
 
@@ -65,7 +67,6 @@ func scanContent(b *strings.Builder, page *html.Node, s Service) error {
 
 func getNodeText(node *html.Node) string {
 	text := ""
-	space := regexp.MustCompile(`\s+`)
 	var crawler func(*html.Node)
 	crawler = func(node *html.Node) {
 		if node.Type == html.TextNode && node.Data != "" {
@@ -77,5 +78,5 @@ func getNodeText(node *html.Node) string {
 		}
 	}
 	crawler(node)
-	return space.ReplaceAllString(text, " ")
+	return whitespaceRe.ReplaceAllString(text, " ")
 }
