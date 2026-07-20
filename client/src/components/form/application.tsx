@@ -65,14 +65,15 @@ export default function ApplicationForm(props: ApplicationFormProps) {
     setSubmitting(true)
     if (props.onSubmit) props.onSubmit()
 
-    try {
-      const response = await POST<{ application: SavedApplication }>("/api/applications", data);
-      if (props.onSuccess) props.onSuccess(response.data.application)
-    } catch (err: any) {
-      console.error(err)
+    const result = await POST<SavedApplication>("/api/applications", data);
+    setSubmitting(false)
+
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong while trying to create new application", { position: "bottom-right" })
-      setSubmitting(false)
     }
+
+    if (props.onSuccess && result.response) props.onSuccess((result.response.data as SavedApplication))
   }
 
   return (

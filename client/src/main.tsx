@@ -15,16 +15,16 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { TooltipProvider } from './components/ui/tooltip.tsx'
 import { Toaster } from "@/components/ui/sonner"
 import Providers from './routes/llm.tsx'
-import Notifications from './lib/sse.ts'
+import NotificationProvider from './components/notification.tsx'
 
-Notifications.connect("http://localhost:8000/events")
+const eventSourceUrl = "http://localhost:8000/events"
 const queryClient = new QueryClient()
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
     errorElement: <Error />,
-    middleware: [loggingMiddleware],
+    middleware: [loggingMiddleware, isInitialized],
     children: [
       {
         index: true,
@@ -32,27 +32,22 @@ const router = createBrowserRouter([
       },
       {
         path: "/dashboard",
-        middleware: [isInitialized],
         element: <Home />,
       },
       {
         path: "/models",
-        middleware: [isInitialized],
         element: <Providers />,
       },
       {
         path: "/profile",
-        middleware: [isInitialized],
         element: <Profile />,
       },
       {
         path: "/applications/new",
-        middleware: [isInitialized],
         element: <NewApplication />,
       },
       {
         path: "/applications/:id",
-        middleware: [isInitialized],
         element: <ApplicationDetail />,
       }
     ]
@@ -66,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
         <RouterProvider router={router} />
       </TooltipProvider>
       <ReactQueryDevtools buttonPosition='bottom-right' />
+      <NotificationProvider url={eventSourceUrl} />
       <Toaster />
     </QueryClientProvider>
   </StrictMode>,

@@ -22,16 +22,17 @@ export default function WorkHistory(props: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    try {
-      await DELETE(`/api/profile/history/${id}`)
-      setHistory((prev) => (
-        prev.filter((item) => item.id !== id)
-      ))
-      toast.success("Work history deleted", { position: "bottom-right" })
-    } catch (err) {
-      console.error(err)
+    const { error } = await DELETE(`/api/profile/history/${id}`, null)
+    if (error) {
+      console.error(error)
       toast.success("Could not delete current work history", { position: "bottom-right" })
+      return
     }
+
+    setHistory((prev) => (
+      prev.filter((item) => item.id !== id)
+    ))
+    toast.success("Work history deleted", { position: "bottom-right" })
   }
 
   return (

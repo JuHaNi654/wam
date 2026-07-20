@@ -1,3 +1,20 @@
+export type APIResponse<T> = {
+  status: number
+  data?: T
+}
+
+export type APIErrorResponse = {
+  status: number;
+  message?: string;
+  validation?: Array<PropertyError>
+}
+
+export type PropertyError = {
+  property?: string;
+  title?: string;
+  message?: string;
+}
+
 export type ApplicationStatus =
   | "saved"
   | "applied"

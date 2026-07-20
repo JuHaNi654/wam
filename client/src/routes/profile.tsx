@@ -18,19 +18,22 @@ type Response = {
 }
 
 export default function Profile() {
-  const { data, isLoading } = useQuery({
+  const { data, isSuccess, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      return await GET<Response>('/api/profile', null)
+      const result = await GET<Response>(`/api/profile`, null)
+      if (result.error) throw result.error
+      return result.response!.data
     },
-    retry: 0,
   })
 
+  if (isLoading) return <Loading isLoading={isLoading} />
+  if (!isSuccess || !data) return null
+
   const saveSkills = async (skills: Skill[]) => {
-    try {
-      await POST<any>("/api/profile/skills", { skills })
-    } catch (err) {
-      console.error(err)
+    const { error } = await POST<any>("/api/profile/skills", { skills })
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to update skills", { position: "bottom-right" })
     }
   }
@@ -40,22 +43,21 @@ export default function Profile() {
       <header className="py-4 font-semibold">
         <h1 className="text-4xl">Profile</h1>
       </header>
-      <Loading isLoading={isLoading}>
-        <div className="flex flex-col gap-6">
-          <Introduction introduction={data?.data.profile.introduction} />
 
-          <div className="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
-            <h3 className="text-sm font-semibold mb-3 text-muted-foreground 
-            uppercase tracking-wide">
-              Skills
-            </h3>
-            <Skills skills={data?.data.skills || []} update={saveSkills} />
-          </div>
+      <div className="flex flex-col gap-6">
+        <Introduction introduction={data!.profile.introduction} />
 
-          <EducationList data={data?.data.education || []} />
-          <WorkHistory data={data?.data.history || []} />
+        <div className="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
+          <h3 className="text-sm font-semibold mb-3 text-muted-foreground 
+          uppercase tracking-wide">
+            Skills
+          </h3>
+          <Skills skills={data!.skills || []} update={saveSkills} />
         </div>
-      </Loading>
+
+        <EducationList data={data!.education || []} />
+        <WorkHistory data={data!.history || []} />
+      </div>
     </Base>
   )
 }

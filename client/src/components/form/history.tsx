@@ -44,15 +44,16 @@ export default function HistoryForm(props: HistoryFormProps) {
   })
 
   const handleSubmit = async (data: WorkHistory) => {
-    try {
-      data.start_date = Number(data.start_date.toFixed(0))
-      data.end_date = Number(data.end_date.toFixed(0))
-      const response = await POST<SavedWorkHistory>(`/api/profile/history`, data)
-      if (props.onSubmit) props.onSubmit(response.data)
-    } catch (err: unknown) {
-      console.error(err)
+    data.start_date = Number(data.start_date.toFixed(0))
+    data.end_date = Number(data.end_date.toFixed(0))
+    const result = await POST<SavedWorkHistory>(`/api/profile/history`, data)
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong while trying to save new work history", { position: "bottom-right" })
+      return
     }
+
+    if (props.onSubmit && result.response) props.onSubmit((result.response.data as SavedWorkHistory))
   }
 
   const handleCancel = () => {
@@ -168,12 +169,13 @@ export function UpdateHistoryForm(props: UpdateHistoryFormProps) {
   })
 
   const handleSubmit = async (data: WorkHistory) => {
-    try {
-      await PUT(`/api/profile/history/${props.history.id}`, data)
-      if (props.onSave) props.onSave(props.history.id, data)
-    } catch (err: any) {
-      console.log(err)
+    const { error } = await PUT(`/api/profile/history/${props.history.id}`, data)
+    if (error) {
+      console.log(error)
+      return
     }
+
+    if (props.onSave) props.onSave(props.history.id, data)
   }
 
   return (

@@ -38,15 +38,16 @@ export default function EducationForm(props: EducationFormProps) {
   })
 
   const handleSubmit = async (data: Education) => {
-    try {
-      data.start_date = Number(data.start_date.toFixed(0))
-      data.end_date = Number(data.end_date.toFixed(0))
-      const response = await POST<SavedEducation>(`/api/profile/education`, data)
-      if (props.onSubmit) props.onSubmit(response.data)
-    } catch (err: any) {
-      console.error(err)
+    data.start_date = Number(data.start_date.toFixed(0))
+    data.end_date = Number(data.end_date.toFixed(0))
+    const result = await POST<SavedEducation>(`/api/profile/education`, data)
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong while trying to save new education", { position: "bottom-right" })
+      return
     }
+
+    if (props.onSubmit && result.response) props.onSubmit((result.response.data as SavedEducation))
   }
 
   const handleCancel = () => {

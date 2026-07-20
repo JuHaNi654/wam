@@ -52,13 +52,16 @@ export default function Sidemenu() {
 }
 
 function AIStatus() {
-  const { data, isFetching } = useQuery({
+  const { data, isSuccess, isFetching } = useQuery({
     queryKey: ["llm-status"],
     queryFn: async () => {
-      return await GET<AIAgentStatus>('/api/llm/status', null)
+      const result = await GET<AIAgentStatus>('/api/llm/status', null)
+      if (result.error) throw result.error
+      return result.response?.data
     },
-    refetchInterval: 5000
   })
+
+  if (!isSuccess || !data) return null
 
   return (
     <div className="mx-auto">
@@ -69,12 +72,12 @@ function AIStatus() {
             <NavLink aria-label="Go ai settings page" to="/models">
               <Avatar>
                 <RiRobot2Fill className="m-auto" />
-                <AvatarBadge className={data?.data.available ? "bg-green-600" : "bg-red-600"} />
+                <AvatarBadge className={data.available ? "bg-green-600" : "bg-red-600"} />
               </Avatar>
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{data?.data.available ? data?.data.in_use?.model : "Unavailable"}</p>
+            <p>{data.available ? data.in_use?.model : "Unavailable"}</p>
           </TooltipContent>
         </Tooltip>
       </Loading>

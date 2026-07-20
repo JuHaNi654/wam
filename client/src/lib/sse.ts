@@ -1,17 +1,17 @@
-class Notifications {
-  static #instance: Notifications | null = null
+class Notification {
+  static #instance: Notification | null = null
   #eventSrc: EventSource | null = null
 
   constructor() {
-    if (Notifications.#instance) {
-      return Notifications.#instance
+    if (Notification.#instance) {
+      return Notification.#instance
     }
 
-    Notifications.#instance = this
+    Notification.#instance = this
   }
 
   static getInstance() {
-    return (Notifications.#instance ??= new Notifications)
+    return (Notification.#instance ??= new Notification)
   }
 
   #onMessage = (event: MessageEvent<any>) => {
@@ -22,12 +22,17 @@ class Notifications {
     console.log("Event error: ", event)
   }
 
-  connect(url: string) {
+  mount(url: string) {
     console.log("Connecting notifications: ", url)
     this.#eventSrc = new EventSource(url)
     this.#eventSrc.onmessage = this.#onMessage
     this.#eventSrc.onerror = this.#onError
   }
+
+  unmount() {
+    if (!this.#eventSrc) return;
+    this.#eventSrc.close()
+  }
 }
 
-export default new Notifications()
+export default new Notification()

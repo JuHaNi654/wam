@@ -17,15 +17,14 @@ export default function Introduction(props: Props) {
 
   const save = async () => {
     setDisabled(true)
-    try {
-      await PUT("/api/profile", { introduction })
-    } catch (err) {
-      console.error(err)
-      toast.success("Could not update introduction", { position: "bottom-right" })
-    } finally {
-      setDisabled(false)
-      setEdit(false)
+    const { error } = await PUT("/api/profile", { introduction })
+    if (error) {
+      console.error(error)
+      toast.error("Could not update introduction", { position: "bottom-right" })
     }
+
+    setDisabled(false)
+    setEdit(false)
   }
 
   return (
@@ -56,7 +55,6 @@ export default function Introduction(props: Props) {
           </div>
         )}
       </div>
-
     </div>
   )
 }

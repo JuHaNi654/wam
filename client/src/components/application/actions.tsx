@@ -26,13 +26,14 @@ export default function Actions(props: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    try {
-      await DELETE(`/api/actions/${id}`)
-      setActions((prev) => prev.filter((item) => item.id !== id))
-    } catch (err: any) {
-      console.error(err)
+    const { error } = await DELETE(`/api/actions/${id}`, null)
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to delete action", { position: "bottom-right" })
+      return
     }
+
+    setActions((prev) => prev.filter((item) => item.id !== id))
   }
 
   return (

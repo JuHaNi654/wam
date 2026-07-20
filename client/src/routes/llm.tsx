@@ -3,7 +3,7 @@ import Loading from "@/components/loading";
 import { AvatarBadge } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { GET, POST, ResponseError } from "@/lib/api";
+import { GET, POST } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -14,10 +14,12 @@ type Provider = {
 }
 
 export default function Providers() {
-  const { data: response, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["llmProviders"],
     queryFn: async () => {
-      return await GET<{ providers: Provider[] }>('/api/llm/providers', null)
+      const { response, error } = await GET<Provider[]>('/api/llm/providers', null)
+      if (error) throw error
+      return response!.data || []
     }
   })
 
@@ -28,7 +30,7 @@ export default function Providers() {
       </header>
       <Loading isLoading={isLoading}>
         <div>
-          {response?.data.providers.map((provider, i) => (
+          {data && data.map((provider, i) => (
             <details key={i} className="border rounded">
               <summary className="flex justify-between items-center px-4 py-2">
                 <div className="flex flex-col">
@@ -82,50 +84,56 @@ type ModelsProps = {
 }
 
 function Models(props: ModelsProps) {
-  const { data, refetch } = useQuery({
+  const { data, isSuccess, refetch } = useQuery({
     queryKey: ["llmModels"],
     queryFn: async () => {
-      return await GET<ModelResponse>(`/api/llm/providers/${props.provider}/models`, null)
-    }
+      const result = await GET<ModelResponse>(`/api/llm/providers/${props.provider}/models`, null)
+      if (result.error) throw result.error
+      return result.response!.data
+    },
   })
 
+  if (!isSuccess || !data) return null
+
   const loadModel = async (model: string) => {
-    try {
-      await POST(`/api/llm/providers/${props.provider}/load`, { model })
-      refetch()
-    } catch (err: any) {
-      console.error(err)
+    const { error } = await POST(`/api/llm/providers/${props.provider}/load`, { model })
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to load model", { position: "bottom-right" })
+      return
     }
+    refetch()
   }
 
   const unloadModel = async (model: string) => {
-    try {
-      await POST(`/api/llm/providers/${props.provider}/unload`, { model })
-      refetch()
-    } catch (err: any) {
-      console.error(err)
+    const { error } = await POST(`/api/llm/providers/${props.provider}/unload`, { model })
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+      return
     }
+
+    refetch()
   }
 
   const enableModel = async (model: string) => {
-    try {
-      await POST(`/api/llm/providers/${props.provider}/toggle`, { model })
-      refetch()
-    } catch (err: any) {
-      if (err instanceof ResponseError) {
-        toast.error(err!.body![0].message, { position: "bottom-right" })
-      } else {
-        console.error(err)
-        toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
-      }
+    const { error } = await POST(`/api/llm/providers/${props.provider}/toggle`, { model })
+
+    if (error && error.status !== 500) {
+      toast.error(error.message, { position: "bottom-right" })
+      return
+    } else if (error) {
+      console.error(error)
+      toast.error("Something went wrong while trying to unload model", { position: "bottom-right" })
+      return
     }
+
+    refetch()
   }
 
   return (
     <>
-      {data?.data.models && data.data.models.map((model) => (
+      {data.models.map((model) => (
         <TableRow key={model.id}>
           <TableCell>{model.id}</TableCell>
           <TableCell className="w-30 text-right">
@@ -143,8 +151,8 @@ function Models(props: ModelsProps) {
           </TableCell>
           <TableCell className="w-30 text-right">
             <Button onClick={() => enableModel(model.id)}
-              size="xs" variant={data.data.in_use && data.data.in_use.model === model.id ? 'destructive' : 'success'}>
-              {data.data.in_use && data.data.in_use.model === model.id ? "Disable" : "Enable"}
+              size="xs" variant={data.in_use && data.in_use.model === model.id ? 'destructive' : 'success'}>
+              {data.in_use && data.in_use.model === model.id ? "Disable" : "Enable"}
             </Button>
           </TableCell>
         </TableRow>

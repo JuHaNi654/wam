@@ -12,7 +12,7 @@ export default function InlineEditDropdown(props: PropsInlineEditDropdown) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const commit = async (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => {
+  const commit = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const next = e.target.value
     if (next === props.value) {
       return
