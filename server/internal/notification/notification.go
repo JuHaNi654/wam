@@ -26,28 +26,28 @@ type Client struct {
 }
 
 type NotificationService struct {
-	Clients map[*Client]bool
+	clients map[*Client]bool
 	mu      sync.Mutex
 }
 
 func NewService() *NotificationService {
 	return &NotificationService{
-		Clients: make(map[*Client]bool),
+		clients: make(map[*Client]bool),
 	}
 }
 
 func (s *NotificationService) Register(c *Client) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.Clients[c] = true
+	s.clients[c] = true
 }
 
 func (s *NotificationService) UnRegister(c *Client) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.Clients[c] {
+	if s.clients[c] {
 		close(c.Done)
-		delete(s.Clients, c)
+		delete(s.clients, c)
 	}
 }
 
@@ -58,7 +58,7 @@ func (s *NotificationService) Send(payload Payload) {
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(payload)
 
-	for c := range s.Clients {
+	for c := range s.clients {
 		select {
 		case c.Send <- buf.Bytes():
 		default:
