@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"server/internal/logger"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -40,7 +41,7 @@ func (l *Llama) Name() string {
 func (l *Llama) Init(ctx context.Context) []api.Action {
 	url := os.Getenv("LLAMA_URL")
 	if url == "" {
-		fmt.Printf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL)
+		logger.Log.Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
 		url = llamaBaseURL
 	}
 
@@ -74,7 +75,7 @@ func (l *Llama) Load(model string) error {
 		return err
 	}
 
-	fmt.Printf("llama (load model): %+v\n", responseBody)
+	logger.Log.Debug(fmt.Sprintf("llama (load model): %+v\n", responseBody))
 	if statusCode == 200 {
 		return nil
 	}
@@ -93,7 +94,7 @@ func (l *Llama) Unload(model string) error {
 		return err
 	}
 
-	fmt.Printf("llama (unload model): %+v\n", responseBody)
+	logger.Log.Debug(fmt.Sprintf("llama (unload model): %+v\n", responseBody))
 	if statusCode == 200 {
 		return nil
 	}
@@ -131,12 +132,12 @@ func ListLlamaModels(url string) []Model {
 
 	statusCode, err := get(url, &body)
 	if err != nil {
-		fmt.Printf("get request was unsuccesfull: %s\n", err.Error())
+		logger.Log.Error(fmt.Sprintf("get request was unsuccesfull: %s\n", err.Error()))
 		return nil
 	}
 
 	if statusCode != 200 {
-		fmt.Println("provider request was unsuccesfull")
+		logger.Log.Error("(ListllamaModels) provider request was unsuccesfull")
 		return nil
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"server/internal/logger"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -20,7 +21,7 @@ func parse(url *url.URL, node *html.Node) (string, error) {
 			continue
 		}
 
-		fmt.Println("Handling document from: ", service.Host)
+		logger.Log.Debug(fmt.Sprintf("Handling document from: %s", service.Host))
 		if err := scanContent(&b, node, service); err != nil {
 			return "", err
 		}

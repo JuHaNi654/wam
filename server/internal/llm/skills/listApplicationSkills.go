@@ -37,8 +37,7 @@ func ListAdHardSkills(ctx *context.Context, a llm.AgentInstance, input Applicati
 	)
 
 	if err != nil {
-		msg := fmt.Sprintf("could not generate skill list: %v", err)
-		return nil, errors.New(msg)
+		return nil, fmt.Errorf("could not generate skill list: %v", err)
 	}
 
 	return skills, nil
