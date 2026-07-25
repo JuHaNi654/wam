@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"server/internal/llm"
+	"server/internal/logger"
 	"server/internal/models"
 	"server/internal/services"
 
@@ -23,7 +24,7 @@ func listModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	provider := ctx.Param("provider")
 	models, err := llm.ListModels(provider)
 	if err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -32,7 +33,7 @@ func listModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		Data: gin.H{
 			"provider": provider,
 			"models":   models,
-			"in_use":   llm.InitializedAgent.Selected(),
+			"in_use":   llm.Current.Selected(),
 		},
 	})
 	return nil
@@ -43,7 +44,7 @@ func loadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.HandleModel)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
@@ -51,8 +52,8 @@ func loadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
 	}
 
-	if err := llm.InitializedAgent.LoadModel(provider, requestBody.Model); err != nil {
-		s.Logger.Error(err.Error())
+	if err := llm.Current.LoadModel(provider, requestBody.Model); err != nil {
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -72,12 +73,12 @@ func unloadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.HandleModel)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	if err := llm.InitializedAgent.UnloadModel(provider, requestBody.Model); err != nil {
-		s.Logger.Error(err.Error())
+	if err := llm.Current.UnloadModel(provider, requestBody.Model); err != nil {
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -96,20 +97,20 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.HandleModel)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	current := llm.InitializedAgent.Selected()
+	current := llm.Current.Selected()
 	if current != nil && current.Model == requestBody.Model {
-		llm.InitializedAgent.ClearSelected()
+		llm.Current.ClearSelected()
 		ctx.JSON(http.StatusNoContent, gin.H{})
 		return nil
 	}
 
-	err := llm.InitializedAgent.UseModel(provider, requestBody.Model)
+	err := llm.Current.UseModel(provider, requestBody.Model)
 	if err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		if errors.Is(err, llm.ErrModelNotLoaded) {
 			return &ErrorResponse{
 				StatusCode: http.StatusBadRequest,
@@ -124,12 +125,12 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 }
 
 func llmStatus(ctx *gin.Context, _ *services.Service) *ErrorResponse {
-	ok, _ := llm.InitializedAgent.ProviderAvailability()
+	ok, _ := llm.Current.ProviderAvailability()
 
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: http.StatusOK,
 		Data: gin.H{
-			"in_use":    llm.InitializedAgent.Selected(),
+			"in_use":    llm.Current.Selected(),
 			"available": ok,
 		},
 	})

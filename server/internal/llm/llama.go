@@ -74,6 +74,7 @@ func (l *Llama) Load(model string) error {
 		return err
 	}
 
+	fmt.Printf("llama (load model): %+v\n", responseBody)
 	if statusCode == 200 {
 		return nil
 	}
@@ -92,6 +93,7 @@ func (l *Llama) Unload(model string) error {
 		return err
 	}
 
+	fmt.Printf("llama (unload model): %+v\n", responseBody)
 	if statusCode == 200 {
 		return nil
 	}

@@ -3,6 +3,7 @@ package routes
 import (
 	"errors"
 	"net/http"
+	"server/internal/logger"
 	"server/internal/models"
 	"server/internal/repositories"
 	"server/internal/services"
@@ -13,7 +14,7 @@ import (
 func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	skills, err := s.SkillRepository.List()
 	if err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -27,12 +28,12 @@ func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func createSkill(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Skill)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.SkillRepository.Create(requestBody); err != nil {
-		s.Logger.Error(err.Error())
+		logger.Log.Error(err.Error())
 		if errors.Is(err, repositories.ErrSkillAlreadyExists) {
 			return &ErrorResponse{StatusCode: http.StatusConflict, Message: "a skill with that name already exists"}
 		}

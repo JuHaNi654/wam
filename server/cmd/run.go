@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os/signal"
 	"server/internal/database"
-	"server/internal/logger"
+	"server/internal/notification"
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
@@ -18,6 +18,7 @@ import (
 const PORT = "8000"
 
 func Run() error {
+	notification.Init()
 	fmt.Printf("Starting server on port %s...\n", PORT)
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -33,7 +34,6 @@ func Run() error {
 
 	service := services.NewService(
 		client.GetSession(),
-		&logger.EchoLogger{},
 	)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),

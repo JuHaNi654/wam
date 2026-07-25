@@ -9,7 +9,7 @@ import (
 )
 
 func ping(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	s.NotificationService.Send(notification.Payload{Type: "ping", Content: map[string]any{"msg": "pong"}})
+	notification.Current.Send(notification.Payload{Type: "ping", Content: map[string]any{"msg": "pong"}})
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: http.StatusOK,
 		Data: gin.H{

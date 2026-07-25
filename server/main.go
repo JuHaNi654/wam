@@ -6,6 +6,7 @@ import (
 	"os"
 	"server/cmd"
 	"server/internal/llm"
+	"server/internal/logger"
 
 	"github.com/joho/godotenv"
 )
@@ -16,6 +17,7 @@ var commands = []string{"start-server", "migrate"}
 var prompts embed.FS
 
 func main() {
+	logger.InitLoger(logger.Echo{})
 	argsWithoutProg := os.Args[1:]
 	if len(argsWithoutProg) == 0 {
 		fmt.Printf("Command is missing\n\nAvailable commands:\n")

@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func sseHandler(ctx *gin.Context, s *services.Service) *ErrorResponse {
+func sseHandler(ctx *gin.Context, _ *services.Service) *ErrorResponse {
 	ctx.Header("Content-Type", "text/event-stream")
 	ctx.Header("Cache-Control", "no-cache")
 	ctx.Header("Connection", "keep-alive")
@@ -26,8 +26,8 @@ func sseHandler(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		Done: make(chan struct{}),
 	}
 
-	s.NotificationService.Register(client)
-	defer s.NotificationService.UnRegister(client)
+	notification.Current.Register(client)
+	defer notification.Current.UnRegister(client)
 
 	fmt.Println("client connected")
 	for {

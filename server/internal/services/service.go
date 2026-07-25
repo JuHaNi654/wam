@@ -1,8 +1,6 @@
 package services
 
 import (
-	"server/internal/logger"
-	"server/internal/notification"
 	"server/internal/repositories"
 
 	"gorm.io/gorm"
@@ -15,11 +13,9 @@ type Service struct {
 	ProfileRepository     *repositories.ProfileRepository
 	HistoryRepository     *repositories.HistoryRepository
 	EducationRepository   *repositories.EducationRepository
-	NotificationService   *notification.NotificationService
-	Logger                logger.ILogger
 }
 
-func NewService(db *gorm.DB, logger logger.ILogger) *Service {
+func NewService(db *gorm.DB) *Service {
 	return &Service{
 		ApplicationRepository: repositories.NewApplicationRepository(db),
 		ActionRepository:      repositories.NewActionRepository(db),
@@ -27,7 +23,5 @@ func NewService(db *gorm.DB, logger logger.ILogger) *Service {
 		ProfileRepository:     repositories.NewProfileRepository(db),
 		HistoryRepository:     repositories.NewHistoryRepository(db),
 		EducationRepository:   repositories.NewEducationRepository(db),
-		NotificationService:   notification.NewService(),
-		Logger:                logger,
 	}
 }

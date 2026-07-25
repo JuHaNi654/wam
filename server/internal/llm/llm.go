@@ -12,7 +12,7 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 )
 
-var InitializedAgent *Agent
+var Current Agent
 var AvailableProviders = make(map[string]api.Plugin)
 
 type AgentInstance interface {
@@ -120,7 +120,7 @@ func Initalize(embed fs.FS) {
 
 	AvailableProviders[llama.Name()] = llama
 
-	InitializedAgent = &Agent{
+	Current = Agent{
 		genkit: genkit.Init(
 			context.TODO(),
 			genkit.WithPlugins(llama),

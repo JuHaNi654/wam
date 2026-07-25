@@ -7,42 +7,22 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
-	"server/internal/llm"
+	"server/internal/logger"
 	"server/internal/models"
 	"server/internal/repositories"
 	"server/internal/services"
 	"testing"
 	"time"
-	"unsafe"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-// noopLogger satisfies logger.ILogger without producing any output.
-type noopLogger struct{}
-
-func (noopLogger) Debug(_ any)    {}
-func (noopLogger) Info(_ string)  {}
-func (noopLogger) Error(_ string) {}
-func (noopLogger) Warn(_ string)  {}
-
 // TestMain initialises package-level state shared across all test cases.
-// createApplication dereferences llm.InitializedAgent.Selected().Model; both
-// the agent pointer and its unexported `selected` field must be non-nil, or the
-// handler panics. We construct a zero-value Agent and write a zero-value
-// Selected into its unexported field via reflect+unsafe so that Selected().Model
-// evaluates to "" and the LLM code path is skipped during tests.
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
-
-	agent := new(llm.Agent)
-	f := reflect.ValueOf(agent).Elem().FieldByName("selected")
-	*(**llm.Selected)(unsafe.Pointer(f.UnsafeAddr())) = new(llm.Selected)
-	llm.InitializedAgent = agent
-
+	logger.InitLoger(logger.NoLog{})
 	os.Exit(m.Run())
 }
 
@@ -69,7 +49,6 @@ func setupServiceEnvironment(t *testing.T) *services.Service {
 		ApplicationRepository: repositories.NewApplicationRepository(db),
 		ActionRepository:      repositories.NewActionRepository(db),
 		SkillRepository:       repositories.NewSkillRepository(db),
-		Logger:                noopLogger{},
 	}
 }
 

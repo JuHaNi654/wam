@@ -6,13 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type NotificationType string
 
 const (
-	NotificationLLM NotificationType = "llm"
+	NotificationLLMStatusChange NotificationType = "llm-status-change"
 )
+
+var Current NotificationService
 
 type Payload struct {
 	Type    NotificationType `json:"type"`
@@ -26,14 +30,26 @@ type Client struct {
 }
 
 type NotificationService struct {
-	clients map[*Client]bool
-	mu      sync.Mutex
+	clients     map[*Client]bool
+	providerSSE map[string]*LLMProviderSSE
+	mu          sync.Mutex
 }
 
-func NewService() *NotificationService {
-	return &NotificationService{
+func Init() {
+	Current = NotificationService{
 		clients: make(map[*Client]bool),
 	}
+}
+
+func (s *NotificationService) RegisterProviderSSE(provider string, url string) error {
+	var errG errgroup.Group
+	client := NewLLMSSEClient(url, func(data Payload) { s.Send(data) })
+	errG.Go(client.Listen)
+	if err := errG.Wait(); err != nil {
+		return err
+	}
+	s.providerSSE[provider] = client
+	return nil
 }
 
 func (s *NotificationService) Register(c *Client) {
