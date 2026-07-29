@@ -8,14 +8,17 @@ import (
 	"sync"
 )
 
+var (
+	instance *NotificationService
+	once     sync.Once
+)
+
 type NotificationType string
 
 const (
 	NotificationLLMStatusChange NotificationType = "llm-status-change"
 	NotificationLLMModelEnabled NotificationType = "llm-model-enabled"
 )
-
-var Current NotificationService
 
 type Payload struct {
 	Type    NotificationType `json:"type"`
@@ -34,8 +37,23 @@ type NotificationService struct {
 }
 
 func Init() {
-	Current = NotificationService{
-		clients: make(map[*Client]bool),
+	once.Do(func() {
+		instance = &NotificationService{
+			clients: make(map[*Client]bool),
+		}
+	})
+}
+
+func GetInstance() *NotificationService {
+	return instance
+}
+
+func (s *NotificationService) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for c := range s.clients {
+		c.Done <- struct{}{}
 	}
 }
 
@@ -49,6 +67,7 @@ func (s *NotificationService) UnRegister(c *Client) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.clients[c] {
+		close(c.Send)
 		close(c.Done)
 		delete(s.clients, c)
 	}

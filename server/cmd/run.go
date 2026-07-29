@@ -15,7 +15,6 @@ import (
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
-	"time"
 )
 
 const PORT = "8000"
@@ -58,7 +57,9 @@ func Run(prompts fs.FS) error {
 	stop()
 	log.Println("Shutting down gracefully, press ctrl+c again to force")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
+	notification.GetInstance().Close()
+	llm.GetInstance().Close()
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		return err

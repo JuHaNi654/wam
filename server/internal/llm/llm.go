@@ -25,6 +25,8 @@ type Agent struct {
 
 	incomingNotifications chan []byte
 	notify                chan []byte
+	ctx                   context.Context
+	cancel                context.CancelFunc
 }
 
 type Selected struct {
@@ -40,19 +42,27 @@ type ProviderInfo struct {
 
 func Init(embed fs.FS) {
 	once.Do(func() {
+		ctx, cancel := context.WithCancel(context.Background())
+
 		instance = &Agent{
 			availableProviders: make(map[string]api.Plugin),
+			ctx:                ctx,
+			cancel:             cancel,
 		}
 
-		llama := getLlamaPlugin()
+		llama := getLlamaPlugin(ctx)
 		instance.availableProviders[llama.Name()] = llama
 
 		instance.genkit = genkit.Init(
-			context.TODO(),
+			ctx,
 			genkit.WithPlugins(llama),
 			genkit.WithPromptFS(embed),
 		)
 	})
+}
+
+func (a *Agent) Close() {
+	a.cancel()
 }
 
 func GetInstance() *Agent {

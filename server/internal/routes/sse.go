@@ -26,8 +26,10 @@ func sseHandler(ctx *gin.Context, _ *services.Service) *ErrorResponse {
 		Done: make(chan struct{}),
 	}
 
-	notification.Current.Register(client)
-	defer notification.Current.UnRegister(client)
+	instance := notification.GetInstance()
+
+	instance.Register(client)
+	defer instance.UnRegister(client)
 
 	fmt.Println("client connected")
 	for {
@@ -37,6 +39,7 @@ func sseHandler(ctx *gin.Context, _ *services.Service) *ErrorResponse {
 			ctx.Writer.Flush()
 		case <-client.Done:
 			fmt.Println("<-client.Done")
+			instance.UnRegister(client)
 			return nil
 		case <-ctx.Done():
 			fmt.Println("<-ctx.Done")

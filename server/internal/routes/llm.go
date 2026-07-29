@@ -97,6 +97,7 @@ func unloadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	provider := ctx.Param("provider")
 	requestBody := new(models.HandleModel)
+	instance := notification.GetInstance()
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
@@ -106,7 +107,7 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	if strings.HasSuffix(llm.GetInstance().Selected(), requestBody.Model) {
 		llm.GetInstance().ClearSelected()
 
-		notification.Current.Send(notification.Payload{
+		instance.Send(notification.Payload{
 			Type:    notification.NotificationLLMModelEnabled,
 			Content: llm.GetInstance().Selected(),
 		})
@@ -126,7 +127,7 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	notification.Current.Send(notification.Payload{
+	instance.Send(notification.Payload{
 		Type:    notification.NotificationLLMModelEnabled,
 		Content: llm.GetInstance().Selected(),
 	})

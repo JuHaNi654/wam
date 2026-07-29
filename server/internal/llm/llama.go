@@ -39,13 +39,12 @@ type LlamaServerError struct {
 
 type Llama struct {
 	compat_oai.OpenAICompatible
+
+	SSEListenerEnabled bool
 }
 
-func (l *Llama) ListenSSE() {
+func (l *Llama) ListenSSE(ctx context.Context) {
 	url := fmt.Sprintf("%s/models/sse", l.BaseURL)
-	fmt.Println(url)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -60,7 +59,7 @@ func (l *Llama) ListenSSE() {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil {
+	if err != nil && !errors.Is(ctx.Err(), context.Canceled) {
 		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled make http request", l.Name()))
 		logger.GetInstance().Error(err.Error())
 		return
@@ -72,6 +71,7 @@ func (l *Llama) ListenSSE() {
 		return
 	}
 
+	l.SSEListenerEnabled = true
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		if len(scanner.Bytes()) == 0 {
@@ -86,14 +86,15 @@ func (l *Llama) ListenSSE() {
 			continue
 		}
 
-		notification.Current.Send(notification.Payload{
+		notification.GetInstance().Send(notification.Payload{
 			Type:    notification.NotificationLLMStatusChange,
 			Content: data,
 		})
 	}
 
-	if scanner.Err() != nil {
+	if scanner.Err() != nil && !errors.Is(ctx.Err(), context.Canceled) {
 		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) scanner  returned error", l.Name()))
+		logger.GetInstance().Error(scanner.Err().Error())
 	}
 }
 
@@ -188,8 +189,10 @@ func ListLlamaModels(url string) []Model {
 	return models
 }
 
-func getLlamaPlugin() *Llama {
-	llama := &Llama{}
+func getLlamaPlugin(ctx context.Context) *Llama {
+	llama := &Llama{
+		SSEListenerEnabled: false,
+	}
 	url := os.Getenv("LLAMA_URL")
 	if url == "" {
 		logger.GetInstance().Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
@@ -198,7 +201,7 @@ func getLlamaPlugin() *Llama {
 
 	llama.BaseURL = url
 	llama.Provider = provider
-	go llama.ListenSSE()
+	go llama.ListenSSE(ctx)
 
 	return llama
 }
