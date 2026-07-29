@@ -73,14 +73,11 @@ function AIStatus() {
 
   if (!isSuccess || !data) return null
 
-
-  console.log(data)
   return (
     <div className="mx-auto">
       <Loading isLoading={isFetching}>
         <Tooltip>
           <TooltipTrigger asChild>
-
             <NavLink aria-label="Go ai settings page" to="/models">
               <Avatar>
                 <RiRobot2Fill className="m-auto" />

@@ -55,7 +55,7 @@ export default function Providers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <Models provider={provider.name} />
+                    {provider.available && <Models provider={provider.name} />}
                   </TableBody>
                 </Table>
               </div>
