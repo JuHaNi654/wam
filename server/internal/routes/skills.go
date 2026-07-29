@@ -14,7 +14,7 @@ import (
 func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	skills, err := s.SkillRepository.List()
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -28,12 +28,12 @@ func listAllSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func createSkill(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Skill)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.SkillRepository.Create(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		if errors.Is(err, repositories.ErrSkillAlreadyExists) {
 			return &ErrorResponse{StatusCode: http.StatusConflict, Message: "a skill with that name already exists"}
 		}

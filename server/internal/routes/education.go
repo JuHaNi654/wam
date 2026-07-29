@@ -13,12 +13,12 @@ func createEducation(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Education)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.EducationRepository.Create(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -32,7 +32,7 @@ func createEducation(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func deleteEducation(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.EducationRepository.Delete(id); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 

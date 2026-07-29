@@ -21,7 +21,7 @@ func parse(url *url.URL, node *html.Node) (string, error) {
 			continue
 		}
 
-		logger.Log.Debug(fmt.Sprintf("Handling document from: %s", service.Host))
+		logger.GetInstance().Debug(fmt.Sprintf("Handling document from: %s", service.Host))
 		if err := scanContent(&b, node, service); err != nil {
 			return "", err
 		}

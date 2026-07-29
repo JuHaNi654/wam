@@ -1,45 +1,28 @@
 // Package logger
 package logger
 
-import "log"
+import (
+	"sync"
+)
 
-var Log ILogger
+var (
+	instance Logger
+	once     sync.Once
+)
 
-func InitLoger(current ILogger) {
-	Log = current
-}
-
-type ILogger interface {
+type Logger interface {
 	Debug(content any)
 	Info(msg string)
 	Error(msg string)
 	Warn(msg string)
 }
 
-type Echo struct{}
-
-func (l Echo) Debug(content any) {
-	log.Printf("Debug: %+v\n", content)
+func Init(current Logger) {
+	once.Do(func() {
+		instance = current
+	})
 }
 
-func (l Echo) Info(msg string) {
-	log.Println("Info:", msg)
+func GetInstance() Logger {
+	return instance
 }
-
-func (l Echo) Error(msg string) {
-	log.Println("Error:", msg)
-}
-
-func (l Echo) Warn(msg string) {
-	log.Println("Warn:", msg)
-}
-
-type NoLog struct{}
-
-func (l NoLog) Debug(_ any) {}
-
-func (l NoLog) Info(_ string) {}
-
-func (l NoLog) Error(_ string) {}
-
-func (l NoLog) Warn(_ string) {}

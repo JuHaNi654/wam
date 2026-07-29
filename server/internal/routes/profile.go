@@ -14,7 +14,7 @@ import (
 func checkProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	_, err := s.ProfileRepository.Get()
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &ErrorResponse{StatusCode: http.StatusNotFound, Message: "profile not found"}
 		}
@@ -29,7 +29,7 @@ func checkProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func getProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	profile, err := s.ProfileRepository.Get()
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &ErrorResponse{StatusCode: http.StatusNotFound, Message: "profile not found"}
 		}
@@ -39,19 +39,19 @@ func getProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	skills, err := s.ProfileRepository.Skills()
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	history, err := s.HistoryRepository.ListByProfileID(profile.ID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	education, err := s.EducationRepository.ListByProfileID(profile.ID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -70,7 +70,7 @@ func getProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func createProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	profile, err := s.ProfileRepository.Create()
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -84,12 +84,12 @@ func createProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func updateProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Profile)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.ProfileRepository.Update(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -100,12 +100,12 @@ func updateProfile(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func saveProfileSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.UpdateSkills)
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.ProfileRepository.SetSkills(requestBody.Skills); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 

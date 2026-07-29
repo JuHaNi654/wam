@@ -19,7 +19,7 @@ func listApplications(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applications, err := s.ApplicationRepository.List()
 
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -34,7 +34,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Application)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
@@ -49,25 +49,25 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		})
 
 		if err != nil {
-			logger.Log.Error(err.Error())
+			logger.GetInstance().Error(err.Error())
 		} else {
 			requestBody.Ad = ad
 		}
 	}
 
 	if err := s.ApplicationRepository.Create(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	if sel := llm.Current.Selected(); sel != nil && sel.Model != "" {
+	if sel := llm.GetInstance().Selected(); sel != nil && sel.Model != "" {
 		c := context.Background()
-		result, err := skills.ListAdHardSkills(&c, &llm.Current, skills.ApplicationInput{
+		result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
 			Ad: requestBody.Ad,
 		})
 
 		if err != nil {
-			logger.Log.Error(err.Error())
+			logger.GetInstance().Error(err.Error())
 		} else { // TODO Should this be inside transaction
 			savedSkills := []models.Skill{}
 			for _, skill := range result.Skills {
@@ -77,7 +77,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 				err := s.SkillRepository.Create(savedSkill)
 				if err != nil {
-					logger.Log.Error(err.Error())
+					logger.GetInstance().Error(err.Error())
 					continue
 				}
 
@@ -86,7 +86,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 			_, err = s.ApplicationRepository.SetSkills(savedSkills, requestBody.ID)
 			if err != nil {
-				logger.Log.Error(err.Error())
+				logger.GetInstance().Error(err.Error())
 			}
 		}
 	}
@@ -103,7 +103,7 @@ func getApplicationByID(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applicationID := ctx.Param("id")
 	application, err := s.ApplicationRepository.GetByID(applicationID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &ErrorResponse{
 				StatusCode: http.StatusNotFound,
@@ -116,13 +116,13 @@ func getApplicationByID(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	actions, err := s.ActionRepository.GetByJobID(applicationID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	skills, err := s.SkillRepository.GetByJobID(applicationID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -142,14 +142,14 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 	requestBody := new(models.UpdateSkills)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	skills, err := s.ApplicationRepository.SetSkills(requestBody.Skills, applicationID)
 
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -168,12 +168,12 @@ func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applicationID := ctx.Param("id")
 	var requestBody map[string]any
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
 	if err := s.ApplicationRepository.Update(applicationID, requestBody); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
@@ -184,7 +184,7 @@ func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func deleteApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.ApplicationRepository.Delete(id); err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 

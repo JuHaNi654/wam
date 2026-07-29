@@ -2,11 +2,16 @@
 package llm
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"server/internal/logger"
+	"server/internal/notification"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -19,6 +24,14 @@ const (
 	provider     = "llama"
 	llamaBaseURL = "http://127.0.0.1:8001/v1"
 )
+
+type ModelSSE struct {
+	Model string `json:"model"`
+	Event string `json:"event"`
+	Data  struct {
+		Status string `json:"status"`
+	} `json:"data"`
+}
 
 type LlamaServerError struct {
 	Error struct {
@@ -34,6 +47,62 @@ type Llama struct {
 	BaseURL          string
 }
 
+func (l *Llama) ListenSSE() {
+	url := fmt.Sprintf("%s/models/sse", l.BaseURL)
+	fmt.Println(url)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled initialize http request", l.Name()))
+		logger.GetInstance().Error(err.Error())
+		return
+	}
+
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Connection", "keep-alive")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled make http request", l.Name()))
+		logger.GetInstance().Error(err.Error())
+		return
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) returned non 200 status code", l.Name()))
+		return
+	}
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		if len(scanner.Bytes()) == 0 {
+			continue
+		}
+
+		payload := bytes.TrimPrefix(scanner.Bytes(), []byte("data: "))
+
+		var data ModelSSE
+		if err := json.Unmarshal(payload, &data); err != nil {
+			logger.GetInstance().Error(fmt.Sprintf("Provider (%s) invalid sse body", l.Name()))
+			continue
+		}
+
+		notification.Current.Send(notification.Payload{
+			Type:    notification.NotificationLLMStatusChange,
+			Content: data,
+		})
+	}
+
+	if scanner.Err() != nil {
+		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) scanner  returned error", l.Name()))
+	}
+}
+
 func (l *Llama) Name() string {
 	return provider
 }
@@ -41,7 +110,7 @@ func (l *Llama) Name() string {
 func (l *Llama) Init(ctx context.Context) []api.Action {
 	url := os.Getenv("LLAMA_URL")
 	if url == "" {
-		logger.Log.Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
+		logger.GetInstance().Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
 		url = llamaBaseURL
 	}
 
@@ -53,6 +122,7 @@ func (l *Llama) Init(ctx context.Context) []api.Action {
 	var actions []api.Action
 	actions = append(actions, compatActions...)
 
+	go l.ListenSSE()
 	return actions
 }
 
@@ -75,7 +145,7 @@ func (l *Llama) Load(model string) error {
 		return err
 	}
 
-	logger.Log.Debug(fmt.Sprintf("llama (load model): %+v\n", responseBody))
+	logger.GetInstance().Debug(fmt.Sprintf("llama (load model): %+v\n", responseBody))
 	if statusCode == 200 {
 		return nil
 	}
@@ -94,7 +164,7 @@ func (l *Llama) Unload(model string) error {
 		return err
 	}
 
-	logger.Log.Debug(fmt.Sprintf("llama (unload model): %+v\n", responseBody))
+	logger.GetInstance().Debug(fmt.Sprintf("llama (unload model): %+v\n", responseBody))
 	if statusCode == 200 {
 		return nil
 	}
@@ -132,12 +202,12 @@ func ListLlamaModels(url string) []Model {
 
 	statusCode, err := get(url, &body)
 	if err != nil {
-		logger.Log.Error(fmt.Sprintf("get request was unsuccesfull: %s\n", err.Error()))
+		logger.GetInstance().Error(fmt.Sprintf("get request was unsuccesfull: %s\n", err.Error()))
 		return nil
 	}
 
 	if statusCode != 200 {
-		logger.Log.Error("(ListllamaModels) provider request was unsuccesfull")
+		logger.GetInstance().Error("(ListllamaModels) provider request was unsuccesfull")
 		return nil
 	}
 

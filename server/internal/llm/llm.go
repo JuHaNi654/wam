@@ -12,12 +12,19 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 )
 
-var Current Agent
-var AvailableProviders = make(map[string]api.Plugin)
+var (
+	instance *Agent
+	once     sync.Once
+)
 
-type AgentInstance interface {
-	Genkit() *genkit.Genkit
-	Selected() *Selected
+type Agent struct {
+	mu                 sync.RWMutex
+	genkit             *genkit.Genkit
+	selected           *Selected
+	availableProviders map[string]api.Plugin
+
+	incomingNotifications chan []byte
+	notify                chan []byte
 }
 
 type Selected struct {
@@ -25,10 +32,31 @@ type Selected struct {
 	Model    string `json:"model"`
 }
 
-type Agent struct {
-	mu       sync.RWMutex
-	genkit   *genkit.Genkit
-	selected *Selected
+type ProviderInfo struct {
+	Name      string `json:"name"`
+	Addr      string `json:"addr"`
+	Available bool   `json:"available"`
+}
+
+func Init(embed fs.FS) {
+	once.Do(func() {
+		instance = &Agent{
+			availableProviders: make(map[string]api.Plugin),
+		}
+
+		llama := getLlamaPlugin()
+		instance.availableProviders[llama.Name()] = llama
+
+		instance.genkit = genkit.Init(
+			context.TODO(),
+			genkit.WithPlugins(llama),
+			genkit.WithPromptFS(embed),
+		)
+	})
+}
+
+func GetInstance() *Agent {
+	return instance
 }
 
 func (a *Agent) Genkit() *genkit.Genkit {
@@ -41,11 +69,17 @@ func (a *Agent) Selected() *Selected {
 	return a.selected
 }
 
-func (a *Agent) UseModel(provider string, model string) error {
+func (a *Agent) ClearSelected() {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	a.selected = nil
+}
+
+func (a *Agent) Select(provider string, model string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	models, err := ListModels(provider)
+	models, err := a.ListModels(provider)
 	if err != nil {
 		return err
 	}
@@ -62,16 +96,12 @@ func (a *Agent) UseModel(provider string, model string) error {
 	return ErrProviderNotAvailable
 }
 
-func (a *Agent) ClearSelected() {
-	a.selected = nil
-}
-
 func (a *Agent) ProviderAvailability() (bool, error) {
 	if a.selected == nil {
 		return false, errors.New("provider is not currently selected")
 	}
 
-	provider, ok := AvailableProviders[a.selected.Provider]
+	provider, ok := a.availableProviders[a.selected.Provider]
 	if !ok {
 		return false, ErrProviderNotAvailable
 	}
@@ -87,7 +117,7 @@ func (a *Agent) ProviderAvailability() (bool, error) {
 
 func (a *Agent) LoadModel(provider string, model string) error {
 	var err error
-	selectedProvider, ok := AvailableProviders[provider]
+	selectedProvider, ok := a.availableProviders[provider]
 	if !ok {
 		return ErrProviderNotAvailable
 	}
@@ -102,7 +132,7 @@ func (a *Agent) LoadModel(provider string, model string) error {
 
 func (a *Agent) UnloadModel(provider string, model string) error {
 	var err error
-	selectedProvider, ok := AvailableProviders[provider]
+	selectedProvider, ok := a.availableProviders[provider]
 	if !ok {
 		return ErrProviderNotAvailable
 	}
@@ -115,34 +145,21 @@ func (a *Agent) UnloadModel(provider string, model string) error {
 	return err
 }
 
-func Initalize(embed fs.FS) {
-	llama := getLlamaPlugin()
-
-	AvailableProviders[llama.Name()] = llama
-
-	Current = Agent{
-		genkit: genkit.Init(
-			context.TODO(),
-			genkit.WithPlugins(llama),
-			genkit.WithPromptFS(embed),
-		),
+func (a *Agent) GetSelectedProviderPlugin() api.Plugin {
+	if a.selected == nil {
+		return nil
 	}
+	return a.availableProviders[a.selected.Provider]
 }
 
-type ProviderInfo struct {
-	Name      string `json:"name"`
-	Addr      string `json:"addr"`
-	Available bool   `json:"available"`
-}
-
-func Providers() []ProviderInfo {
+func (a *Agent) Providers() []ProviderInfo {
 	providers := []ProviderInfo{}
 
 	var (
 		addr      string
 		available bool
 	)
-	for _, provider := range AvailableProviders {
+	for _, provider := range a.availableProviders {
 		switch s := provider.(type) {
 		case *Llama:
 			addr = s.BaseURL
@@ -163,9 +180,9 @@ func Providers() []ProviderInfo {
 	return providers
 }
 
-func ListModels(provider string) ([]Model, error) {
+func (a *Agent) ListModels(provider string) ([]Model, error) {
 	var models []Model
-	selectedProvider, ok := AvailableProviders[provider]
+	selectedProvider, ok := a.availableProviders[provider]
 	if !ok {
 		return nil, ErrProviderNotAvailable
 	}

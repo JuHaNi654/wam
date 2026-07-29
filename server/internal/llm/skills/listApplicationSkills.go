@@ -19,13 +19,12 @@ type Skills struct {
 	Skills []string `json:"skills"`
 }
 
-func ListAdHardSkills(ctx *context.Context, a llm.AgentInstance, input ApplicationInput) (*Skills, error) {
-	selectedProvider := a.Selected()
-	if selectedProvider == nil {
+func ListAdHardSkills(ctx *context.Context, a *llm.Agent, input ApplicationInput) (*Skills, error) {
+	provider := a.GetSelectedProviderPlugin()
+	if provider == nil {
 		return nil, errors.New("provider is not set")
 	}
 
-	provider := llm.AvailableProviders[selectedProvider.Provider]
 	prompt := genkit.LookupDataPrompt[ApplicationInput, *Skills](
 		a.Genkit(), "hard-skill",
 	)

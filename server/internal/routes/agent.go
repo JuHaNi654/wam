@@ -16,17 +16,17 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	application, err := s.ApplicationRepository.GetByID(applicationID)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	c := context.Background()
-	result, err := skills.ListAdHardSkills(&c, &llm.Current, skills.ApplicationInput{
+	result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
 		Ad: application.Ad,
 	})
 
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 

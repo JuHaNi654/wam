@@ -3,7 +3,6 @@ package database
 import (
 	"fmt"
 	"os"
-	"server/internal/logger"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +17,6 @@ func Migrate(db *gorm.DB, sqlFile string) error {
 		return result.Error
 	}
 
-	logger.Log.Info(fmt.Sprintf("Applied %s\n", sqlFile))
+	fmt.Printf("Applied %s\n", sqlFile)
 	return nil
 }

@@ -22,7 +22,7 @@ import (
 // TestMain initialises package-level state shared across all test cases.
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
-	logger.InitLoger(logger.NoLog{})
+	logger.Init(logger.NoLog{})
 	os.Exit(m.Run())
 }
 

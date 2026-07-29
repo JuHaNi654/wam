@@ -4,10 +4,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os/signal"
 	"server/internal/database"
+	"server/internal/llm"
+	"server/internal/logger"
 	"server/internal/notification"
 	"server/internal/routes"
 	"server/internal/services"
@@ -17,8 +20,12 @@ import (
 
 const PORT = "8000"
 
-func Run() error {
+func Run(prompts fs.FS) error {
+	// Initialize services
+	logger.Init(logger.Echo{})
 	notification.Init()
+	llm.Init(prompts)
+
 	fmt.Printf("Starting server on port %s...\n", PORT)
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
