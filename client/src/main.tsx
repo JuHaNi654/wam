@@ -13,9 +13,9 @@ import { loggingMiddleware, isInitialized } from './middlewares.ts'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { TooltipProvider } from './components/ui/tooltip.tsx'
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "./components/ui/sonner"
 import Providers from './routes/llm.tsx'
-import NotificationProvider from './components/notification.tsx'
+import NotificationProvider from './context/notification.tsx'
 
 const eventSourceUrl = "http://localhost:8000/events"
 const queryClient = new QueryClient()
@@ -57,11 +57,12 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
+      <NotificationProvider url={eventSourceUrl}>
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </NotificationProvider>
       <ReactQueryDevtools buttonPosition='bottom-right' />
-      <NotificationProvider url={eventSourceUrl} />
       <Toaster />
     </QueryClientProvider>
   </StrictMode>,

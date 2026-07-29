@@ -60,7 +60,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	if sel := llm.GetInstance().Selected(); sel != nil && sel.Model != "" {
+	if llm.GetInstance().Selected() != "" {
 		c := context.Background()
 		result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
 			Ad: requestBody.Ad,

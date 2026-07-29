@@ -63,10 +63,14 @@ func (a *Agent) Genkit() *genkit.Genkit {
 	return a.genkit
 }
 
-func (a *Agent) Selected() *Selected {
+func (a *Agent) Selected() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.selected
+	if a.selected == nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%s/%s", a.selected.Provider, a.selected.Model)
 }
 
 func (a *Agent) ClearSelected() {

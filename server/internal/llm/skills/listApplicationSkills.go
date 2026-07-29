@@ -25,14 +25,12 @@ func ListAdHardSkills(ctx *context.Context, a *llm.Agent, input ApplicationInput
 		return nil, errors.New("provider is not set")
 	}
 
-	prompt := genkit.LookupDataPrompt[ApplicationInput, *Skills](
-		a.Genkit(), "hard-skill",
-	)
+	prompt := genkit.LookupDataPrompt[ApplicationInput, *Skills](a.Genkit(), "hard-skill")
 
 	skills, _, err := prompt.Execute(
 		(*ctx),
 		input,
-		ai.WithModel(provider),
+		ai.WithModelName(a.Selected()),
 	)
 
 	if err != nil {

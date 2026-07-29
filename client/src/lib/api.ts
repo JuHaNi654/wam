@@ -30,6 +30,7 @@ export const GET: APIFunction = async <T>(endpoint: string) => {
 };
 
 export const POST: APIFunction = async <T>(endpoint: string, body: unknown) => {
+  console.log("Post: ", endpoint)
   try {
     const response = await fetch(`${URL}${endpoint}`, {
       method: "POST",

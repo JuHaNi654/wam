@@ -151,12 +151,12 @@ function AISkill(props: AISkillProps) {
 
   const generate = async () => {
     setIsLoading(true)
-    const result = await GET<string[]>(`/api/llm/agent/hardskills?applicationId=${props.applicationID}`, null)
+    const result = await GET<{ skills: Array<string> }>(`/api/llm/agent/hardskills?applicationId=${props.applicationID}`, null)
     if (result.error) {
       console.log(result.error)
     }
 
-    setSkills(result.response?.data ?? [])
+    setSkills(result.response?.data?.skills ?? [])
     setIsLoading(false)
   }
 

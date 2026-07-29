@@ -3,8 +3,11 @@ import Loading from "@/components/loading";
 import { AvatarBadge } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useNotification } from "@/context/notification";
 import { GET, POST } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { NotificationLLMStatusChange, type LlamaStatusEvent } from "@/types/notification.types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 type Provider = {
@@ -71,12 +74,9 @@ type Model = {
 }
 
 type ModelResponse = {
-  models: Model[]
-  provider: string
-  in_use: {
-    model: string;
-    provider: string;
-  } | null
+  models: Model[];
+  provider: string;
+  in_use: string;
 }
 
 type ModelsProps = {
@@ -84,6 +84,8 @@ type ModelsProps = {
 }
 
 function Models(props: ModelsProps) {
+  const notification = useNotification()
+  const queryClient = useQueryClient()
   const { data, isSuccess, refetch } = useQuery({
     queryKey: ["llmModels"],
     queryFn: async () => {
@@ -92,6 +94,23 @@ function Models(props: ModelsProps) {
       return result.response!.data
     },
   })
+
+  useEffect(() => {
+    if (notification.type !== NotificationLLMStatusChange || !data) return
+    const content = notification.content as LlamaStatusEvent;
+
+    queryClient.setQueryData<ModelResponse>(['llmModels'], (prev) => {
+      if (!prev) return prev
+
+      return {
+        ...prev,
+        models: prev.models.map((model) => (
+          (model.id === content.model) ? { ...model, status: content.data.status } : model
+        ))
+      }
+    })
+
+  }, [notification, queryClient])
 
   if (!isSuccess || !data) return null
 
@@ -145,14 +164,16 @@ function Models(props: ModelsProps) {
                   unloadModel(model.id)
                 }
               }}
-              size="xs" variant={model.status != "unloaded" ? 'destructive' : 'secondary'}>
-              {model.status == "unloaded" ? "Load" : "Unload"}
+              size="xs" variant="secondary">
+              {model.status === "loading" && "Loading"}
+              {model.status === "unloaded" && "Load"}
+              {model.status === "loaded" && "Unload"}
             </Button>
           </TableCell>
-          <TableCell className="w-30 text-right">
+          <TableCell className="w-25 text-right">
             <Button onClick={() => enableModel(model.id)}
-              size="xs" variant={data.in_use && data.in_use.model === model.id ? 'destructive' : 'success'}>
-              {data.in_use && data.in_use.model === model.id ? "Disable" : "Enable"}
+              size="xs" variant="secondary">
+              {data.in_use && data.in_use.includes(model.id) ? "Enabled" : "Disabled"}
             </Button>
           </TableCell>
         </TableRow>

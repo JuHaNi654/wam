@@ -13,15 +13,11 @@ import (
 	"server/internal/logger"
 	"server/internal/notification"
 
-	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/core/api"
-	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/compat_oai"
-	"github.com/openai/openai-go/option"
 )
 
 const (
-	provider     = "llama"
+	provider     = "llamacpp"
 	llamaBaseURL = "http://127.0.0.1:8001/v1"
 )
 
@@ -42,9 +38,7 @@ type LlamaServerError struct {
 }
 
 type Llama struct {
-	Opts             []option.RequestOption
-	openAiCompatible compat_oai.OpenAICompatible
-	BaseURL          string
+	compat_oai.OpenAICompatible
 }
 
 func (l *Llama) ListenSSE() {
@@ -105,33 +99,6 @@ func (l *Llama) ListenSSE() {
 
 func (l *Llama) Name() string {
 	return provider
-}
-
-func (l *Llama) Init(ctx context.Context) []api.Action {
-	url := os.Getenv("LLAMA_URL")
-	if url == "" {
-		logger.GetInstance().Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
-		url = llamaBaseURL
-	}
-
-	l.BaseURL = url
-	l.Opts = append([]option.RequestOption{option.WithBaseURL(url)}, l.Opts...)
-	l.openAiCompatible.Opts = l.Opts
-	compatActions := l.openAiCompatible.Init(ctx)
-
-	var actions []api.Action
-	actions = append(actions, compatActions...)
-
-	go l.ListenSSE()
-	return actions
-}
-
-func (l *Llama) Model(g *genkit.Genkit, id string) ai.Model {
-	return l.openAiCompatible.Model(g, api.NewName(provider, id))
-}
-
-func (l *Llama) DefineModel(id string, opts ai.ModelOptions) ai.Model {
-	return l.openAiCompatible.DefineModel(provider, id, opts)
 }
 
 func (l *Llama) Load(model string) error {
@@ -222,5 +189,16 @@ func ListLlamaModels(url string) []Model {
 }
 
 func getLlamaPlugin() *Llama {
-	return &Llama{}
+	llama := &Llama{}
+	url := os.Getenv("LLAMA_URL")
+	if url == "" {
+		logger.GetInstance().Warn(fmt.Sprintf("llama server url not found from environment. Set to fallback url (%s)\n", llamaBaseURL))
+		url = llamaBaseURL
+	}
+
+	llama.BaseURL = url
+	llama.Provider = provider
+	go llama.ListenSSE()
+
+	return llama
 }

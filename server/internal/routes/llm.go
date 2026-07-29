@@ -6,7 +6,9 @@ import (
 	"server/internal/llm"
 	"server/internal/logger"
 	"server/internal/models"
+	"server/internal/notification"
 	"server/internal/services"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,9 +103,13 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	current := llm.GetInstance().Selected()
-	if current != nil && current.Model == requestBody.Model {
+	if strings.HasSuffix(llm.GetInstance().Selected(), requestBody.Model) {
 		llm.GetInstance().ClearSelected()
+
+		notification.Current.Send(notification.Payload{
+			Type:    notification.NotificationLLMModelEnabled,
+			Content: llm.GetInstance().Selected(),
+		})
 		ctx.JSON(http.StatusNoContent, gin.H{})
 		return nil
 	}
@@ -120,6 +126,10 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
+	notification.Current.Send(notification.Payload{
+		Type:    notification.NotificationLLMModelEnabled,
+		Content: llm.GetInstance().Selected(),
+	})
 	ctx.JSON(http.StatusNoContent, gin.H{})
 	return nil
 }

@@ -1,6 +1,12 @@
+import type { NotificationPayload } from "@/types/notification.types";
+
+
+type Listener<T> = (event: NotificationPayload<T>) => void
+
 class Notification {
   static #instance: Notification | null = null
   #eventSrc: EventSource | null = null
+  #listeners: Set<Listener<any>> = new Set()
 
   constructor() {
     if (Notification.#instance) {
@@ -15,11 +21,17 @@ class Notification {
   }
 
   #onMessage = (event: MessageEvent<any>) => {
-    console.log("Incoming event: ", event)
+    const data = JSON.parse(event.data) as NotificationPayload<any>
+    this.#listeners.forEach((fn) => fn(data))
   }
 
   #onError = (event: Event) => {
     console.log("Event error: ", event)
+  }
+
+  subscribe<T>(fn: Listener<T>) {
+    this.#listeners.add(fn)
+    return () => this.#listeners.delete(fn)
   }
 
   mount(url: string) {

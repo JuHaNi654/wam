@@ -12,6 +12,7 @@ type NotificationType string
 
 const (
 	NotificationLLMStatusChange NotificationType = "llm-status-change"
+	NotificationLLMModelEnabled NotificationType = "llm-model-enabled"
 )
 
 var Current NotificationService

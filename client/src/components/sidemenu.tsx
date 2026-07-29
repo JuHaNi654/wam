@@ -7,6 +7,9 @@ import Loading from "./loading";
 import { Avatar, AvatarBadge } from "./ui/avatar";
 import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiUserFill } from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { useNotification } from "../context/notification";
+import { useEffect } from "react";
+import { NotificationLLMModelEnabled } from "@/types/notification.types";
 
 type Links = {
   label: string;
@@ -52,7 +55,8 @@ export default function Sidemenu() {
 }
 
 function AIStatus() {
-  const { data, isSuccess, isFetching } = useQuery({
+  const notification = useNotification()
+  const { data, isSuccess, isFetching, refetch } = useQuery({
     queryKey: ["llm-status"],
     queryFn: async () => {
       const result = await GET<AIAgentStatus>('/api/llm/status', null)
@@ -61,8 +65,16 @@ function AIStatus() {
     },
   })
 
+  useEffect(() => {
+    if (notification.type === NotificationLLMModelEnabled) {
+      refetch()
+    }
+  }, [notification, refetch])
+
   if (!isSuccess || !data) return null
 
+
+  console.log(data)
   return (
     <div className="mx-auto">
       <Loading isLoading={isFetching}>
@@ -77,7 +89,7 @@ function AIStatus() {
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{data.available ? data.in_use?.model : "Unavailable"}</p>
+            <p>{data.available ? data.in_use : "Unavilable"}</p>
           </TooltipContent>
         </Tooltip>
       </Loading>

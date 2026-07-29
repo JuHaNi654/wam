@@ -81,9 +81,6 @@ export type Education = {
 }
 
 export type AIAgentStatus = {
-  in_use: {
-    provider: string;
-    model: string;
-  } | null;
-  available: boolean
+  in_use: string;
+  available: boolean;
 }
