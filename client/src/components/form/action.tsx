@@ -36,13 +36,14 @@ export default function ActionForm(props: ActionFormProps) {
   })
 
   const handleSubmit = async (data: Action) => {
-    try {
-      const response = await POST<SavedAction>(`/api/jobs/${props.applicationId}/actions`, data);
-      if (props.onSubmit) props.onSubmit(response.data)
-    } catch (err: any) {
-      console.error(err)
+    const result = await POST<SavedAction>(`/api/applications/${props.applicationId}/actions`, data);
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong while trying to create new action", { position: "bottom-right" })
+      return
     }
+
+    if (props.onSubmit && result.response) props.onSubmit((result.response.data as SavedAction))
   }
 
   const handleCancel = () => {
@@ -110,14 +111,14 @@ export function UpdateActionForm(props: UpdateActionFormProps) {
   })
 
   const handleSubmit = async (data: Action) => {
-    try {
-      await PUT(`/api/actions/${props.action.id}`, data)
-      if (props.onSave) props.onSave(props.action.id, data)
-      toast.success("Action updated", { position: "bottom-right" })
-    } catch (err: any) {
-      console.error(err)
+    const { error } = await PUT(`/api/actions/${props.action.id}`, data)
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to update action", { position: "bottom-right" })
     }
+
+    if (props.onSave) props.onSave(props.action.id, data)
+    toast.success("Action updated", { position: "bottom-right" })
   }
 
   return (

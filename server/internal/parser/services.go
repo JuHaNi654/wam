@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"server/internal/logger"
 	"strings"
 
 	"golang.org/x/net/html"
 )
+
+var whitespaceRe = regexp.MustCompile(`\s+`)
 
 func parse(url *url.URL, node *html.Node) (string, error) {
 	var b strings.Builder
@@ -18,7 +21,7 @@ func parse(url *url.URL, node *html.Node) (string, error) {
 			continue
 		}
 
-		fmt.Println("Handling document from: ", service.Host)
+		logger.GetInstance().Debug(fmt.Sprintf("Handling document from: %s", service.Host))
 		if err := scanContent(&b, node, service); err != nil {
 			return "", err
 		}
@@ -65,7 +68,6 @@ func scanContent(b *strings.Builder, page *html.Node, s Service) error {
 
 func getNodeText(node *html.Node) string {
 	text := ""
-	space := regexp.MustCompile(`\s+`)
 	var crawler func(*html.Node)
 	crawler = func(node *html.Node) {
 		if node.Type == html.TextNode && node.Data != "" {
@@ -77,5 +79,5 @@ func getNodeText(node *html.Node) string {
 		}
 	}
 	crawler(node)
-	return space.ReplaceAllString(text, " ")
+	return whitespaceRe.ReplaceAllString(text, " ")
 }

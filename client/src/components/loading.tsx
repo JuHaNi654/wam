@@ -1,7 +1,7 @@
 
 type LoadingProps = {
   isLoading: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export default function Loading(props: LoadingProps) {
@@ -31,6 +31,7 @@ export default function Loading(props: LoadingProps) {
       </div>
     );
   }
-  
+
+  if (!props.children) return null;
   return <>{props.children}</>;
 }

@@ -1,3 +1,11 @@
+-- Ai connection / models
+CREATE TABLE ai_connections (
+  id            TEXT PRIMARY KEY,
+  name          TEXT,
+  service_addr  TEXT,
+  active_model  TEXT
+);
+
 -- resume
 CREATE TABLE profile (
   id           TEXT PRIMARY KEY,

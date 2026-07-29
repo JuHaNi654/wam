@@ -7,7 +7,9 @@ import Loading from "./loading";
 import { Avatar, AvatarBadge } from "./ui/avatar";
 import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiUserFill } from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { useEffect, useState } from "react";
+import { useNotification } from "../context/notification";
+import { useEffect } from "react";
+import { NotificationLLMModelEnabled } from "@/types/notification.types";
 
 type Links = {
   label: string;
@@ -52,51 +54,39 @@ export default function Sidemenu() {
   )
 }
 
-
-const onlineStatus = {
-  online: "bg-green-600",
-  sleep: "bg-yellow-600",
-  offline: "bg-red-600"
-}
-
 function AIStatus() {
-  const [status, setStatus] = useState(onlineStatus.offline)
-  const { data, isLoading } = useQuery({
-    queryKey: ["ai-status"],
+  const notification = useNotification()
+  const { data, isSuccess, isFetching, refetch } = useQuery({
+    queryKey: ["llm-status"],
     queryFn: async () => {
-      return await GET<AIAgentStatus>('/api/agent', null)
+      const result = await GET<AIAgentStatus>('/api/llm/status', null)
+      if (result.error) throw result.error
+      return result.response?.data
     },
-    retry: 0,
   })
 
   useEffect(() => {
-    if (data && data.data.name.length !== 0) {
-      const expiresAt = new Date(data.data.expires_at).getTime()
-      const current = new Date().getTime()
-
-      if (expiresAt < current) {
-        setStatus(onlineStatus.sleep)
-        return
-      }
-      setStatus(onlineStatus.online)
-      return
+    if (notification.type === NotificationLLMModelEnabled) {
+      refetch()
     }
+  }, [notification, refetch])
 
-    setStatus(onlineStatus.offline)
-  }, [data])
+  if (!isSuccess || !data) return null
 
   return (
     <div className="mx-auto">
-      <Loading isLoading={isLoading}>
+      <Loading isLoading={isFetching}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Avatar>
-              <RiRobot2Fill className="m-auto" />
-              <AvatarBadge className={`${status}`} />
-            </Avatar>
+            <NavLink aria-label="Go ai settings page" to="/models">
+              <Avatar>
+                <RiRobot2Fill className="m-auto" />
+                <AvatarBadge className={data.available ? "bg-green-600" : "bg-red-600"} />
+              </Avatar>
+            </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{data && data.data.name.length !== 0 ? data.data.name : "Unavailable"}</p>
+            <p>{data.available ? data.in_use : "Unavilable"}</p>
           </TooltipContent>
         </Tooltip>
       </Loading>

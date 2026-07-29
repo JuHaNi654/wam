@@ -38,25 +38,38 @@ func (r *ApplicationRepository) GetByID(applicationID string) (*models.Applicati
 	return &item, result.Error
 }
 
-func (r *ApplicationRepository) SetSkills(items []models.Skill, applicationID string) ([]models.ApplicationSkill, error) {
-	savedSkills := []models.ApplicationSkill{}
-	ctx := context.Background()
+func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID string) ([]models.Skill, error) {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		ctx := context.Background()
+		_, err := gorm.G[models.ApplicationSkill](tx).Where("application_id = ?", applicationID).Delete(ctx)
+		if err != nil {
+			return err
+		}
 
-	_, err := gorm.G[models.ApplicationSkill](r.db).Where("application_id = ?", applicationID).Delete(ctx)
+		savedSkills := make([]models.ApplicationSkill, 0, len(skills))
+		for _, skill := range skills {
+			savedSkills = append(savedSkills, models.ApplicationSkill{
+				ID:            uuid.New().String(),
+				ApplicationID: applicationID,
+				SkillID:       skill.ID,
+			})
+		}
+
+		if len(savedSkills) == 0 {
+			return nil
+		}
+
+		if result := tx.Create(&savedSkills); result.Error != nil {
+			return result.Error
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
-
-	for _, curr := range items {
-		savedSkills = append(savedSkills, models.ApplicationSkill{
-			ID:            uuid.New().String(),
-			ApplicationID: applicationID,
-			SkillID:       curr.ID,
-		})
-	}
-
-	r.db.Create(savedSkills)
-	return savedSkills, nil
+	return skills, nil
 }
 
 func (r *ApplicationRepository) Update(id string, data map[string]any) error {
@@ -66,19 +79,10 @@ func (r *ApplicationRepository) Update(id string, data map[string]any) error {
 	return err
 }
 
-func (r *ApplicationRepository) Delete(applicationID string) error {
+func (r *ApplicationRepository) Delete(id string) error {
 	ctx := context.Background()
-
-	_, err := gorm.G[models.ApplicationSkill](r.db).Where("application_id = ?", applicationID).Delete(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = gorm.G[models.Action](r.db).Where("application_id = ?", applicationID).Delete(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = gorm.G[models.Application](r.db).Where("id = ?", applicationID).Delete(ctx)
+	// Relying on cascade delete, might need to wrap in to the transaction
+	// function
+	_, err := gorm.G[models.Application](r.db).Where("id = ?", id).Delete(ctx)
 	return err
 }

@@ -66,17 +66,3 @@ func NewSQLiteClient() *SQLiteClient {
 
 	return client
 }
-
-/*
-func SqliteFileExists() (bool, error) {
-
-	stat, err := os.Stat(path)
-	fmt.Println(stat)
-
-	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
-
-	return true, nil
-}
-*/

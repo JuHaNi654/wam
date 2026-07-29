@@ -30,21 +30,28 @@ const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destru
 };
 
 export default function Home() {
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isSuccess, isLoading, refetch } = useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
-      return await GET<{ applications: ApplicationListing[] }>('/api/applications', null)
+      const result = await GET<ApplicationListing[]>('/api/applications', null)
+      if (result.error) throw result.error
+      return result.response!.data ?? []
     },
+    initialData: []
   })
 
+  if (isLoading) return <Loading isLoading={isLoading} />
+  if (!isSuccess) return null
+
   const handleDelete = async (id: string) => {
-    try {
-      await DELETE(`/api/applications/${id}`)
-      refetch()
-    } catch (err) {
-      console.error(err)
+    const { error } = await DELETE(`/api/applications/${id}`, null)
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to delete application", { position: "bottom-right" })
+      return
     }
+
+    refetch()
   }
 
   return (
@@ -52,51 +59,49 @@ export default function Home() {
       <header className="py-4 font-semibold">
         <h1 className="text-4xl">Applications</h1>
       </header>
-      <Loading isLoading={isLoading}>
-        <div className="border border-gray-200 rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead></TableHead>
+      <div className="border border-gray-200 rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data && data.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-sm text-muted-foreground">{item.company}</div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={statusVariant[item.status]}>{item.status}</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {renderDate(item.create_date)}
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" className="rounded-md" asChild size="sm">
+                    <Link to={`/applications/${item.id}`}>
+                      <RiEyeLine />
+                    </Link>
+                  </Button>
+
+
+                  <DeleteConfirmationDialog buttonLabel="Delete application"
+                    title="Are you sure, you want to delete selected item"
+                    description={`You are currently deleting (${item.name}).`}
+                    onConfirmation={() => handleDelete(item.id)}
+                  />
+
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data && data.data.applications.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-muted-foreground">{item.company}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[item.status]}>{item.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {renderDate(item.create_date)}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" className="rounded-md" asChild size="sm">
-                      <Link to={`/applications/${item.id}`}>
-                        <RiEyeLine />
-                      </Link>
-                    </Button>
-
-
-                    <DeleteConfirmationDialog buttonLabel="Delete application"
-                      title="Are you sure, you want to delete selected item"
-                      description={`You are currently deleting (${item.name}).`}
-                      onConfirmation={() => handleDelete(item.id)}
-                    />
-
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </Loading>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Base>
   )
 }

@@ -4,10 +4,14 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os/signal"
 	"server/internal/database"
+	"server/internal/llm"
+	"server/internal/logger"
+	"server/internal/notification"
 	"server/internal/routes"
 	"server/internal/services"
 	"syscall"
@@ -16,7 +20,12 @@ import (
 
 const PORT = "8000"
 
-func Run() error {
+func Run(prompts fs.FS) error {
+	// Initialize services
+	logger.Init(logger.Echo{})
+	notification.Init()
+	llm.Init(prompts)
+
 	fmt.Printf("Starting server on port %s...\n", PORT)
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -30,9 +39,12 @@ func Run() error {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
+	service := services.NewService(
+		client.GetSession(),
+	)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: routes.Routes(services.NewService(client.GetSession())),
+		Handler: routes.Routes(service),
 	}
 
 	fmt.Printf("Server is running on port %s\n", PORT)

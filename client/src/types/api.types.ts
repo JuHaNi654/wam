@@ -1,3 +1,20 @@
+export type APIResponse<T> = {
+  status: number
+  data?: T
+}
+
+export type APIErrorResponse = {
+  status: number;
+  message?: string;
+  validation?: Array<PropertyError>
+}
+
+export type PropertyError = {
+  property?: string;
+  title?: string;
+  message?: string;
+}
+
 export type ApplicationStatus =
   | "saved"
   | "applied"
@@ -25,8 +42,6 @@ export type Application = {
   create_date: number;
   ad?: string;
   application?: string;
-  skills: Skill[];
-  actions: Action[];
 };
 
 export type Skill = {
@@ -66,19 +81,6 @@ export type Education = {
 }
 
 export type AIAgentStatus = {
-  name: string;
-  model: string;
-  size: number;
-  digest: string;
-  expires_at: string;
-  size_vram: number;
-  context_lengt: number;
-  details: {
-    parent_model: string;
-    format: string;
-    family: string;
-    families: Array<string>;
-    parameter_size: string;
-    quantization_level: string;
-  }
+  in_use: string;
+  available: boolean;
 }

@@ -30,7 +30,7 @@ const statusOptions: Array<{ label: string, value: ApplicationStatus }> = [
 const formSchema = z.object({
   name: z.string(),
   company: z.string(),
-  job_title: z.string(),
+  position: z.string(),
   homepage: z.string(),
   link: z.string(),
   status: z.string()
@@ -54,7 +54,7 @@ export default function ApplicationForm(props: ApplicationFormProps) {
     defaultValues: {
       name: "",
       company: "",
-      job_title: "",
+      position: "",
       homepage: "",
       link: "",
       status: ""
@@ -65,14 +65,15 @@ export default function ApplicationForm(props: ApplicationFormProps) {
     setSubmitting(true)
     if (props.onSubmit) props.onSubmit()
 
-    try {
-      const response = await POST<{ application: SavedApplication }>("/api/applications", data);
-      if (props.onSuccess) props.onSuccess(response.data.application)
-    } catch (err: any) {
-      console.error(err)
+    const result = await POST<SavedApplication>("/api/applications", data);
+    setSubmitting(false)
+
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong while trying to create new application", { position: "bottom-right" })
-      setSubmitting(false)
     }
+
+    if (props.onSuccess && result.response) props.onSuccess((result.response.data as SavedApplication))
   }
 
   return (
@@ -111,7 +112,7 @@ export default function ApplicationForm(props: ApplicationFormProps) {
             )}
           />
 
-          <Controller name="job_title" control={form.control}
+          <Controller name="position" control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>Company position</FieldLabel>

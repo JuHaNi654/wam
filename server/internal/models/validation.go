@@ -28,11 +28,11 @@ func (status ApplicationStatus) Valid() bool {
 
 const (
 	Saved        ApplicationStatus = "saved"
-	Applied                        = "applied"
-	Interviewing                   = "interviewing"
-	Offered                        = "offered"
-	Rejected                       = "rejected"
-	Withdrawn                      = "withdrawn"
+	Applied      ApplicationStatus = "applied"
+	Interviewing ApplicationStatus = "interviewing"
+	Offered      ApplicationStatus = "offered"
+	Rejected     ApplicationStatus = "rejected"
+	Withdrawn    ApplicationStatus = "withdrawn"
 )
 
 func ValidateApplicationStatus(fl validator.FieldLevel) bool {

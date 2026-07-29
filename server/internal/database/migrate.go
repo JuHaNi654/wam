@@ -14,7 +14,7 @@ func Migrate(db *gorm.DB, sqlFile string) error {
 	}
 	result := db.Exec(string(query))
 	if result.Error != nil {
-		return err
+		return result.Error
 	}
 
 	fmt.Printf("Applied %s\n", sqlFile)

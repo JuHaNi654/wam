@@ -47,15 +47,25 @@ func Routes(s *services.Service) *gin.Engine {
 	r.PUT("/api/applications/:id", Handler(s, updateApplication))
 	r.DELETE("/api/applications/:id", Handler(s, deleteApplication))
 	r.POST("/api/applications/:id/skills", Handler(s, addSkillsToTheApplication))
+	r.POST("/api/applications/:id/actions", Handler(s, createAction))
 
 	// Actions
-	r.POST("/api/jobs/:id/actions", Handler(s, createAction))
 	r.PUT("/api/actions/:id", Handler(s, updateAction))
 	r.DELETE("/api/actions/:id", Handler(s, deleteAction))
 
-	// AI agent endpoints
-	r.GET("/api/agent", Handler(s, getAgentServiceInfo))
-	r.GET("/api/agent/skills", Handler(s, generateSkillsFromAgent))
+	// llm endpoints
+	r.GET("/api/llm/status", Handler(s, llmStatus))
+	r.GET("/api/llm/providers", Handler(s, listProviders))
+	r.GET("/api/llm/providers/:provider/models", Handler(s, listModels))
+	r.POST("/api/llm/providers/:provider/load", Handler(s, loadModel))
+	r.POST("/api/llm/providers/:provider/unload", Handler(s, unloadModel))
+	r.POST("/api/llm/providers/:provider/toggle", Handler(s, toggleModel))
+
+	// Agent skill endpoints
+	r.GET("/api/llm/agent/hardskills", Handler(s, agentListSkills))
+
+	// SSE endpoints
+	r.GET("/events", Handler(s, sseHandler))
 
 	// Return 404 from invalid endpoint
 	r.NoRoute(noRoute)

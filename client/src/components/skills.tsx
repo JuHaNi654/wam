@@ -13,7 +13,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox"
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { RiAddLine } from "@remixicon/react";
 import { toast } from "sonner"
 
@@ -41,28 +41,29 @@ export default function Skills(props: Props) {
   const anchor = useComboboxAnchor()
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>(props.skills)
   const [inputValue, setInputValue] = useState("")
-
-  useEffect(() => {
-    setSelectedSkills(props.skills)
-  }, [props.skills])
-
-  const { data } = useQuery({
+  const { data, isSuccess } = useQuery({
     queryKey: ["skills"],
     queryFn: async () => {
-      return await GET<{ skills: Skill[] }>('/api/skills', null)
+      const result = await GET<Skill[]>('/api/skills', null)
+      if (result.error) throw result.error
+      return result.response?.data
     },
     retry: 0,
   })
 
+  if (!isSuccess) return null
+
   const createNewTag = async (name: string) => {
-    try {
-      const response = await POST<{ skill: Skill }>('/api/skills', { name })
-      setSelectedSkills((prev) => [...prev, response.data.skill])
-      props.update([...selectedSkills, response.data.skill])
-    } catch (err) {
-      console.error(err)
+    const result = await POST<Skill>('/api/skills', { name })
+    if (result.error) {
+      console.error(result.error)
       toast.error("Something went wrong, while trying to create new skill", { position: "bottom-right" })
+      return
     }
+
+    const skill = result.response?.data as Skill
+    setSelectedSkills((prev) => [...prev, skill])
+    props.update([...selectedSkills, skill])
   }
 
   const handleUpdate = async (items: Array<ListView | Skill>) => {
@@ -80,7 +81,7 @@ export default function Skills(props: Props) {
     <Combobox
       multiple
       autoHighlight
-      items={listItems(inputValue, data?.data.skills)}
+      items={listItems(inputValue, data)}
       value={selectedSkills}
       itemToStringLabel={(item) => item.name}
       itemToStringValue={(item) => item.id}

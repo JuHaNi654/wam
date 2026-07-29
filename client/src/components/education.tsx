@@ -16,14 +16,15 @@ export default function Education(props: Props) {
   const { openDialog, closeDialog } = useDialog()
 
   const handleDelete = async (id: string) => {
-    try {
-      await DELETE(`/api/profile/education/${id}`)
-      setEducations((prev) => prev.filter((item) => item.id !== id))
-      toast.success("Selected education deleted successfully", { position: "bottom-right" })
-    } catch (err) {
-      console.error(err)
+    const { error } = await DELETE(`/api/profile/education/${id}`, null)
+    if (error) {
+      console.error(error)
       toast.success("Something went wrong while trying to delete education", { position: "bottom-right" })
+      return
     }
+
+    setEducations((prev) => prev.filter((item) => item.id !== id))
+    toast.success("Selected education deleted successfully", { position: "bottom-right" })
   }
 
   return (

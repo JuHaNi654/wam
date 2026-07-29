@@ -1,36 +1,21 @@
 import { useNavigate } from "react-router";
 import Base from "../components/base";
 import { Button } from "../components/ui/button";
-import { GET, POST, ResponseError } from "../lib/api";
-import { useQuery } from "@tanstack/react-query"
-import { useEffect } from "react";
+import { POST } from "../lib/api";
 import { toast } from "sonner"
 
 export default function Welcome() {
   const navigate = useNavigate()
-  const { error, status } = useQuery({
-    queryKey: ["initialized"],
-    queryFn: async () => {
-      return await GET<any>('/api/profile/initialized', null)
-    },
-    retry: 0,
-  })
-
-  useEffect(() => {
-    if (status === 'success') navigate('/dashboard')
-    if (!(error instanceof ResponseError)) {
-      console.log(error)
-    }
-  }, [error, status])
 
   const createProfile = async () => {
-    try {
-      await POST<Response>("/api/profile", {});
-      navigate('/dashboard');
-    } catch (err: unknown) {
-      console.error(err)
+    const { error } = await POST<Response>("/api/profile", {});
+    if (error) {
+      console.error(error)
       toast.error("Something went wrong while trying to initialize profile", { position: "bottom-right" })
+      return
     }
+
+    navigate('/dashboard');
   }
 
   return (
