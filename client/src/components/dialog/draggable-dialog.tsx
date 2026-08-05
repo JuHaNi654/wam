@@ -68,8 +68,8 @@ export function DraggableDialog(props: DraggableDialogProps) {
         const deltaX = e.clientX - resizeStart.x;
         const deltaY = e.clientY - resizeStart.y;
 
-        let newWidth = Math.max(MIN_WIDTH, resizeStart.width + deltaX);
-        let newHeight = Math.max(MIN_HEIGHT, resizeStart.height + deltaY);
+        const newWidth = Math.max(MIN_WIDTH, resizeStart.width + deltaX);
+        const newHeight = Math.max(MIN_HEIGHT, resizeStart.height + deltaY);
         props.onSizeChange(newWidth, newHeight);
       }
     };

@@ -5,7 +5,7 @@ import type { AIAgentStatus } from "@/types/api.types";
 import { GET } from "@/lib/api";
 import Loading from "./loading";
 import { Avatar, AvatarBadge } from "./ui/avatar";
-import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiUserFill } from "@remixicon/react";
+import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiSettings2Fill, RiUserFill } from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useNotification } from "../context/notification";
 import { useEffect } from "react";
@@ -31,6 +31,11 @@ const items: Links[] = [
     label: "Profile",
     path: "/profile",
     icon: <RiUserFill />
+  },
+  {
+    label: "Settings",
+    path: "/settings",
+    icon: <RiSettings2Fill />
   }
 ]
 

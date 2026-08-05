@@ -27,6 +27,10 @@ func Routes(s *services.Service) *gin.Engine {
 	r.PUT("/api/profile", Handler(s, updateProfile))
 	r.POST("/api/profile/skills", Handler(s, saveProfileSkills))
 
+	// Settings
+	r.GET("/api/settings", Handler(s, getSettings))
+	r.POST("/api/settings", Handler(s, saveSettings))
+
 	// History
 	r.POST("/api/profile/history", Handler(s, createWorkHistory))
 	r.PUT("/api/profile/history/:id", Handler(s, updateHistory))

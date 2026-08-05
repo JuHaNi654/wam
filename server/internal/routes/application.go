@@ -8,7 +8,7 @@ import (
 	"server/internal/llm/skills"
 	"server/internal/logger"
 	"server/internal/models"
-	"server/internal/parser"
+	"server/internal/scraper"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +30,8 @@ func listApplications(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	return nil
 }
 
+// FIXME: Check why function returns 500 status code if we are missing
+// company website
 func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Application)
 
@@ -44,8 +46,15 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	// If job add link not received, then skip content scraping
 	if requestBody.Link != nil {
-		ad, err := parser.Run(&parser.Config{
-			URL: *requestBody.Link,
+		settings, err := s.SettingsRpository.Get()
+		if err != nil {
+			logger.GetInstance().Error(err.Error())
+			return &ErrorResponse{StatusCode: http.StatusInternalServerError}
+		}
+
+		ad, err := scraper.Scrape(&scraper.Config{
+			URL:              *requestBody.Link,
+			AvailableTargets: settings.Targets,
 		})
 
 		if err != nil {

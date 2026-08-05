@@ -21,7 +21,7 @@ export default function InlineEditDropdown(props: PropsInlineEditDropdown) {
     try {
       setSaving(true)
       await props.onSave({ [props.name]: next })
-    } catch (err: unknown) {
+    } catch (_) {
       setError("Failed to update status")
     } finally {
       setDraft(next)

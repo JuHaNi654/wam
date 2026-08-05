@@ -1,3 +1,8 @@
+CREATE TABLE settings { 
+  id            TEXT PRIMARY KEY,
+  scrape_targets BLOB
+}
+
 -- Ai connection / models
 CREATE TABLE ai_connections (
   id            TEXT PRIMARY KEY,

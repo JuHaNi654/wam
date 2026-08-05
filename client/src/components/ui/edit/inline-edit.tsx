@@ -42,7 +42,7 @@ export default function InlineEditText(props: EditTextProps) {
       setError(null)
       await props.onSave({ [props.name]: normalized })
       setEditing(false)
-    } catch (err: unknown) {
+    } catch (_) {
       setError(`Failed to save ${props.label}`)
     } finally {
       setSaving(false)

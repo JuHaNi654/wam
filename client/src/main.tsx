@@ -6,6 +6,7 @@ import Root from './routes/root.tsx'
 import Welcome from './routes/welcome.tsx'
 import Error from './routes/error.tsx'
 import Home from './routes/home.tsx'
+import Settings from './routes/settings.tsx'
 import Profile from './routes/profile.tsx'
 import NewApplication from './routes/application.new.tsx'
 import ApplicationDetail from './routes/application.tsx'
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: "/profile",
         element: <Profile />,
+      },
+      {
+        path: "/settings",
+        element: <Settings />,
       },
       {
         path: "/applications/new",
