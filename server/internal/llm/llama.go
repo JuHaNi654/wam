@@ -59,7 +59,12 @@ func (l *Llama) ListenSSE(ctx context.Context) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil && !errors.Is(ctx.Err(), context.Canceled) {
+	if err != nil {
+		// TODO: check other possible way to handle incoming cancel events
+		if errors.Is(ctx.Err(), context.Canceled) {
+			return
+		}
+
 		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled make http request", l.Name()))
 		logger.GetInstance().Error(err.Error())
 		return

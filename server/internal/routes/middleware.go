@@ -12,7 +12,7 @@ type NextFunc func(*gin.Context, *services.Service) *ErrorResponse
 func Handler(s *services.Service, next NextFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := next(ctx, s); err != nil {
-			if err.StatusCode != http.StatusInternalServerError {
+			if err.StatusCode == http.StatusInternalServerError {
 				ctx.JSON(http.StatusInternalServerError, ErrorResponse{
 					StatusCode: http.StatusInternalServerError,
 					Message:    "something went wrong",

@@ -30,8 +30,6 @@ func listApplications(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	return nil
 }
 
-// FIXME: Check why function returns 500 status code if we are missing
-// company website
 func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Application)
 
@@ -175,6 +173,7 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 
 func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applicationID := ctx.Param("id")
+	// TODO: update requestBody to valid struct type for possible validations
 	var requestBody map[string]any
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())

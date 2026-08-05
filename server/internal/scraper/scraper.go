@@ -91,6 +91,7 @@ func scan(b *strings.Builder, node *html.Node, target models.Target) error {
 				b.WriteString("\n")
 				b.WriteString(getNodeText(node))
 				b.WriteString("\n")
+				return
 			case "li":
 				b.WriteString("- ")
 				b.WriteString(getNodeText(node))
@@ -155,7 +156,7 @@ func fetchDocument(url *url.URL) (*html.Node, error) {
 	}
 	req.Header = header
 	client := &http.Client{}
-	res, err := client.Get(url.String())
+	res, err := client.Do(req)
 	if err != nil {
 		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
 			return nil, ErrParserTimeout

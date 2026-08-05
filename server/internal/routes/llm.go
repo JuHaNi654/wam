@@ -104,6 +104,9 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
+	// NOTE: can accidentally match if multiple models have same enough suffix
+	// (e.g. "large" only would match "model-large"), might be small use
+	// case, but possible
 	if strings.HasSuffix(llm.GetInstance().Selected(), requestBody.Model) {
 		llm.GetInstance().ClearSelected()
 

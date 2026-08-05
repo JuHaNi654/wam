@@ -31,6 +31,7 @@ func createWorkHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 func updateHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
+	// TODO: update requestBody to valid struct type for possible validations
 	var requestBody map[string]any
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())

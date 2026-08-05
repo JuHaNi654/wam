@@ -84,19 +84,19 @@ func (a *Agent) Selected() string {
 }
 
 func (a *Agent) ClearSelected() {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.selected = nil
 }
 
 func (a *Agent) Select(provider string, model string) error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
 	models, err := a.ListModels(provider)
 	if err != nil {
 		return err
 	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
 
 	for _, m := range models {
 		if m.ID == model && m.Status == "unloaded" {

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"server/internal/llm"
 	"server/internal/llm/skills"
@@ -9,6 +10,7 @@ import (
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
@@ -17,6 +19,13 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	application, err := s.ApplicationRepository.GetByID(applicationID)
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &ErrorResponse{
+				StatusCode: http.StatusInternalServerError,
+				Message:    "Application not found",
+			}
+		}
+
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 

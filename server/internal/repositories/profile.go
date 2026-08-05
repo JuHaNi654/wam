@@ -53,21 +53,24 @@ func (r *ProfileRepository) Skills() ([]models.Skill, error) {
 }
 
 func (r *ProfileRepository) SetSkills(items []models.Skill) error {
-	savedSkills := []models.ProfileSkill{}
-	ctx := context.Background()
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		savedSkills := []models.ProfileSkill{}
+		ctx := context.Background()
 
-	_, err := gorm.G[models.ProfileSkill](r.db).Where("profile_id = ?", profileKey).Delete(ctx)
-	if err != nil {
-		return err
-	}
+		_, err := gorm.G[models.ProfileSkill](r.db).Where("profile_id = ?", profileKey).Delete(ctx)
+		if err != nil {
+			return err
+		}
 
-	for _, curr := range items {
-		savedSkills = append(savedSkills, models.ProfileSkill{
-			ProfileID: profileKey,
-			SkillID:   curr.ID,
-		})
-	}
+		for _, curr := range items {
+			savedSkills = append(savedSkills, models.ProfileSkill{
+				ProfileID: profileKey,
+				SkillID:   curr.ID,
+			})
+		}
 
-	r.db.Create(savedSkills)
-	return nil
+		r.db.Create(savedSkills)
+
+		return nil
+	})
 }
