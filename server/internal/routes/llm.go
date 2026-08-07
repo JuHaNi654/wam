@@ -114,7 +114,7 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 			Type:    notification.NotificationLLMModelEnabled,
 			Content: llm.GetInstance().Selected(),
 		})
-		ctx.JSON(http.StatusNoContent, gin.H{})
+		ctx.Status(http.StatusNoContent)
 		return nil
 	}
 
@@ -134,7 +134,7 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		Type:    notification.NotificationLLMModelEnabled,
 		Content: llm.GetInstance().Selected(),
 	})
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }
 

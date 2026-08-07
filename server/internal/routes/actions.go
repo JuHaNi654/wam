@@ -19,6 +19,10 @@ func createAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
+	}
+
 	if err := s.ActionRepository.Create(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -48,8 +52,7 @@ func updateAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
-
+	ctx.Status(http.StatusNoContent)
 	return nil
 }
 
@@ -57,9 +60,9 @@ func deleteAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.ActionRepository.Delete(id); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }

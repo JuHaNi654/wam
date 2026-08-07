@@ -1,15 +1,18 @@
 package models
 
 type Education struct {
-	ID        string `gorm:"primaryKey" json:"id"`
-	Program   string `json:"program"`
-	School    string `json:"school"`
-	StartDate int64  `gorm:"column:start_date" json:"start_date"`
-	EndDate   int64  `gorm:"column:end_date" json:"end_date"`
-
-	ProfileID string `gorm:"column:profile_id" json:"profile_id"`
+	Program   string `json:"program" validate:"required"`
+	School    string `json:"school" validate:"required"`
+	StartDate int64  `json:"start_date" validate:"required" gorm:"column:start_date"`
+	EndDate   int64  `json:"end_date" validate:"required" gorm:"column:end_date"`
 }
 
-func (Education) TableName() string {
+type SavedEducation struct {
+	ID        string `json:"id" gorm:"primaryKey"`
+	ProfileID string `json:"-" gorm:"column:profile_id"`
+	Education
+}
+
+func (SavedEducation) TableName() string {
 	return "education"
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"server/internal/logger"
 	"sync"
 
 	"github.com/firebase/genkit/go/core/api"
@@ -180,7 +181,7 @@ func (a *Agent) Providers() []ProviderInfo {
 			statusCode, err := get[any](fmt.Sprintf("%s/health", addr), nil)
 			available = statusCode == 200
 			if err != nil {
-				fmt.Printf("could not check providers availability: %s\n", err.Error())
+				logger.GetInstance().Error(fmt.Sprintf("could not check providers availability: %s\n", err.Error()))
 			}
 		}
 

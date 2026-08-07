@@ -17,16 +17,18 @@ func NewActionRepository(db *gorm.DB) *ActionRepository {
 	return &ActionRepository{db: db}
 }
 
-func (r *ActionRepository) GetByJobID(jobID string) ([]models.Action, error) {
-	var items []models.Action
+func (r *ActionRepository) GetByApplicationID(jobID string) ([]models.SavedAction, error) {
+	var items []models.SavedAction
 	result := r.db.Where("application_id = ?", jobID).Find(&items)
 	return items, result.Error
 }
 
 func (r *ActionRepository) Create(action *models.Action) error {
-	action.ID = uuid.New().String()
-	action.Date = time.Now().Unix()
-	return r.db.Create(action).Error
+	return r.db.Create(models.SavedAction{
+		ID:     uuid.New().String(),
+		Date:   time.Now().Unix(),
+		Action: *action,
+	}).Error
 }
 
 func (r *ActionRepository) Update(id string, action map[string]any) error {

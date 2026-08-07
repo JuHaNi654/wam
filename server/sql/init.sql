@@ -1,15 +1,7 @@
-CREATE TABLE settings { 
-  id            TEXT PRIMARY KEY,
-  scrape_targets BLOB
-}
-
--- Ai connection / models
-CREATE TABLE ai_connections (
-  id            TEXT PRIMARY KEY,
-  name          TEXT,
-  service_addr  TEXT,
-  active_model  TEXT
-);
+CREATE TABLE settings (
+  id              TEXT PRIMARY KEY,
+  scrape_targets  BLOB
+)
 
 -- resume
 CREATE TABLE profile (

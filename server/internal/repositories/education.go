@@ -19,13 +19,15 @@ func NewEducationRepository(db *gorm.DB) *EducationRepository {
 }
 
 func (r *EducationRepository) Create(education *models.Education) error {
-	education.ID = uuid.New().String()
-	education.ProfileID = profileKey
-	return r.db.Create(education).Error
+	return r.db.Create(models.SavedEducation{
+		ID:        uuid.New().String(),
+		ProfileID: profileKey,
+		Education: *education,
+	}).Error
 }
 
-func (r *EducationRepository) ListByProfileID(profileID string) ([]models.Education, error) {
-	var items []models.Education
+func (r *EducationRepository) ListByProfileID(profileID string) ([]models.SavedEducation, error) {
+	var items []models.SavedEducation
 
 	result := r.db.Where("profile_id = ?", profileID).Find(&items)
 	return items, result.Error

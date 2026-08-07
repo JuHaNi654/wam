@@ -26,7 +26,3 @@ type ApplicationSkill struct {
 func (ApplicationSkill) TableName() string {
 	return "application_skill"
 }
-
-type NewAppliCationSkills struct {
-	Skills []Skill `json:"skills"`
-}

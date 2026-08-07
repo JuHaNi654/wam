@@ -13,7 +13,7 @@ type Service struct {
 	ProfileRepository     *repositories.ProfileRepository
 	HistoryRepository     *repositories.HistoryRepository
 	EducationRepository   *repositories.EducationRepository
-	SettingsRpository     *repositories.SettingsRepository
+	SettingsRepository    *repositories.SettingsRepository
 }
 
 func NewService(db *gorm.DB) *Service {
@@ -24,6 +24,6 @@ func NewService(db *gorm.DB) *Service {
 		ProfileRepository:     repositories.NewProfileRepository(db),
 		HistoryRepository:     repositories.NewHistoryRepository(db),
 		EducationRepository:   repositories.NewEducationRepository(db),
-		SettingsRpository:     repositories.NewSettingsRepository(db),
+		SettingsRepository:    repositories.NewSettingsRepository(db),
 	}
 }

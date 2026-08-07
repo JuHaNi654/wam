@@ -12,7 +12,7 @@ import (
 )
 
 func getSettings(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	settings, err := s.SettingsRpository.Get()
+	settings, err := s.SettingsRepository.Get()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -30,12 +30,12 @@ func saveSettings(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	if err := s.SettingsRpository.Save(requestBody); err != nil {
+	if err := s.SettingsRepository.Save(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	ctx.JSON(http.StatusCreated, Response{

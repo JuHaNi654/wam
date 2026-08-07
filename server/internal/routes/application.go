@@ -44,7 +44,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	// If job add link not received, then skip content scraping
 	if requestBody.Link != nil {
-		settings, err := s.SettingsRpository.Get()
+		settings, err := s.SettingsRepository.Get()
 		if err != nil {
 			logger.GetInstance().Error(err.Error())
 			return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -121,7 +121,7 @@ func getApplicationByID(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	actions, err := s.ActionRepository.GetByJobID(applicationID)
+	actions, err := s.ActionRepository.GetByApplicationID(applicationID)
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -185,7 +185,7 @@ func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }
 
@@ -193,9 +193,9 @@ func deleteApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.ApplicationRepository.Delete(id); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }

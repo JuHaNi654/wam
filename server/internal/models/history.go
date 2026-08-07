@@ -1,17 +1,20 @@
 package models
 
 type History struct {
-	ID          string `gorm:"primaryKey" json:"id"`
-	Company     string `json:"company"`
-	Title       string `json:"title"`
+	Company     string `json:"company" validate:"required"`
+	Title       string `json:"title" validate:"required"`
 	Description string `json:"description"`
-	StartDate   int64  `gorm:"column:start_date" json:"start_date"`
-	EndDate     int64  `gorm:"column:end_date" json:"end_date"`
+	StartDate   int64  `json:"start_date" gorm:"column:start_date"`
+	EndDate     int64  `json:"end_date" gorm:"column:end_date"`
 	Current     bool   `json:"current"`
-
-	ProfileID string `gorm:"column:profile_id" json:"profile_id"`
 }
 
-func (History) TableName() string {
+type SavedHistory struct {
+	ID        string `json:"id" gorm:"primaryKey"`
+	ProfileID string `json:"-" gorm:"column:profile_id"`
+	History
+}
+
+func (SavedHistory) TableName() string {
 	return "history"
 }

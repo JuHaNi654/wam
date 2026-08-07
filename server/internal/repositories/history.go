@@ -17,13 +17,15 @@ func NewHistoryRepository(db *gorm.DB) *HistoryRepository {
 }
 
 func (r *HistoryRepository) Create(history *models.History) error {
-	history.ID = uuid.New().String()
-	history.ProfileID = profileKey
-	return r.db.Create(history).Error
+	return r.db.Create(models.SavedHistory{
+		ID:        uuid.New().String(),
+		ProfileID: profileKey,
+		History:   *history,
+	}).Error
 }
 
-func (r *HistoryRepository) ListByProfileID(profileID string) ([]models.History, error) {
-	var items []models.History
+func (r *HistoryRepository) ListByProfileID(profileID string) ([]models.SavedHistory, error) {
+	var items []models.SavedHistory
 
 	result := r.db.Where("profile_id = ?", profileID).Find(&items)
 	return items, result.Error

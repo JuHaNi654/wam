@@ -17,6 +17,10 @@ func createWorkHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
+	}
+
 	if err := s.HistoryRepository.Create(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -43,7 +47,7 @@ func updateHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }
 
@@ -51,9 +55,9 @@ func deleteHistory(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	id := ctx.Param("id")
 	if err := s.HistoryRepository.Delete(id); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{})
+	ctx.Status(http.StatusNoContent)
 	return nil
 }

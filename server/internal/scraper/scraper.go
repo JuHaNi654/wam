@@ -50,8 +50,6 @@ func Scrape(config *Config) (string, error) {
 }
 
 func extractContent(config *Config, node *html.Node) (string, error) {
-	fmt.Printf("Config: %+v\n", config)
-
 	if len(config.AvailableTargets) == 0 {
 		return "", ErrTargetNotSet
 	}

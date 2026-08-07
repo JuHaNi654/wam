@@ -1,13 +1,17 @@
 package models
 
 type Action struct {
-	ID            string `gorm:"primaryKey" json:"id"`
-	Title         string `json:"title"`
-	Date          int64  `json:"date"`
+	Title         string `json:"title" validate:"required"`
 	Note          string `json:"note"`
-	ApplicationID string `json:"application_id" gorm:"column:application_id"`
+	ApplicationID string `json:"application_id" validate:"required" gorm:"column:application_id"`
 }
 
-func (Action) TableName() string {
+type SavedAction struct {
+	ID   string `gorm:"primaryKey" json:"id"`
+	Date int64  `json:"date"`
+	Action
+}
+
+func (SavedAction) TableName() string {
 	return "actions"
 }
