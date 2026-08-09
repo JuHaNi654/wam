@@ -1,12 +1,12 @@
-import { Button } from "../ui/button"
+import { Button } from "./ui/button"
 import { useDialog } from "@/context/dialog-context"
 import { RiEyeLine } from "@remixicon/react";
 import { renderDate } from "@/lib/date";
-import ActionForm from "../form/action";
-import { UpdateActionForm } from "../form/action";
-import type { Action, SavedAction } from "../form/action";
+import ActionForm from "./form/action";
+import { UpdateActionForm } from "./form/action";
+import type { Action, SavedAction } from "./form/action";
 import { useState } from "react";
-import { DeleteConfirmationDialog } from "../dialog/alert-dialog";
+import { DeleteConfirmationDialog } from "./dialog/alert-dialog";
 import { DELETE } from "@/lib/api";
 import { toast } from "sonner"
 

@@ -1,8 +1,8 @@
 import { useDialog } from "@/context/dialog-context";
-import { Button } from "../ui/button";
+import { Button } from "./ui/button";
 import type { Application } from "@/types/api.types";
 import { useState } from "react";
-import { Textarea } from "../ui/textarea";
+import { Textarea } from "./ui/textarea";
 
 type DocumentProps = {
   name?: string

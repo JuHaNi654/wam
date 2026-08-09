@@ -1,6 +1,8 @@
 import { createContext, useContext, useReducer, useCallback } from "react";
 import type { ReactNode } from "react";
 
+export const useDialog = () => { };
+
 export interface DialogInstance {
   id: string;
   title: string;
@@ -150,10 +152,3 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useDialog(): DialogContextType {
-  const context = useContext(DialogContext);
-  if (!context) {
-    throw new Error("useDialog must be used within a DialogProvider");
-  }
-  return context;
-}

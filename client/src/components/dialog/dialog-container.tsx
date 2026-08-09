@@ -2,7 +2,10 @@ import { createPortal } from "react-dom";
 import { useDialog } from "@/context/dialog-context";
 import { DraggableDialog } from "./draggable-dialog";
 
+
+
 export function DialogContainer() {
+  return null
   const { dialogs, closeDialog, updatePosition, updateSize, focusDialog } =
     useDialog();
 

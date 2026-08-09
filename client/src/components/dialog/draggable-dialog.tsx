@@ -105,7 +105,7 @@ export function DraggableDialog(props: DraggableDialogProps) {
         className={cn(
           "flex items-center justify-between p-3 border-b border-border bg-muted/40 select-none",
           isDragging && "bg-muted/60 cursor-grabbing",
-          !isDragging && "cursor-move cursor-grab hover:bg-muted/50 transition-colors"
+          !isDragging && "cursor-grab hover:bg-muted/50 transition-colors"
         )}
         onMouseDown={handleTitleMouseDown}
       >
