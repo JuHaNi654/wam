@@ -19,9 +19,6 @@ import { useQuery } from "@tanstack/react-query";
 import { DELETE, GET } from "@/lib/api";
 import { DeleteConfirmationDialog } from "@/components/dialog/alert-dialog";
 import { toast } from "sonner"
-import { createPortal } from "react-dom";
-import Modal from "@/components/modal";
-import { useState } from "react";
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link'> = {
   saved: "default",
@@ -33,7 +30,6 @@ const statusVariant: Record<ApplicationStatus, 'default' | 'secondary' | 'destru
 };
 
 export default function Home() {
-  const [showModal, setShowModal] = useState(false)
   const { data, isSuccess, isLoading, refetch } = useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
@@ -106,11 +102,6 @@ export default function Home() {
           </TableBody>
         </Table>
       </div>
-      <section>
-        <h2>Test</h2>
-        <button onClick={() => setShowModal(true)}>Show modal</button>
-        {showModal && createPortal(<Modal onClose={() => setShowModal(false)} />, document.body)}
-      </section>
     </Base>
   )
 }

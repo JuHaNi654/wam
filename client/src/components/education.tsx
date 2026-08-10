@@ -1,4 +1,3 @@
-import { useDialog } from "@/context/dialog-context"
 import type { Education } from "@/types/api.types"
 import { Button } from "./ui/button"
 import { renderDate } from "@/lib/date"
@@ -7,13 +6,15 @@ import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
 import { useState } from "react"
 import { DELETE } from "@/lib/api"
 import { toast } from "sonner"
+import { createPortal } from "react-dom"
+import Modal from "./modal"
 
 type Props = {
   data: Education[]
 }
 export default function Education(props: Props) {
+  const [showFormModal, setShowModalForm] = useState(false)
   const [educations, setEducations] = useState(props.data)
-  const { openDialog, closeDialog } = useDialog()
 
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/api/profile/education/${id}`, null)
@@ -33,24 +34,19 @@ export default function Education(props: Props) {
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Education
         </h3>
-        <Button variant="outline" size="sm" onClick={() => {
-          openDialog({
-            id: "new-education",
-            title: "New education",
-            children: (
-              <EducationForm
-                onCancel={() => closeDialog('new-education')}
-                onSubmit={(data: SavedEducation) => {
-                  setEducations((prev) => [...prev, data])
-                  closeDialog('new-education')
-                }} />
-            ),
-            width: 420,
-            height: 380,
-          })
-        }}>
+        <Button variant="outline" size="sm" onClick={() => setShowModalForm(true)}>
           + Add education
         </Button>
+        {showFormModal && createPortal(
+          <Modal title="New education" onClose={() => setShowModalForm(false)}>
+            <EducationForm
+              onCancel={() => setShowModalForm(false)}
+              onSubmit={(data: SavedEducation) => {
+                setEducations((prev) => [...prev, data])
+                setShowModalForm(false)
+              }} />
+          </Modal>, document.body
+        )}
       </div>
 
       {educations.length === 0 && (
