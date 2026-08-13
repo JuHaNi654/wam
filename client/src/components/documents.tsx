@@ -1,8 +1,9 @@
-import { useDialog } from "@/context/dialog-context";
-import { Button } from "../ui/button";
+import { Button } from "./ui/button";
 import type { Application } from "@/types/api.types";
 import { useState } from "react";
-import { Textarea } from "../ui/textarea";
+import { Textarea } from "./ui/textarea";
+import { createPortal } from "react-dom";
+import Modal from "./modal";
 
 type DocumentProps = {
   name?: string
@@ -45,28 +46,8 @@ type DocumentsProps = {
 }
 
 export default function Documents(props: DocumentsProps) {
-  const { openDialog } = useDialog()
-
-  const showAd = () => {
-    openDialog({
-      id: "job-ad",
-      title: "Job ad",
-      children: (<Document content={props.application.ad} />),
-      width: 560,
-      height: 480
-    })
-  }
-
-
-  const showApplication = () => {
-    openDialog({
-      id: "job-application",
-      title: "Job application",
-      children: (<Document name="application" update={props.onUpdate} content={props.application.application} editable />),
-      width: 560,
-      height: 480
-    })
-  }
+  const [showAd, setShowAd] = useState(false)
+  const [showApplication, setShowApplication] = useState(false)
 
   return (
     <div className="bg-card border rounded-lg p-6">
@@ -75,8 +56,18 @@ export default function Documents(props: DocumentsProps) {
         Documents
       </h3>
       <div className="flex gap-3">
-        <Button variant="outline" onClick={showAd}>View Job ad</Button>
-        <Button variant="outline" onClick={showApplication}>View Job application</Button>
+        <Button variant="outline" onClick={() => setShowAd(true)}>View Job ad</Button>
+        {showAd && createPortal(
+          <Modal onClose={() => setShowAd(false)} title="Job ad">
+            <Document content={props.application.ad} />
+          </Modal>, document.body
+        )}
+        <Button variant="outline" onClick={() => setShowApplication(true)}>View Job application</Button>
+        {showApplication && createPortal(
+          <Modal onClose={() => setShowApplication(false)} title="Job application">
+            <Document name="application" update={props.onUpdate} content={props.application.application} editable />
+          </Modal>, document.body
+        )}
       </div>
     </div>
   )

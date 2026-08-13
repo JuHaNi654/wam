@@ -1,14 +1,15 @@
-import { Button } from "../ui/button"
-import { useDialog } from "@/context/dialog-context"
+import { Button } from "./ui/button"
 import { RiEyeLine } from "@remixicon/react";
 import { renderDate } from "@/lib/date";
-import ActionForm from "../form/action";
-import { UpdateActionForm } from "../form/action";
-import type { Action, SavedAction } from "../form/action";
+import ActionForm from "./form/action";
+import { UpdateActionForm } from "./form/action";
+import type { Action, SavedAction } from "./form/action";
 import { useState } from "react";
-import { DeleteConfirmationDialog } from "../dialog/alert-dialog";
+import { DeleteConfirmationDialog } from "./dialog/alert-dialog";
 import { DELETE } from "@/lib/api";
 import { toast } from "sonner"
+import Modal from "./modal";
+import { createPortal } from "react-dom";
 
 type Props = {
   applicationId: string,
@@ -16,8 +17,12 @@ type Props = {
 }
 
 export default function Actions(props: Props) {
-  const { openDialog, closeDialog } = useDialog()
+  const [modalOpenState, setModalOpenState] = useState<{ [k: string]: boolean }>({})
   const [actions, setActions] = useState<SavedAction[]>(props.actions)
+
+  const toggleTargetModal = (id: string, value: boolean) => {
+    setModalOpenState({ ...modalOpenState, [id]: value })
+  }
 
   const handleUpdate = (actionId: string, action: Action) => {
     setActions((prev) =>
@@ -40,25 +45,20 @@ export default function Actions(props: Props) {
     <div className="bg-card border rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Actions</h3>
-        <Button variant="outline" size="sm" onClick={() => {
-          openDialog({
-            id: "new-action-dialog",
-            title: "New action",
-            children: (
-              <ActionForm applicationId={props.applicationId}
-                onCancel={() => closeDialog("new-action-dialog")}
-                onSubmit={(data: SavedAction) => {
-                  setActions((prev) => [...prev, data])
-                  closeDialog("new-action-dialog")
-                }}
-              />
-            ),
-            width: 420,
-            height: 380
-          })
-        }}>
+        <Button variant="outline" size="sm" onClick={() => toggleTargetModal("new-action-dialog", true)}>
           + Add Action
         </Button>
+        {modalOpenState["new-action-dialog"] && createPortal(
+          <Modal onClose={() => toggleTargetModal("new-action-dialog", false)} title="New action">
+            <ActionForm applicationId={props.applicationId}
+              onCancel={() => toggleTargetModal("new-action-dialog", false)}
+              onSubmit={(data: SavedAction) => {
+                setActions((prev) => [...prev, data])
+                toggleTargetModal("new-action-dialog", false)
+              }}
+            />
+          </Modal>, document.body
+        )}
       </div>
 
       {actions.length === 0 && (
@@ -74,22 +74,17 @@ export default function Actions(props: Props) {
               </div>
               <p className="flex-1 font-medium">{action.title}</p>
               <div className="">
-                <Button type="button" variant="ghost"
-                  size="icon-sm"
-                  aria-label="View action"
-                  className="shrink-0 cursor-pointer"
-                  onClick={() => {
-                    openDialog({
-                      id: action.id,
-                      title: action.title,
-                      children: <UpdateActionForm onSave={handleUpdate} action={action} />,
-                      width: 520,
-                      height: 560,
-                    })
-                  }}
-                >
+                <Button type="button" variant="ghost" size="icon-sm"
+                  aria-label="View action" className="shrink-0 cursor-pointer"
+                  onClick={() => toggleTargetModal(action.id, true)}>
                   <RiEyeLine />
                 </Button>
+
+                {modalOpenState[action.id] && createPortal(
+                  <Modal onClose={() => toggleTargetModal(action.id, false)} title="New action">
+                    <UpdateActionForm onSave={handleUpdate} action={action} />
+                  </Modal>, document.body
+                )}
 
                 <DeleteConfirmationDialog buttonLabel="Delete action"
                   title="Are you sure, you want to delete selected item"

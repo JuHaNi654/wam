@@ -4,17 +4,18 @@ import { Link } from "react-router";
 import Loading from "@/components/loading";
 import type { Application, Skill } from "@/types/api.types";
 import InlineEditDropdown from "../components/ui/edit/dropdown-edit";
-import Documents from "@/components/application/documents";
-import Actions from "@/components/application/actions";
+import Documents from "@/components/documents";
+import Actions from "@/components/actions";
 import { renderDate } from "@/lib/date";
 import Base from "@/components/base";
 import Skills from "@/components/skills";
 import { GET, POST, PUT } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { useDialog } from "@/context/dialog-context";
 import { useState } from "react";
 import { toast } from "sonner"
 import type { SavedAction } from "@/components/form/action";
+import { createPortal } from "react-dom";
+import Modal from "@/components/modal";
 
 const statusOptions: string[] = [
   "saved",
@@ -32,7 +33,7 @@ type ApplicationDetails = {
 }
 
 export default function ApplicationDetail() {
-  const { openDialog } = useDialog()
+  const [toggleSkillsModal, setToggleSkillsModal] = useState(false)
   const { id } = useParams();
   const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["application", id],
@@ -89,17 +90,14 @@ export default function ApplicationDetail() {
               uppercase tracking-wide">
                 Skills
               </h3>
-              <Button variant="outline" size="sm" onClick={() => {
-                openDialog({
-                  id: "agent-skills",
-                  title: "Generate list of skills",
-                  children: <AISkill applicationID={data.application.id} />,
-                  width: 420,
-                  height: 380
-                })
-              }}>
+              <Button variant="outline" size="sm" onClick={() => setToggleSkillsModal(true)}>
                 AI
               </Button>
+              {toggleSkillsModal && createPortal(
+                <Modal onClose={() => setToggleSkillsModal(false)} title="Generate list of skills">
+                  <AISkill applicationID={data.application.id} />
+                </Modal>, document.body
+              )}
 
             </div>
             <Skills skills={data!.skills ?? []} update={saveSkills} />
