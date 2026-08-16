@@ -23,14 +23,15 @@ func createAction(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
 	}
 
-	if err := s.ActionRepository.Create(requestBody); err != nil {
+	savedAction, err := s.ActionRepository.Create(requestBody)
+	if err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
 	ctx.JSON(http.StatusCreated, Response{
 		StatusCode: http.StatusCreated,
-		Data:       requestBody,
+		Data:       savedAction,
 	})
 
 	return nil

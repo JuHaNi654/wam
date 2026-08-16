@@ -35,7 +35,7 @@ func setupServiceEnvironment(t *testing.T) *services.Service {
 	}
 
 	err = db.AutoMigrate(
-		&models.Application{},
+		&models.SavedApplication{},
 		&models.Skill{},
 		&models.ApplicationSkill{},
 		&models.Action{},
@@ -103,7 +103,7 @@ func TestListApplications(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := setupServiceEnvironment(t)
 			for i := range tt.seed {
-				if err := svc.ApplicationRepository.Create(&tt.seed[i]); err != nil {
+				if _, err := svc.ApplicationRepository.Create(tt.seed[i]); err != nil {
 					t.Fatalf("seed: %v", err)
 				}
 			}
@@ -138,8 +138,8 @@ func TestListApplications(t *testing.T) {
 // from each item in the list response.
 func TestListApplications_ResponseShape(t *testing.T) {
 	svc := setupServiceEnvironment(t)
-	app := &models.Application{Name: "Shape Test", Company: "Acme", Position: "Dev", Status: models.Saved}
-	if err := svc.ApplicationRepository.Create(app); err != nil {
+	app := models.Application{Name: "Shape Test", Company: "Acme", Position: "Dev", Status: models.Saved}
+	if _, err := svc.ApplicationRepository.Create(app); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
@@ -262,21 +262,21 @@ func TestGetApplicationByID(t *testing.T) {
 	tests := []struct {
 		name     string
 		seedApp  bool
-		paramID  func(seeded *models.Application) string
+		paramID  func(seeded *models.SavedApplication) string
 		wantCode int
 		wantErr  bool
 	}{
 		{
 			name:     "existing application returns 200 with full payload",
 			seedApp:  true,
-			paramID:  func(a *models.Application) string { return a.ID },
+			paramID:  func(a *models.SavedApplication) string { return a.ID },
 			wantCode: http.StatusOK,
 			wantErr:  false,
 		},
 		{
 			name:     "non-existent ID returns 404",
 			seedApp:  false,
-			paramID:  func(_ *models.Application) string { return "00000000-0000-0000-0000-000000000000" },
+			paramID:  func(_ *models.SavedApplication) string { return "00000000-0000-0000-0000-000000000000" },
 			wantCode: http.StatusNotFound,
 			wantErr:  true,
 		},
@@ -285,14 +285,17 @@ func TestGetApplicationByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := setupServiceEnvironment(t)
-			app := &models.Application{Name: "Test App", Company: "Corp", Position: "Dev", Status: models.Saved}
+			seedApp := models.Application{Name: "Test App", Company: "Corp", Position: "Dev", Status: models.Saved}
+			var savedApp *models.SavedApplication
 			if tt.seedApp {
-				if err := svc.ApplicationRepository.Create(app); err != nil {
+				var err error
+				savedApp, err = svc.ApplicationRepository.Create(seedApp)
+				if err != nil {
 					t.Fatalf("seed: %v", err)
 				}
 			}
 
-			id := tt.paramID(app)
+			id := tt.paramID(savedApp)
 			ctx, recorder := newApplicationTestContext(http.MethodGet, "/api/applications/"+id, nil)
 			ctx.Params = gin.Params{{Key: "id", Value: id}}
 
@@ -355,8 +358,9 @@ func TestUpdateApplication(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := setupServiceEnvironment(t)
-			app := &models.Application{Name: "Update Me", Company: "Corp", Position: "Dev", Status: models.Saved}
-			if err := svc.ApplicationRepository.Create(app); err != nil {
+			app := models.Application{Name: "Update Me", Company: "Corp", Position: "Dev", Status: models.Saved}
+			savedApp, err := svc.ApplicationRepository.Create(app)
+			if err != nil {
 				t.Fatalf("seed: %v", err)
 			}
 
@@ -365,8 +369,8 @@ func TestUpdateApplication(t *testing.T) {
 				t.Fatalf("marshal body: %v", err)
 			}
 
-			ctx, recorder := newApplicationTestContext(http.MethodPut, "/api/applications/"+app.ID, b)
-			ctx.Params = gin.Params{{Key: "id", Value: app.ID}}
+			ctx, recorder := newApplicationTestContext(http.MethodPut, "/api/applications/"+savedApp.ID, b)
+			ctx.Params = gin.Params{{Key: "id", Value: savedApp.ID}}
 
 			errResp := updateApplication(ctx, svc)
 
@@ -416,14 +420,16 @@ func TestDeleteApplication(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := setupServiceEnvironment(t)
-			app := &models.Application{Name: "Delete Me", Company: "Corp", Position: "Dev", Status: models.Saved}
-
+			app := models.Application{Name: "Delete Me", Company: "Corp", Position: "Dev", Status: models.Saved}
+			var savedApp *models.SavedApplication
 			id := "00000000-0000-0000-0000-000000000000"
 			if tt.seedApp {
-				if err := svc.ApplicationRepository.Create(app); err != nil {
+				var err error
+				savedApp, err = svc.ApplicationRepository.Create(app)
+				if err != nil {
 					t.Fatalf("seed: %v", err)
 				}
-				id = app.ID
+				id = savedApp.ID
 			}
 
 			ctx, recorder := newApplicationTestContext(http.MethodDelete, "/api/applications/"+id, nil)
@@ -482,8 +488,9 @@ func TestAddSkillsToTheApplication(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := setupServiceEnvironment(t)
-			app := &models.Application{Name: "Skill App", Company: "Corp", Position: "Dev", Status: models.Saved}
-			if err := svc.ApplicationRepository.Create(app); err != nil {
+			app := models.Application{Name: "Skill App", Company: "Corp", Position: "Dev", Status: models.Saved}
+			savedApp, err := svc.ApplicationRepository.Create(app)
+			if err != nil {
 				t.Fatalf("seed app: %v", err)
 			}
 
@@ -492,8 +499,8 @@ func TestAddSkillsToTheApplication(t *testing.T) {
 				t.Fatalf("marshal body: %v", err)
 			}
 
-			ctx, recorder := newApplicationTestContext(http.MethodPost, "/api/applications/"+app.ID+"/skills", b)
-			ctx.Params = gin.Params{{Key: "id", Value: app.ID}}
+			ctx, recorder := newApplicationTestContext(http.MethodPost, "/api/applications/"+savedApp.ID+"/skills", b)
+			ctx.Params = gin.Params{{Key: "id", Value: savedApp.ID}}
 
 			errResp := addSkillsToTheApplication(ctx, svc)
 

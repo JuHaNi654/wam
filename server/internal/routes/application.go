@@ -61,16 +61,16 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 			requestBody.Ad = ad
 		}
 	}
-
-	if err := s.ApplicationRepository.Create(requestBody); err != nil {
+	savedApplication, err := s.ApplicationRepository.Create(*requestBody)
+	if err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	if llm.GetInstance().Selected() != "" {
+	if llm.GetInstance() != nil && llm.GetInstance().Selected() != "" {
 		c := context.Background()
 		result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
-			Ad: requestBody.Ad,
+			Ad: savedApplication.Ad,
 		})
 
 		if err != nil {
@@ -91,7 +91,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 				savedSkills = append(savedSkills, *savedSkill)
 			}
 
-			_, err = s.ApplicationRepository.SetSkills(savedSkills, requestBody.ID)
+			_, err = s.ApplicationRepository.SetSkills(savedSkills, savedApplication.ID)
 			if err != nil {
 				logger.GetInstance().Error(err.Error())
 			}
@@ -100,7 +100,7 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	ctx.JSON(http.StatusCreated, Response{
 		StatusCode: http.StatusCreated,
-		Data:       requestBody,
+		Data:       savedApplication,
 	})
 
 	return nil
@@ -186,6 +186,7 @@ func updateApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	}
 
 	ctx.Status(http.StatusNoContent)
+	ctx.Writer.WriteHeaderNow()
 	return nil
 }
 
@@ -197,5 +198,6 @@ func deleteApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	}
 
 	ctx.Status(http.StatusNoContent)
+	ctx.Writer.WriteHeaderNow()
 	return nil
 }

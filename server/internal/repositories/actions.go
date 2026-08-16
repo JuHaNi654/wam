@@ -23,12 +23,13 @@ func (r *ActionRepository) GetByApplicationID(jobID string) ([]models.SavedActio
 	return items, result.Error
 }
 
-func (r *ActionRepository) Create(action *models.Action) error {
-	return r.db.Create(models.SavedAction{
+func (r *ActionRepository) Create(action *models.Action) (models.SavedAction, error) {
+	savedAction := models.SavedAction{
 		ID:     uuid.New().String(),
 		Date:   time.Now().Unix(),
 		Action: *action,
-	}).Error
+	}
+	return savedAction, r.db.Create(savedAction).Error
 }
 
 func (r *ActionRepository) Update(id string, action map[string]any) error {

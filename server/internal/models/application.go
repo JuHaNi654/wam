@@ -1,19 +1,23 @@
 package models
 
 type Application struct {
-	ID          string            `json:"id,omitempty" gorm:"primaryKey"`
 	Name        string            `json:"name,omitempty" validate:"required"`
 	Company     string            `json:"company,omitempty" validate:"required"`
 	Position    string            `json:"position,omitempty" validate:"required"`
 	Homepage    *string           `json:"homepage,omitempty" validate:"omitempty,https_url,url"`
 	Link        *string           `json:"link,omitempty" validate:"omitempty,https_url,url"`
 	Status      ApplicationStatus `json:"status,omitempty" validate:"required,validate_status"`
-	CreateDate  int64             `json:"create_date,omitempty" gorm:"column:create_date"`
 	Ad          string            `json:"ad,omitempty"`
 	Application string            `json:"application,omitempty"`
 }
 
-func (Application) TableName() string {
+type SavedApplication struct {
+	ID         string `json:"id,omitempty" gorm:"primaryKey"`
+	CreateDate int64  `json:"create_date,omitempty" gorm:"column:create_date"`
+	Application
+}
+
+func (SavedApplication) TableName() string {
 	return "application"
 }
 

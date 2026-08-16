@@ -17,25 +17,29 @@ func NewApplicationRepository(db *gorm.DB) *ApplicationRepository {
 	return &ApplicationRepository{db: db}
 }
 
-func (r *ApplicationRepository) List() ([]models.Application, error) {
-	items := []models.Application{}
-	result := r.db.Model(&models.Application{}).
+func (r *ApplicationRepository) List() (*[]models.SavedApplication, error) {
+	items := new([]models.SavedApplication)
+	result := r.db.Model(&models.SavedApplication{}).
 		Select([]string{"id", "name", "company", "status", "create_date"}).
-		Find(&items)
+		Find(items)
 
 	return items, result.Error
 }
 
-func (r *ApplicationRepository) Create(application *models.Application) error {
-	application.ID = uuid.New().String()
-	application.CreateDate = time.Now().Unix()
-	return r.db.Create(application).Error
+func (r *ApplicationRepository) Create(application models.Application) (*models.SavedApplication, error) {
+	newApplication := &models.SavedApplication{
+		ID:          uuid.New().String(),
+		CreateDate:  time.Now().Unix(),
+		Application: application,
+	}
+	err := r.db.Create(newApplication).Error
+	return newApplication, err
 }
 
-func (r *ApplicationRepository) GetByID(applicationID string) (*models.Application, error) {
-	var item models.Application
-	result := r.db.First(&item, "id = ?", applicationID)
-	return &item, result.Error
+func (r *ApplicationRepository) GetByID(applicationID string) (*models.SavedApplication, error) {
+	item := new(models.SavedApplication)
+	result := r.db.First(item, "id = ?", applicationID)
+	return item, result.Error
 }
 
 func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID string) ([]models.Skill, error) {
@@ -83,6 +87,6 @@ func (r *ApplicationRepository) Delete(id string) error {
 	ctx := context.Background()
 	// Relying on cascade delete, might need to wrap in to the transaction
 	// function
-	_, err := gorm.G[models.Application](r.db).Where("id = ?", id).Delete(ctx)
+	_, err := gorm.G[models.SavedApplication](r.db).Where("id = ?", id).Delete(ctx)
 	return err
 }
