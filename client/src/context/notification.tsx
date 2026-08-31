@@ -24,10 +24,11 @@ type Props = {
 export default function NotificationProvider(props: Props) {
   const [event, setEvent] = useState<NotificationPayload<DynamicObject>>(defaultPayload)
   useEffect(() => {
-    if (props.url) Notification.mount(props.url)
     const unsub = Notification.subscribe((e) => {
       setEvent(e as any) //FIXME: fix typing
     })
+
+    if (props.url) Notification.mount(props.url)
 
     return () => {
       unsub()

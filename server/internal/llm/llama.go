@@ -3,7 +3,6 @@ package llm
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -12,6 +11,8 @@ import (
 	"os"
 	"server/internal/logger"
 	"server/internal/notification"
+	"strings"
+	"time"
 
 	"github.com/firebase/genkit/go/plugins/compat_oai"
 )
@@ -45,62 +46,109 @@ type Llama struct {
 
 func (l *Llama) ListenSSE(ctx context.Context) {
 	url := fmt.Sprintf("%s/models/sse", l.BaseURL)
+	client := &http.Client{}
+	backoff := time.Second
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled initialize http request", l.Name()))
+		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unable initialize http request", l.Name()))
 		logger.GetInstance().Error(err.Error())
 		return
 	}
-
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Connection", "keep-alive")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		// TODO: check other possible way to handle incoming cancel events
-		if errors.Is(ctx.Err(), context.Canceled) {
+	for {
+		if ctx.Err() != nil {
 			return
 		}
 
-		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unabled make http request", l.Name()))
-		logger.GetInstance().Error(err.Error())
-		return
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) returned non 200 status code", l.Name()))
-		return
-	}
-
-	l.SSEListenerEnabled = true
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		if len(scanner.Bytes()) == 0 {
+		resp, err := client.Do(req)
+		if err != nil {
+			logger.GetInstance().Error(fmt.Sprintf("Provider (%s) unable make http request", l.Name()))
+			logger.GetInstance().Error(err.Error())
+			if !waitBackoff(ctx, &backoff) {
+				return
+			}
 			continue
 		}
 
-		payload := bytes.TrimPrefix(scanner.Bytes(), []byte("data: "))
-
-		var data ModelSSE
-		if err := json.Unmarshal(payload, &data); err != nil {
-			logger.GetInstance().Error(fmt.Sprintf("Provider (%s) invalid sse body", l.Name()))
+		if resp.StatusCode != http.StatusOK {
+			logger.GetInstance().Error(fmt.Sprintf("Provider (%s) returned non-200 status code: %d", l.Name(), resp.StatusCode))
+			resp.Body.Close()
+			if !waitBackoff(ctx, &backoff) {
+				return
+			}
 			continue
 		}
 
-		notification.GetInstance().Send(notification.Payload{
-			Type:    notification.NotificationLLMStatusChange,
-			Content: data,
-		})
-	}
+		backoff = time.Second
 
-	if scanner.Err() != nil && !errors.Is(ctx.Err(), context.Canceled) {
-		logger.GetInstance().Error(fmt.Sprintf("Provider (%s) scanner  returned error", l.Name()))
-		logger.GetInstance().Error(scanner.Err().Error())
+		scanner := bufio.NewScanner(resp.Body)
+		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+		l.SSEListenerEnabled = true
+		for scanner.Scan() {
+			if ctx.Err() != nil {
+				resp.Body.Close()
+				l.SSEListenerEnabled = false
+				return
+			}
+
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, ":") || !strings.HasPrefix(line, "data:") {
+				continue
+			}
+
+			payload := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+			if payload == "" || payload == "[DONE]" {
+				continue
+			}
+
+			var data ModelSSE
+			if err := json.Unmarshal([]byte(payload), &data); err != nil {
+				logger.GetInstance().Error(fmt.Sprintf("Provider (%s) invalid sse body: %s", l.Name(), payload))
+				continue
+			}
+
+			instance := notification.GetInstance()
+			if instance == nil {
+				logger.GetInstance().Error("notification service not initialized")
+				continue
+			}
+
+			logger.GetInstance().Debug(fmt.Sprintf("Llama (SSE): %+v", data))
+			instance.Send(notification.Payload{
+				Type:    notification.NotificationLLMStatusChange,
+				Content: data,
+			})
+		}
+
+		if err := scanner.Err(); err != nil && ctx.Err() == nil {
+			l.SSEListenerEnabled = false
+			logger.GetInstance().Error(fmt.Sprintf("Provider (%s) scanner returned error", l.Name()))
+			logger.GetInstance().Error(err.Error())
+		}
+
+		resp.Body.Close()
+
+		if !waitBackoff(ctx, &backoff) {
+			return
+		}
 	}
+}
+
+func waitBackoff(ctx context.Context, backoff *time.Duration) bool {
+	select {
+	case <-ctx.Done():
+		return false
+	case <-time.After(*backoff):
+	}
+	if *backoff < 10*time.Second {
+		*backoff *= 2
+	}
+	return true
 }
 
 func (l *Llama) Name() string {

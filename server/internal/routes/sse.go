@@ -33,11 +33,13 @@ func sseHandler(ctx *gin.Context, _ *services.Service) *ErrorResponse {
 
 	for {
 		select {
-		case msg := <-client.Send:
+		case msg, ok := <-client.Send:
+			if !ok {
+				return nil
+			}
 			fmt.Fprintf(ctx.Writer, "data: %s\n\n", msg)
 			ctx.Writer.Flush()
 		case <-client.Done:
-			instance.UnRegister(client)
 			return nil
 		case <-ctx.Done():
 			return nil
