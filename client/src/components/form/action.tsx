@@ -8,17 +8,18 @@ import { POST, PUT } from "@/lib/api"
 import { Textarea } from "../ui/textarea"
 import { renderDate } from "@/lib/date"
 import { toast } from "sonner"
+import { DatePickerInput } from "../date-picker"
 
 const formSchema = z.object({
   title: z.string(),
-  note: z.string()
+  note: z.string(),
+  date: z.number()
 })
 
 export type Action = z.infer<typeof formSchema>
 export type SavedAction = {
   id: string;
   job_id: string;
-  date: number;
 } & Action
 type ActionFormProps = {
   applicationId: string;
@@ -31,7 +32,8 @@ export default function ActionForm(props: ActionFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      note: ""
+      note: "",
+      date: new Date().getTime() / 1000
     }
   })
 
@@ -54,6 +56,15 @@ export default function ActionForm(props: ActionFormProps) {
   return (
     <form id="action-form" onSubmit={form.handleSubmit(handleSubmit)}>
       <FieldGroup>
+        <Controller name="date" control={form.control}
+          render={({ field }) => (
+            <DatePickerInput label="Date" valueInUnix={field.value}
+              onChange={(date) => field.onChange(date)}
+            />
+          )}>
+        </Controller>
+
+
         <Controller name="title" control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -125,7 +136,7 @@ export function UpdateActionForm(props: UpdateActionFormProps) {
     <form id="action-form" onSubmit={form.handleSubmit(handleSubmit)}>
       <FieldGroup>
         <div className="text-sm">
-          <h3>Created</h3>
+          <h3>Date of action</h3>
           <span>{renderDate(props.action.date)}</span>
         </div>
 

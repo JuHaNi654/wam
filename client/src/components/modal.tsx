@@ -37,7 +37,7 @@ export default function Modal(props: ModalProps) {
 
   const focusModal = useRef(() => {
     if (!modalRef.current) return
-    modalRef.current.style.zIndex = '99'
+    modalRef.current.style.zIndex = '40'
   }).current
 
   const blurModal = useRef((e: any) => {
