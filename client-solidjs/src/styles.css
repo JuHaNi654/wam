@@ -1,0 +1,165 @@
+@import 'tailwindcss';
+@plugin "daisyui";
+@import './theme.css';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+body {
+  background-color: #09090B;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  font-size: 1.6rem;
+}
+
+.body-wrapper {
+  flex: 1;
+  display: flex;
+  gap: 1rem;
+
+  & aside {
+    width: min(25%, 17.5rem);
+  }
+
+  & main {
+    flex: 1;
+  }
+}
+
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    width: 78%;
+    height: 170%;
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(.82);
+    filter: blur(1rem);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+
+  &:hover,
+  &:focus {
+    &::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+}
+
+.btn-glow-danger::after {
+  background: radial-gradient(ellipse at center,
+      rgb(244 63 94/ .75) 0%,
+      rgb(244 63 94/ .25) 42%,
+      transparent 72%);
+}
+
+
+.btn-glow-primary::after {
+  background: radial-gradient(ellipse at center,
+      rgb(52 211 153 / .75) 0%,
+      rgb(16 185 129 / .55) 42%,
+      transparent 72%);
+}
+
+.sidenav-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: #A1A1AA;
+  padding: 0.6rem 0.8rem;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    width: 78%;
+    height: 170%;
+    transform: translate(-50%, -50%) scale(.82);
+    background: radial-gradient(ellipse at center,
+        rgb(52 211 153 / .55) 0%, rgb(16 185 129 / .25) 42%, transparent 72%);
+    filter: blur(20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+
+  &:hover,
+  &:focus {
+    background: rgb(255 255 255 / .03);
+    border-color: rgb(255 255 255 / .07);
+    backdrop-filter: blur(10px) saturate(140%);
+    color: #FAFAFA;
+
+    &::after {
+      opacity: 0.55;
+    }
+  }
+
+  &[data-page="true"] {
+    background: rgb(255 255 255 / .045);
+    border-color: rgb(255 255 255 / .14);
+    backdrop-filter: blur(10px) saturate(140%);
+    color: #FAFAFA;
+    font-weight: 600;
+
+    &::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+}
+
+/* Cally components */
+calendar-select-year {
+  &::part(select) {
+    border: unset;
+    background: transparent;
+    cursor: pointer;
+  }
+}
+
+
+.input {
+  & input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    appearance: auto;
+  }
+}
