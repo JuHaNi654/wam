@@ -113,6 +113,11 @@ export type TSavedEducation = {
   id: string;
 } & TEducation
 
+// Settings 
+export type TScrapeTarget = {
+  url: string
+  class: string
+}
 
 // LLM
 export type TProvider = {
