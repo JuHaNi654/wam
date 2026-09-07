@@ -11,10 +11,9 @@ const dateInUnix = (label: string) => {
 }
 
 // Server types
-export type TApiResponse<T> = {
-  status: number;
-  data?: T
-}
+export type TApiResponse<T> = T extends void
+  ? { status: number }
+  : { status: number; data: T }
 
 export type TApiErrorResponse = {
   status: number;
@@ -29,8 +28,8 @@ export type TPropertyError = {
 }
 
 export type TApiResult<T> = {
-  response?: TApiResponse<T>
-  error?: TApiErrorResponse
+  response: TApiResponse<T> | null
+  error: TApiErrorResponse | null
 }
 
 // Application types

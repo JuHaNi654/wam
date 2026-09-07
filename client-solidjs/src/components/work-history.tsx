@@ -36,7 +36,7 @@ export default function WorkHistory(props: Props) {
         </button>
         <Show when={showModal()["new-history"]}>
           <Portal>
-            <NewWorkExperience toggleVisibility={() => toggleTargetModal("new-history", false)} />
+            <FormWorkExperience toggleVisibility={() => toggleTargetModal("new-history", false)} />
           </Portal>
         </Show>
       </header>
@@ -55,7 +55,7 @@ export default function WorkHistory(props: Props) {
                   </button>
                   <Show when={showModal()[item.id]}>
                     <Portal>
-                      <EditExperience toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
+                      <FormWorkExperience toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
                     </Portal>
                   </Show>
                   <DeleteConfirmationDialog id="delete-application"
@@ -72,13 +72,14 @@ export default function WorkHistory(props: Props) {
   )
 }
 
-type NewWorkExperienceProps = {
+type FormWorkExperienceProps = {
+  item?: TSavedWorkHistory
   toggleVisibility: () => void
   onSuccess?: (item: TSavedWorkHistory) => void
 }
-function NewWorkExperience(props: NewWorkExperienceProps) {
+function FormWorkExperience(props: FormWorkExperienceProps) {
   const form = createForm(() => ({
-    defaultValues: {
+    defaultValues: props.item || {
       company: "",
       title: "",
       description: "",
@@ -173,20 +174,6 @@ function NewWorkExperience(props: NewWorkExperienceProps) {
           )} />
 
       </div>
-    </Modal>
-  )
-}
-
-
-type EditExperienceProps = {
-  item: TSavedWorkHistory
-  toggleVisibility: () => void
-}
-function EditExperience(props: EditExperienceProps) {
-  return (
-    <Modal subTitle={props.item.company} title={props.item.title}
-      onClose={props.toggleVisibility}>
-      <p>placeholder</p>
     </Modal>
   )
 }

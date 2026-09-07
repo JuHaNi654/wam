@@ -17,7 +17,7 @@ function Document(props: DocumentProps) {
   if (!props.editable) {
     return (
       <div className="space-y-3 h-full flex flex-col">
-        <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed flex-1">
+        <div className="max-w-none text-sm flex-1">
           {content}
         </div>
       </div>
