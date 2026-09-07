@@ -42,10 +42,10 @@ export default function Education(props: Props) {
   }))
 
   const handleSubmit = async () => {
-    console.log("HandleSubmit")
     await form.handleSubmit()
-    console.log('isValid:', form.state.isValid, form.state.errorMap)
-    setShowModal(false)
+    if (form.state.isValid) {
+      setShowModal(false)
+    }
   }
 
   const handleDelete = async (id: string) => {

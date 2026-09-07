@@ -63,6 +63,7 @@ func extractContent(config *Config, node *html.Node) (string, error) {
 	}
 	target := config.AvailableTargets[targetIdx]
 	logger.GetInstance().Debug(fmt.Sprintf("Handling document: from %s", target.URL))
+	logger.GetInstance().Debug(fmt.Sprintf("Looking for target (%s)", target.TargetClass))
 	if err := scan(&b, node, target); err != nil {
 		return "", err
 	}
@@ -73,6 +74,7 @@ func extractContent(config *Config, node *html.Node) (string, error) {
 func scan(b *strings.Builder, node *html.Node, target models.Target) error {
 	targetNode := findTarget(node, target.TargetClass)
 	if targetNode == nil {
+		logger.GetInstance().Debug(fmt.Sprintf("Target not found (%s)", target.TargetClass))
 		return errors.New("target node not found") // TODO: rewrite error message
 	}
 

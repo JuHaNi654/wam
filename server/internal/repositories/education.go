@@ -35,6 +35,6 @@ func (r *EducationRepository) ListByProfileID(profileID string) ([]models.SavedE
 
 func (r *EducationRepository) Delete(id string) error {
 	ctx := context.Background()
-	_, err := gorm.G[models.Education](r.db).Where("id = ?", id).Delete(ctx)
+	_, err := gorm.G[models.SavedEducation](r.db).Where("id = ?", id).Delete(ctx)
 	return err
 }

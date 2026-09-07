@@ -1,4 +1,4 @@
-import type { TSavedWorkHistory } from "../models/models"
+import type { TApiResponse, TSavedWorkHistory, TWorkHistory } from "../models/models"
 import { workHistorySchema } from "../models/models"
 import { DeleteConfirmationDialog } from "./alert-dialog";
 import { Modal, ModalFooter } from "./modal"
@@ -10,6 +10,7 @@ import InputField from "./input/InputField";
 import TextareaField from "./input/TextareaField";
 import DateField from "./input/DateField";
 import BooleanField from "./input/BooleanField";
+import { DELETE, POST, PUT } from "../utils/api";
 
 type Props = {
   data: Array<TSavedWorkHistory>
@@ -24,7 +25,22 @@ export default function WorkHistory(props: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    console.log("Delete work history: ", id)
+    const { error } = await DELETE(`/profile/history/${id}`, null)
+    if (error) {
+      console.error("Error occurred while trying to delete history:")
+      console.error(error)
+      return
+    }
+
+    setWorkHistory(workHistory().filter((item) => item.id !== id))
+  }
+
+  const saveWorkHistoryItem = (item: TSavedWorkHistory) => {
+    setWorkHistory([...workHistory(), item])
+  }
+
+  const updateWorkHistoryItem = (item: TSavedWorkHistory) => {
+    setWorkHistory(workHistory().map((history) => history.id === item.id ? item : history))
   }
 
   return (
@@ -36,7 +52,8 @@ export default function WorkHistory(props: Props) {
         </button>
         <Show when={showModal()["new-history"]}>
           <Portal>
-            <FormWorkExperience toggleVisibility={() => toggleTargetModal("new-history", false)} />
+            <FormWorkExperience onSuccess={saveWorkHistoryItem}
+              action="create" toggleVisibility={() => toggleTargetModal("new-history", false)} />
           </Portal>
         </Show>
       </header>
@@ -55,7 +72,8 @@ export default function WorkHistory(props: Props) {
                   </button>
                   <Show when={showModal()[item.id]}>
                     <Portal>
-                      <FormWorkExperience toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
+                      <FormWorkExperience onSuccess={updateWorkHistoryItem}
+                        action="update" toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
                     </Portal>
                   </Show>
                   <DeleteConfirmationDialog id="delete-application"
@@ -73,35 +91,65 @@ export default function WorkHistory(props: Props) {
 }
 
 type FormWorkExperienceProps = {
+  action: 'update' | 'create'
   item?: TSavedWorkHistory
   toggleVisibility: () => void
   onSuccess?: (item: TSavedWorkHistory) => void
 }
+
+const defaultHistoryValues: TWorkHistory = {
+  company: "",
+  title: "",
+  description: "",
+  start_date: 0,
+  end_date: 0,
+  current: false,
+}
+
 function FormWorkExperience(props: FormWorkExperienceProps) {
   const form = createForm(() => ({
-    defaultValues: props.item || {
-      company: "",
-      title: "",
-      description: "",
-      start_date: 0,
-      end_date: 0,
-      current: false,
-    },
+    defaultValues: props.item || defaultHistoryValues,
     validators: {
       onSubmit: workHistorySchema
     },
     onSubmit: async ({ value }) => {
-      console.log("Submit: ", value)
+      if (props.action === 'create') {
+        const result = await POST<TSavedWorkHistory>(`/profile/history`, value)
+        if (result.error) {
+          console.error("Error occurred while trying to save new experience:")
+          console.error(result.error)
+        }
+
+        if (props.onSuccess) props.onSuccess(result!.response!.data)
+        console.log("Create workExp: ", result)
+      } else {
+        const { id, ...data } = value as TSavedWorkHistory
+        const result = await PUT(`/profile/history/${props.item!.id}`, data)
+        if (result.error) {
+          console.error("Error occurred while trying to update experience:")
+          console.error(result.error)
+        }
+
+        if (props.onSuccess) props.onSuccess(value as TSavedWorkHistory)
+        console.log("update workExp: ", result)
+      }
     }
   }))
+
+  const handleSubmit = async () => {
+    await form.handleSubmit()
+    if (form.state.isValid) {
+      props.toggleVisibility()
+    }
+  }
 
   return (
     <Modal subTitle="Work history" title="New entry"
       onClose={props.toggleVisibility}
       footer={(
         <ModalFooter>
-          <Button variant="outline" label="Cancel" />
-          <Button variant="primary" label="Save entry" />
+          <Button onClick={() => props.toggleVisibility()} variant="outline" label="Cancel" />
+          <Button onClick={() => handleSubmit()} variant="primary" label="Save entry" />
         </ModalFooter>
       )}>
       <form id="new-work-history" onSubmit={(e) => {
