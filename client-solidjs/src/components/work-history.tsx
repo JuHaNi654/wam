@@ -57,35 +57,33 @@ export default function WorkHistory(props: Props) {
           </Portal>
         </Show>
       </header>
-      <div>
-        <ul class="flex flex-col gap-4">
-          <For each={workHistory()}>
-            {(item) => (
-              <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
-                <div class="flex-1 flex flex-col">
-                  <h3 class="font-semibold">{item.title}</h3>
-                  <span class="block">{item.company}</span>
-                </div>
-                <div class="flex gap-2">
-                  <button class="btn btn-soft" onClick={() => toggleTargetModal(item.id, true)}>
-                    <i class="ri-eye-line"></i>
-                  </button>
-                  <Show when={showModal()[item.id]}>
-                    <Portal>
-                      <FormWorkExperience onSuccess={updateWorkHistoryItem}
-                        action="update" toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
-                    </Portal>
-                  </Show>
-                  <DeleteConfirmationDialog id="delete-application"
-                    title="Are you sure, you want to delete selected item"
-                    description={`You are currently deleting (${item.title}).`}
-                    onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
-                </div>
-              </li>
-            )}
-          </For>
-        </ul>
-      </div>
+      <ul class="flex flex-col gap-4">
+        <For each={workHistory()}>
+          {(item) => (
+            <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
+              <div class="flex-1 flex flex-col">
+                <h3 class="font-semibold">{item.title}</h3>
+                <span class="block">{item.company}</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-soft" onClick={() => toggleTargetModal(item.id, true)}>
+                  <i class="ri-eye-line"></i>
+                </button>
+                <Show when={showModal()[item.id]}>
+                  <Portal>
+                    <FormWorkExperience onSuccess={updateWorkHistoryItem}
+                      action="update" toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
+                  </Portal>
+                </Show>
+                <DeleteConfirmationDialog id="delete-application"
+                  title="Are you sure, you want to delete selected item"
+                  description={`You are currently deleting (${item.title}).`}
+                  onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
+              </div>
+            </li>
+          )}
+        </For>
+      </ul>
     </div>
   )
 }

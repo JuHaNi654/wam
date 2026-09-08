@@ -120,6 +120,11 @@ export type TScrapeTarget = {
 }
 
 // LLM
+export type TProviderModels = {
+  provider: TProvider
+  models: Array<TModel>
+}
+
 export type TProvider = {
   name: string;
   addr: string;
@@ -135,4 +140,27 @@ export type TModelResponse = {
   models: TModel[];
   provider: string;
   in_use: string;
+}
+
+// Notifications 
+export type TNotificationType = string
+export const NotificationLLMStatusChange: TNotificationType = "llm-status-change"
+export const NotificationLLMModelEnabled: TNotificationType = "llm-model-enabled"
+
+export type TNotificationPayload<T> = {
+  type: TNotificationType
+  content: T
+}
+
+export type TLlamaStatusEvent = {
+  model: string;
+  event: string;
+  provider: string;
+  data: {
+    status: string;
+  }
+}
+
+export type TModelToggleEvent = {
+  model: string
 }

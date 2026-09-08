@@ -1,27 +1,20 @@
-import type { NotificationPayload } from "@/types/notification.types";
+import { createContext, useContext, onMount, onCleanup, type JSX } from "solid-js"
+import type { TNotificationPayload, TNotificationType } from "../models/models"
 
+type Listener<T> = (event: TNotificationPayload<T>) => void
 
-type Listener<T> = (event: NotificationPayload<T>) => void
-
-class Notification {
-  static #instance: Notification | null = null
+// Framework-agnostic SSE connection manager. Owns exactly one EventSource
+// and fans messages out to whoever has subscribed. Instances of this class
+// are created and torn down by <NotificationProvider>, so its lifetime is
+// tied to Solid's ownership tree instead of being a bare module-level
+// singleton.
+class NotificationClient {
   #eventSrc: EventSource | null = null
   #listeners: Set<Listener<any>> = new Set()
   #url: string | null = null
   #reconnectTimer: ReturnType<typeof setTimeout> | null = null
   #retryCount = 0
   #isUnmounted = false
-  constructor() {
-    if (Notification.#instance) {
-      return Notification.#instance
-    }
-
-    Notification.#instance = this
-  }
-
-  static getInstance() {
-    return (Notification.#instance ??= new Notification)
-  }
 
   #clearReconnectTimer() {
     if (!this.#reconnectTimer) return
@@ -54,7 +47,7 @@ class Notification {
 
   #onMessage = (event: MessageEvent<any>) => {
     try {
-      const data = JSON.parse(event.data) as NotificationPayload<any>
+      const data = JSON.parse(event.data) as TNotificationPayload<any>
       this.#listeners.forEach((fn) => fn(data))
     } catch (err) {
       console.error("Invalid SSE message payload", err)
@@ -113,4 +106,50 @@ class Notification {
   }
 }
 
-export default new Notification()
+const NotificationContext = createContext<NotificationClient>()
+
+type NotificationProviderProps = {
+  url: string
+  children: JSX.Element
+}
+
+// Mount this once, at the root of the app. It owns the single EventSource
+// connection for the whole tree: connects on mount, reconnects on error,
+// and tears everything down when the provider itself is unmounted.
+export function NotificationProvider(props: NotificationProviderProps) {
+  const client = new NotificationClient()
+
+  onMount(() => client.mount(props.url))
+  onCleanup(() => client.unmount())
+
+  return (
+    <NotificationContext.Provider value={client}>
+      {props.children}
+    </NotificationContext.Provider>
+  )
+}
+
+// Escape hatch for components that need the raw client (e.g. to subscribe
+// to every event regardless of type). Most components should prefer
+// useNotification below instead.
+export function useNotificationClient() {
+  const client = useContext(NotificationContext)
+  if (!client) {
+    throw new Error("useNotificationClient must be used within a <NotificationProvider>")
+  }
+  return client
+}
+
+// Registers `listener` for events matching `type`. Subscribes on mount and
+// unsubscribes automatically on cleanup, scoped to whichever component
+// calls this hook - no manual bookkeeping required.
+export function useNotification<T>(type: TNotificationType, listener: Listener<T>) {
+  const client = useNotificationClient()
+
+  onMount(() => {
+    const unsubscribe = client.subscribe<T>((event) => {
+      if (event.type === type) listener(event)
+    })
+    onCleanup(unsubscribe)
+  })
+}

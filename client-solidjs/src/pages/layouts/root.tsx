@@ -1,6 +1,8 @@
 import { Outlet, Link } from "@tanstack/solid-router";
 import { createRootRoute } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from '@tanstack/solid-router-devtools';
+import { NotificationProvider } from "../../utils/notification";
+import { SSE_URL } from "../../utils/constants";
 
 export default createRootRoute({
   component: RootComponent,
@@ -18,9 +20,9 @@ function NotFoundComponent() {
 
 function RootComponent() {
   return (
-    <>
+    <NotificationProvider url={SSE_URL}>
       <Outlet />
       <TanStackRouterDevtools position="bottom-right" />
-    </>
+    </NotificationProvider>
   )
 }

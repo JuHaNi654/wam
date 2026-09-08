@@ -23,9 +23,10 @@ const (
 )
 
 type ModelSSE struct {
-	Model string `json:"model"`
-	Event string `json:"event"`
-	Data  struct {
+	Provider string `json:"provider"`
+	Model    string `json:"model"`
+	Event    string `json:"event"`
+	Data     struct {
 		Status string `json:"status"`
 	} `json:"data"`
 }
@@ -118,6 +119,7 @@ func (l *Llama) ListenSSE(ctx context.Context) {
 				continue
 			}
 
+			data.Provider = l.Provider
 			logger.GetInstance().Debug(fmt.Sprintf("Llama (SSE): %+v", data))
 			instance.Send(notification.Payload{
 				Type:    notification.NotificationLLMStatusChange,

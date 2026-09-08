@@ -32,8 +32,6 @@ const items: Links[] = [
 export default function Sidemenu() {
   const location = useLocation()
 
-  console.log(location())
-
   return (
     <aside class="m-2 rounded-md bg-zinc-900 ring-1 ring-white/[.07] shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_24px_48px_-24px_rgba(0,0,0,.95)] flex flex-col items-stretch justify-between p-2">
       <ul class="flex flex-col items-stretch gap-2">
