@@ -1,4 +1,4 @@
-import type { TApiResponse, TSavedWorkHistory, TWorkHistory } from "../models/models"
+import type { TSavedWorkHistory, TWorkHistory } from "../models/models"
 import { workHistorySchema } from "../models/models"
 import { DeleteConfirmationDialog } from "./alert-dialog";
 import { Modal, ModalFooter } from "./modal"
@@ -78,7 +78,8 @@ export default function WorkHistory(props: Props) {
                 <DeleteConfirmationDialog id="delete-application"
                   title="Are you sure, you want to delete selected item"
                   description={`You are currently deleting (${item.title}).`}
-                  onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
+                  onCancel={() => toggleTargetModal(item.id, false)}
+                  onConfirmation={() => handleDelete(item.id)} />
               </div>
             </li>
           )}
@@ -119,7 +120,6 @@ function FormWorkExperience(props: FormWorkExperienceProps) {
         }
 
         if (props.onSuccess) props.onSuccess(result!.response!.data)
-        console.log("Create workExp: ", result)
       } else {
         const { id, ...data } = value as TSavedWorkHistory
         const result = await PUT(`/profile/history/${props.item!.id}`, data)
@@ -129,7 +129,6 @@ function FormWorkExperience(props: FormWorkExperienceProps) {
         }
 
         if (props.onSuccess) props.onSuccess(value as TSavedWorkHistory)
-        console.log("update workExp: ", result)
       }
     }
   }))
@@ -150,7 +149,7 @@ function FormWorkExperience(props: FormWorkExperienceProps) {
           <Button onClick={() => handleSubmit()} variant="primary" label="Save entry" />
         </ModalFooter>
       )}>
-      <form id="new-work-history" onSubmit={(e) => {
+      <form id="work-history-form" onSubmit={(e) => {
         e.preventDefault()
         e.stopPropagation()
       }}>
