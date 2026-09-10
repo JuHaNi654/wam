@@ -91,7 +91,7 @@ export function Modal(props: Props) {
       class="bg-zinc-800 ring-1 ring-white/10 flex flex-col z-20 fixed rounded-xl overflow-hidden">
       <header onMouseDown={handleMouseDown}
         class={twMerge(
-          "flex items-center justify-start px-4 py-4 border-b border-white/10 bg-muted/40 select-none",
+          "flex items-center justify-start p-4 border-b border-white/10 bg-muted/40 select-none",
           isDragging() ? "cursor-grabbing" : "cursor-grab"
         )}>
 
@@ -100,7 +100,7 @@ export function Modal(props: Props) {
           {props.subTitle && <span class="block text-xs font-semibold text-zinc-500">{props.subTitle}</span>}
           <h2 class="text-md uppercase font-display font-semibold flex-1">{props.title}</h2>
         </div>
-        <IconButton size="md" label="close" onClick={props.onClose} icon="ri-close-line" />
+        <IconButton size="sm" label="close" onClick={props.onClose} icon="ri-close-line" />
       </header>
       <div class="flex-1 p-4 overflow-auto">{props.children}</div>
       {props.footer && props.footer}

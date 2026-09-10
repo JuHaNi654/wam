@@ -3,7 +3,7 @@ import { actionSchema, TAction, TSavedAction } from "../models/models"
 import { DeleteConfirmationDialog } from "./alert-dialog"
 import { renderDate } from "../utils/date"
 import { Modal, ModalFooter } from "./modal"
-import { Button } from "./elements/button"
+import { Button, IconButton } from "./elements/button"
 import { Portal } from "solid-js/web"
 import { createForm } from "@tanstack/solid-form"
 import InputField from "./input/InputField";
@@ -45,10 +45,8 @@ export default function Actions(props: Props) {
   return (
     <section class="ring-1 ring-white/20 bg-zinc-800 rounded-lg p-4">
       <header class="mb-3 flex justify-between items-center">
-        <h3 class="text-md font-display font-semibold uppercase tracking-wide">Actions</h3>
-        <button class="btn btn-soft" onClick={() => toggleTargetModal("new-action", true)}>
-          <i class="ri-add-line"></i>
-        </button>
+        <h3 class="text-sm font-semibold uppercase tracking-wide">Actions</h3>
+        <IconButton icon="ri-add-line" size="sm" onClick={() => toggleTargetModal("new-action", true)} label="New action entry" />
         <Show when={showModal()["new-action"]}>
           <Portal>
             <FormAction onSuccess={saveActionItem} title="New entry"
@@ -63,9 +61,7 @@ export default function Actions(props: Props) {
               <span class="block">{renderDate(action.date)}</span>
               <h4 class="font-semibold">{action.title}</h4>
               <div class="flex gap-2 ml-auto">
-                <button class="btn btn-soft" onClick={() => toggleTargetModal(action.id, true)}>
-                  <i class="ri-eye-line"></i>
-                </button>
+                <IconButton label="View entry" icon="ri-eye-line" size="sm" onClick={() => toggleTargetModal(action.id, true)} />
                 <Show when={showModal()[action.id]}>
                   <Portal>
                     <FormAction title="Update entry" item={action} onSuccess={updateActionItem}

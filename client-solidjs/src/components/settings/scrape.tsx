@@ -1,6 +1,7 @@
 import { For, createSignal } from "solid-js"
 import { TScrapeTarget } from "../../models/models"
 import { POST } from "../../utils/api"
+import { Button, IconButton } from "../elements/button"
 
 type Props = {
   items: Array<TScrapeTarget>
@@ -41,12 +42,10 @@ export default function ScrapeTargetListing(props: Props) {
   }
 
   return (
-    <div class="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
+    <div class="flex flex-col gap-2 rounded-lg p-4 ring-1 rint-white/20 bg-zinc-800">
       <header class="flex items-center justify-between">
         <h3 class="text-sm font-semibold uppercase tracking-wide">Website scrape targets</h3>
-        <button onClick={() => save()} class="btn btn-soft">
-          <i class="ri-save-line"></i>
-        </button>
+        <IconButton icon="ri-save-line" label="Save settings" size="sm" onClick={() => save()} />
       </header>
       <table class="table">
         <thead>
@@ -68,11 +67,9 @@ export default function ScrapeTargetListing(props: Props) {
                   <input onChange={(e) => updateListItem(e, idx())}
                     type="text" id="class" name="class" class="input w-full" value={item.class} />
                 </td>
-                <td>
+                <td class="w-8">
                   <div class="flex justify-end">
-                    <button onClick={() => deleteItem(idx())} class="btn btn-soft">
-                      <i class="ri-delete-bin-line"></i>
-                    </button>
+                    <IconButton icon="ri-delete-bin-line" label="Delete item" size="sm" onClick={() => deleteItem(idx())} />
                   </div>
                 </td>
               </tr>
@@ -80,8 +77,8 @@ export default function ScrapeTargetListing(props: Props) {
           </For>
           <tr>
             <td colspan={3}>
-              <div class="text-center my-2">
-                <button class="btn btn-soft" onClick={() => newItem()}>New</button>
+              <div class="flex justify-center my-2">
+                <Button label="New" onClick={newItem} variant="primary" />
               </div>
             </td>
           </tr>

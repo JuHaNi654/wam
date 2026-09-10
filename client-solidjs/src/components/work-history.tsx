@@ -5,7 +5,7 @@ import { Modal, ModalFooter } from "./modal"
 import { createSignal, For, Show } from "solid-js"
 import { Portal } from "solid-js/web";
 import { createForm } from "@tanstack/solid-form"
-import { Button } from "./elements/button";
+import { Button, IconButton } from "./elements/button";
 import InputField from "./input/InputField";
 import TextareaField from "./input/TextareaField";
 import DateField from "./input/DateField";
@@ -44,20 +44,18 @@ export default function WorkHistory(props: Props) {
   }
 
   return (
-    <div class="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
+    <div class="flex flex-col gap-2 rounded-lg p-4 ring-1 ring-white/20 bg-zinc-800">
       <header class="flex items-center justify-between">
         <h3 class="text-sm font-semibold uppercase tracking-wide">Work history</h3>
-        <button class="btn btn-soft" onClick={() => toggleTargetModal("new-history", true)}>
-          <i class="ri-add-line"></i>
-        </button>
+        <IconButton size="sm" icon="ri-add-line" label="New experience entry" onClick={() => toggleTargetModal("new-history", true)} />
         <Show when={showModal()["new-history"]}>
           <Portal>
-            <FormWorkExperience onSuccess={saveWorkHistoryItem}
+            <FormWorkExperience onSuccess={saveWorkHistoryItem} title="New entry"
               action="create" toggleVisibility={() => toggleTargetModal("new-history", false)} />
           </Portal>
         </Show>
       </header>
-      <ul class="flex flex-col gap-4">
+      <ul class="flex flex-col gap-2">
         <For each={workHistory()}>
           {(item) => (
             <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
@@ -66,12 +64,10 @@ export default function WorkHistory(props: Props) {
                 <span class="block">{item.company}</span>
               </div>
               <div class="flex gap-2">
-                <button class="btn btn-soft" onClick={() => toggleTargetModal(item.id, true)}>
-                  <i class="ri-eye-line"></i>
-                </button>
+                <IconButton icon="ri-eye-line" size="sm" label="Edit entry" onClick={() => toggleTargetModal(item.id, true)} />
                 <Show when={showModal()[item.id]}>
                   <Portal>
-                    <FormWorkExperience onSuccess={updateWorkHistoryItem}
+                    <FormWorkExperience title="Edit entry" onSuccess={updateWorkHistoryItem}
                       action="update" toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
                   </Portal>
                 </Show>
@@ -90,6 +86,7 @@ export default function WorkHistory(props: Props) {
 }
 
 type FormWorkExperienceProps = {
+  title: string
   action: 'update' | 'create'
   item?: TSavedWorkHistory
   toggleVisibility: () => void
@@ -141,7 +138,7 @@ function FormWorkExperience(props: FormWorkExperienceProps) {
   }
 
   return (
-    <Modal subTitle="Work history" title="New entry"
+    <Modal subTitle="Work history" title={props.title}
       onClose={props.toggleVisibility}
       footer={(
         <ModalFooter>

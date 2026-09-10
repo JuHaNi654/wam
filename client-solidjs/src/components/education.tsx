@@ -5,7 +5,7 @@ import { createForm } from "@tanstack/solid-form"
 import { educationSchema, TSavedEducation } from "../models/models"
 import InputField from "../components/input/InputField"
 import DateField from "./input/DateField";
-import { Button } from "./elements/button";
+import { Button, IconButton } from "./elements/button";
 import { POST, DELETE } from "../utils/api";
 import { renderDate } from "../utils/date";
 import { DeleteConfirmationDialog } from "./alert-dialog";
@@ -59,12 +59,10 @@ export default function Education(props: Props) {
   }
 
   return (
-    <div class="flex flex-col gap-2 border rounded-lg border-gray-200 p-4">
+    <div class="flex flex-col gap-2 p-4 rounded-lg ring-1 ring-white/20 bg-zinc-800">
       <header class="flex items-center justify-between">
         <h3 class="text-sm font-semibold uppercase tracking-wide">Education</h3>
-        <button class="btn btn-soft" onClick={() => setShowModal(true)}>
-          <i class="ri-add-line"></i>
-        </button>
+        <IconButton label="New education entry" icon="ri-add-line" size="sm" onClick={() => setShowModal(true)} />
         <Show when={showModal()}>
           <Portal>
             <Modal subTitle="Education" title="New entry"
@@ -123,28 +121,26 @@ export default function Education(props: Props) {
           </Portal>
         </Show>
       </header>
-      <div>
-        <ul class="flex flex-col gap-4">
-          <For each={educations()}>
-            {(item) => (
-              <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
-                <div class="flex-1">
-                  <h3 class="font-semibold">{item.program}</h3>
-                  <span class="block">{item.school}</span>
-                </div>
-                <div>
-                  <span>{renderDate(item.start_date)} - {renderDate(item.end_date)}</span>
-                </div>
-                <DeleteConfirmationDialog id="delete-application"
-                  title="Are you sure, you want to delete selected item"
-                  description={`You are currently deleting (${item.program}).`}
-                  onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
+      <ul class="flex flex-col gap-2">
+        <For each={educations()}>
+          {(item) => (
+            <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
+              <div class="flex-1">
+                <h3 class="font-semibold">{item.program}</h3>
+                <span class="block">{item.school}</span>
+              </div>
+              <div>
+                <span>{renderDate(item.start_date)} - {renderDate(item.end_date)}</span>
+              </div>
+              <DeleteConfirmationDialog id="delete-application"
+                title="Are you sure, you want to delete selected item"
+                description={`You are currently deleting (${item.program}).`}
+                onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
 
-              </li>
-            )}
-          </For>
-        </ul>
-      </div>
+            </li>
+          )}
+        </For>
+      </ul>
     </div>
   )
 }

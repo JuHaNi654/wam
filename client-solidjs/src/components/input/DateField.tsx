@@ -50,7 +50,7 @@ export default function DateField(props: InputProps) {
 
   return (
     <fieldset class="fieldset relative w-full">
-      <legend class="fieldset-legend">{props.label}</legend>
+      <legend class="fieldset-legend text-sm">{props.label}</legend>
       <input type="hidden" name={props.name} value={props.value ?? ""} />
       <button disabled={props.disabled} ref={calendarBtnRef} type="button" style={`anchor-name:--${popoverId}`} popovertarget={popoverId} class="input w-full justify-start text-left">
         {props.value > 0 ? renderDate(props.value) : "Pick a date"}

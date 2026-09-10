@@ -1,5 +1,6 @@
 import type { ComponentProps, JSX } from "solid-js"
 import { twMerge } from "tailwind-merge"
+import { Link, type LinkProps } from "@tanstack/solid-router"
 
 const buttonVariants = {
   primary: "btn-glow btn-glow-primary ring-1 ring-white/20",
@@ -10,9 +11,9 @@ const buttonVariants = {
 }
 
 const iconSize = {
-  lg: "w-10",
-  md: "w-8",
-  sm: "w-6",
+  lg: "w-8 h-8",
+  md: "w-7 h-7",
+  sm: "w-5 h-5",
 }
 
 type Props = {
@@ -24,7 +25,7 @@ export function Button({ icon, variant, label, class: styles, ...props }: Props)
   return (
     <button class={twMerge(
       "relative flex items-center justify-center gap-4 cursor-pointer",
-      "px-8 py-2 rounded-xl font-semibold",
+      "px-8 py-2 rounded-md font-semibold",
       buttonVariants[variant], styles
     )} {...props}>
       {icon ? icon : null}
@@ -42,12 +43,32 @@ type IconButtonProps = {
 export function IconButton({ icon, size, label, class: styles, ...props }: IconButtonProps) {
   return (
     <button aria-label={label} class={twMerge(
-      "aspect-square relative flex items-center justify-center gap-4 cursor-pointer",
-      "rounded font-semibold ring-1 ring-white/20 grid place-content-center bg-zinc-900 hover:bg-zinc-800",
-      iconSize[size],
+      "relative cursor-pointer h-min p-2",
+      "rounded ring-1 ring-white/20  bg-zinc-900 hover:bg-zinc-800",
       styles
     )} {...props}>
-      <i class={twMerge(icon, "w-full h-full")}></i>
+      <i class={twMerge(icon, iconSize[size], "aspect-square grid place-content-center")}></i>
     </button>
+  )
+}
+
+type IconLinkProps = {
+  icon: string,
+  label: string,
+  size: keyof typeof iconSize
+  class?: string
+} & LinkProps
+
+
+export function IconLink({ icon, size, label, class: styles, ...props }: IconLinkProps) {
+  return (
+    <Link aria-label={label} {...props}
+      class={twMerge(
+        "relative cursor-pointer h-min p-2",
+        "rounded ring-1 ring-white/20 bg-zinc-900 hover:bg-zinc-800",
+        styles
+      )}>
+      <i class={twMerge(icon, iconSize[size], "aspect-square grid place-content-center")}></i>
+    </Link>
   )
 }

@@ -5,6 +5,8 @@ import { NotificationLLMModelEnabled, NotificationLLMStatusChange, TLlamaStatusE
 import { GET, POST } from "../utils/api"
 import { For, Index, createResource, Suspense } from "solid-js"
 import { useNotification } from "../utils/notification"
+import { Button } from "../components/elements/button"
+import Badge from "../components/elements/badge"
 
 type Response = {
   items: Array<TProviderModels>,
@@ -98,20 +100,21 @@ function LLM() {
   }
 
   return (
-    <div>
+    <>
       <PageHeading title="Models" />
       <Suspense fallback={<p>Loading ...</p>}>
         <Index each={result()!.data.items}>
           {(item) => {
             return (
-              <details class="border rounded">
-                <summary class="flex justify-between items-center px-4 py-2">
+              <details class="ring-1 ring-white/20 rounded-lg overflow-hidden">
+                <summary class="flex justify-between items-center px-4 py-4 bg-zinc-800 cursor-pointer">
                   <div class="flex flex-col">
                     <span class="block text-lg font-semibold">{item().provider.name}</span>
                     <span class="block text-sm">{item().provider.addr}</span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
-                    <span class="text-sm">{item().provider.available ? 'Available' : 'Unavailable'}</span>
+                  <div class="flex flex-row gap-4 items-center">
+                    <Badge class="text-sm" variant={item().provider.available ? 'offered' : 'rejected'} label={item().provider.available ? 'Available' : 'Unavailable'} />
+                    <span class="block text-xs text-zinc-500">{item().models.length} models</span>
                   </div>
                 </summary>
                 <div class="p-4">
@@ -119,8 +122,8 @@ function LLM() {
                     <thead>
                       <tr>
                         <th>Name</th>
-                        <th></th>
-                        <th></th>
+                        <th class="text-center">Action</th>
+                        <th class="text-center">On</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -129,17 +132,19 @@ function LLM() {
                           return (
                             <tr>
                               <td>{model.id}</td>
-                              <td class="capitalize">
-                                <button onClick={() => {
-                                  if (model.status === "loaded") unloadModel(item().provider.name, model.id)
-                                  if (model.status === "unloaded") loadModel(item().provider.name, model.id)
-                                }} disabled={model.status === "loading"} class="btn btn-soft">
-                                  {model.status}
-                                </button>
+                              <td class="capitalize w-20">
+                                <div class="flex justify-center">
+                                  <Button class="w-full" onClick={() => {
+                                    if (model.status === "loaded") unloadModel(item().provider.name, model.id)
+                                    if (model.status === "unloaded") loadModel(item().provider.name, model.id)
+                                  }} label={model.status} variant={model.status === "loaded" ? "primary" : "outline"} disabled={model.status === "loading"} />
+                                </div>
                               </td>
-                              <td>
+                              <td class="w-20 text-center">
                                 <input onChange={() => useModel(item().provider.name, model.id)} type="checkbox"
-                                  checked={result()!.data.in_use.includes(model.id)} class="toggle toggle-primary" />
+                                  checked={result()!.data.in_use.includes(model.id)}
+                                  disabled={model.status !== "loaded"}
+                                  class="toggle border-0 ring-1 ring-white/20 bg-zinc-500 checked:bg-emerald-400 text-zinc-800 checked:text-zinc-950" />
                               </td>
                             </tr>
                           )
@@ -153,7 +158,7 @@ function LLM() {
           }}
         </Index>
       </Suspense>
-    </div>
+    </>
   )
 }
 
