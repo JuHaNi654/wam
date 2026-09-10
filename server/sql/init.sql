@@ -1,7 +1,7 @@
 CREATE TABLE settings (
   id              TEXT PRIMARY KEY,
   scrape_targets  BLOB
-)
+);
 
 -- resume
 CREATE TABLE profile (

@@ -1,10 +1,36 @@
-import { Outlet, Link } from "@tanstack/solid-router";
+import { Outlet, Link, redirect } from "@tanstack/solid-router";
 import { createRootRoute } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from '@tanstack/solid-router-devtools';
 import { NotificationProvider } from "../../utils/notification";
 import { SSE_URL } from "../../utils/constants";
+import { GET } from "../../utils/api";
 
 export default createRootRoute({
+  beforeLoad: async ({ location }) => {
+    const { error } = await GET<any>('/profile/initialized', null)
+
+    if (!error) {
+      if (location.href === "/") {
+        throw redirect({
+          to: '/applications',
+        })
+      }
+
+      return
+    }
+
+
+    if (error!.status === 404 && location.href !== "/") {
+      throw redirect({
+        to: '/',
+      })
+    }
+
+    if (error!.status !== 404) {
+      console.error("Error occured whiel checking init")
+      console.error(error)
+    }
+  },
   component: RootComponent,
   notFoundComponent: NotFoundComponent
 })

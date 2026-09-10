@@ -44,11 +44,11 @@ export const ApplicationStatus = {
 
 const ApplicationStatusEnum = z.enum(ApplicationStatus)
 export const applicationSchema = z.object({
-  name: z.string(),
-  company: z.string(),
-  position: z.string(),
-  homepage: z.string(),
-  link: z.string(),
+  name: z.string().nonempty(),
+  company: z.string().nonempty(),
+  position: z.string().nonempty(),
+  homepage: z.string().nonempty(),
+  link: z.string().nonempty(),
   status: ApplicationStatusEnum
 })
 
@@ -68,9 +68,9 @@ export type TSkill = {
 
 // Action types
 export const actionSchema = z.object({
-  title: z.string(),
-  note: z.string(),
-  date: z.number()
+  title: z.string().nonempty(),
+  note: z.string().nonempty(),
+  date: dateInUnix("Date")
 })
 
 export type TAction = z.infer<typeof actionSchema>
@@ -87,11 +87,11 @@ export type TProfile = {
 
 // History types
 export const workHistorySchema = z.object({
-  company: z.string().min(3),
-  title: z.string().min(3),
-  description: z.string(),
-  start_date: z.number(),
-  end_date: z.number(),
+  company: z.string().nonempty(),
+  title: z.string().nonempty(),
+  description: z.string().nonempty(),
+  start_date: dateInUnix("Start date"),
+  end_date: dateInUnix("End date"),
   current: z.boolean()
 })
 
@@ -102,8 +102,8 @@ export type TSavedWorkHistory = {
 
 // Education
 export const educationSchema = z.object({
-  school: z.string().min(5),
-  program: z.string().min(5),
+  school: z.string().nonempty(),
+  program: z.string().nonempty(),
   start_date: dateInUnix("Start date"),
   end_date: dateInUnix("End date"),
 })
