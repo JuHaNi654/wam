@@ -33,6 +33,7 @@ function LLM() {
 
   useNotification<TLlamaStatusEvent>(NotificationLLMStatusChange, (event) => {
     // TODO: Rewrite ugly solution
+    // TODO https://www.solidjs.com/tutorial/stores_mutation
     mutate((prev) => {
       if (!prev) return prev
 

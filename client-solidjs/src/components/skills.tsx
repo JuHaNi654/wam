@@ -9,6 +9,8 @@ type Props = {
   onUpdate?: (items: Array<TSkill>) => void
 }
 
+// https://www.solidjs.com/tutorial/bindings_directives
+
 const fetchSkills = async () => {
   const { response, error } = await GET<Array<TSkill>>('/skills', null);
 

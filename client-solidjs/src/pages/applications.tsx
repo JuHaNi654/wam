@@ -8,6 +8,7 @@ import PageHeading from "../components/page-heading"
 import { renderDate } from "../utils/date"
 import { IconLink } from "../components/elements/button"
 import Badge from "../components/elements/badge"
+import { useToast } from "../components/toast"
 
 type Application = Pick<TSavedApplication, "id" | "name" | "company" | "status" | "create_date">
 
@@ -33,7 +34,9 @@ type ApplicationsListProps = {
   items: Array<Application>
 }
 function ApplicationsList(props: ApplicationsListProps) {
+  const toast = useToast()
   const [items, setItems] = createSignal(props.items)
+
 
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/applications/${id}`, null)
@@ -87,6 +90,9 @@ function ApplicationsList(props: ApplicationsListProps) {
           </For>
         </tbody>
       </table>
+      <div>
+        <button onClick={() => toast.success({ message: "This is success toast message" })} class="btn btn-soft">Toas success</button>
+      </div>
     </div>
   )
 }

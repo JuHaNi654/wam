@@ -4,6 +4,7 @@ import { TanStackRouterDevtools } from '@tanstack/solid-router-devtools';
 import { NotificationProvider } from "../../utils/notification";
 import { SSE_URL } from "../../utils/constants";
 import { GET } from "../../utils/api";
+import { ToastProvider } from "../../components/toast";
 
 export default createRootRoute({
   beforeLoad: async ({ location }) => {
@@ -47,8 +48,11 @@ function NotFoundComponent() {
 function RootComponent() {
   return (
     <NotificationProvider url={SSE_URL}>
-      <Outlet />
-      <TanStackRouterDevtools position="bottom-right" />
+      <ToastProvider count={1}>
+        <Outlet />
+      </ToastProvider>
+
+      <TanStackRouterDevtools position="bottom-left" />
     </NotificationProvider>
   )
 }
