@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge"
 type Props = ComponentProps<"select"> & {
   label?: string;
   children: JSX.Element
-  class: string
+  class?: string
 }
 export default function SelectField({ label, class: style, children: c, ...props }: Props) {
   const resolved = children(() => c)

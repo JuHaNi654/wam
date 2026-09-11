@@ -7,6 +7,7 @@ import Education from "../components/education"
 import WorkHistory from "../components/work-history"
 import PageHeading from "../components/page-heading"
 import Tags from "../components/skills"
+import { useToast } from "../components/toast"
 
 
 type Response = {
@@ -24,22 +25,29 @@ const profileRoute = createRoute({
 })
 
 function Profile() {
+  const toast = useToast()
   const profile = profileRoute.useLoaderData()
 
   const updateTags = async (tags: Array<TSkill>) => {
     const { error } = await POST('/profile/skills', { skills: tags })
     if (error) {
-      console.error("failed to update skills listing:")
+      toast.error({ message: "Error occured while trying to update skills" })
       console.error(error)
+      return
     }
+
+    toast.success({ message: "Skills updated" })
   }
 
   const handleSave = async (item: { [k: string]: any }) => {
     const { error } = await PUT('/profile', item)
     if (error) {
-      console.error("Error occured while updating profile")
+      toast.error({ message: "Error occured while trying to update profile information" })
       console.error(error)
+      return
     }
+
+    toast.success({ message: "Profile updated" })
   }
 
   return (

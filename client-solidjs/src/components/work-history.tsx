@@ -11,12 +11,14 @@ import TextareaField from "./input/TextareaField";
 import DateField from "./input/DateField";
 import BooleanField from "./input/BooleanField";
 import { DELETE, POST, PUT } from "../utils/api";
+import { useToast } from "./toast";
 
 type Props = {
   data: Array<TSavedWorkHistory>
 }
 
 export default function WorkHistory(props: Props) {
+  const toast = useToast()
   const [workHistory, setWorkHistory] = createSignal(props.data)
   const [showModal, setShowModal] = createSignal<{ [k: string]: boolean }>({})
 
@@ -27,12 +29,14 @@ export default function WorkHistory(props: Props) {
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/profile/history/${id}`, null)
     if (error) {
-      console.error("Error occurred while trying to delete history:")
+      toast.error({ message: "Error occurred while tyring to delete history entry" })
       console.error(error)
       return
     }
 
     setWorkHistory(workHistory().filter((item) => item.id !== id))
+
+    toast.success({ message: "Entry deleted" })
   }
 
   const saveWorkHistoryItem = (item: TSavedWorkHistory) => {
@@ -103,6 +107,7 @@ const defaultHistoryValues: TWorkHistory = {
 }
 
 function FormWorkExperience(props: FormWorkExperienceProps) {
+  const toast = useToast()
   const form = createForm(() => ({
     defaultValues: props.item || defaultHistoryValues,
     validators: {
@@ -112,20 +117,22 @@ function FormWorkExperience(props: FormWorkExperienceProps) {
       if (props.action === 'create') {
         const result = await POST<TSavedWorkHistory>(`/profile/history`, value)
         if (result.error) {
-          console.error("Error occurred while trying to save new experience:")
+          toast.error({ message: "Error occurred while trying to create experience" })
           console.error(result.error)
         }
 
         if (props.onSuccess) props.onSuccess(result!.response!.data)
+        toast.success({ message: "Experience created" })
       } else {
         const { id, ...data } = value as TSavedWorkHistory
         const result = await PUT(`/profile/history/${props.item!.id}`, data)
         if (result.error) {
-          console.error("Error occurred while trying to update experience:")
+          toast.error({ message: "Error occurred while trying to update experience" })
           console.error(result.error)
         }
 
         if (props.onSuccess) props.onSuccess(value as TSavedWorkHistory)
+        toast.success({ message: "Experience updated" })
       }
     }
   }))

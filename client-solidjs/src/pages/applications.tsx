@@ -41,12 +41,13 @@ function ApplicationsList(props: ApplicationsListProps) {
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/applications/${id}`, null)
     if (error) {
-      console.error("Error occurred while trying to delete entry")
+      toast.error({ message: "Error occurred while trying to delete entry" })
       console.error(error)
       return
     }
 
     setItems(items().filter((item) => item.id !== id))
+    toast.success({ message: "Entry removed" })
   }
 
   return (
@@ -90,9 +91,6 @@ function ApplicationsList(props: ApplicationsListProps) {
           </For>
         </tbody>
       </table>
-      <div>
-        <button onClick={() => toast.success({ message: "This is success toast message" })} class="btn btn-soft">Toas success</button>
-      </div>
     </div>
   )
 }

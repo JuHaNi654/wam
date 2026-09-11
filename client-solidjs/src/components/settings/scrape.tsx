@@ -2,11 +2,13 @@ import { For, createSignal } from "solid-js"
 import { TScrapeTarget } from "../../models/models"
 import { POST } from "../../utils/api"
 import { Button, IconButton } from "../elements/button"
+import { useToast } from "../toast"
 
 type Props = {
   items: Array<TScrapeTarget>
 }
 export default function ScrapeTargetListing(props: Props) {
+  const toast = useToast()
   const [items, setItems] = createSignal<Array<TScrapeTarget>>(props.items)
 
   const save = async () => {
@@ -15,11 +17,12 @@ export default function ScrapeTargetListing(props: Props) {
     })
 
     if (result.error) {
-      console.error("error occurred while saving scrape targets")
+      toast.error({ message: "Error occurred whiel trying to save settings" })
       console.error(result.error)
       return
     }
 
+    toast.success({ message: "Settings updated" })
   }
 
   const updateListItem = (e: Event, idx: number) => {

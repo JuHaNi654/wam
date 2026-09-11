@@ -3,6 +3,7 @@ import Root from "./layouts/root"
 import PageHeading from "../components/page-heading"
 import { Button } from "../components/elements/button"
 import { POST } from "../utils/api"
+import { useToast } from "../components/toast"
 
 export default createRoute({
   getParentRoute: () => Root,
@@ -11,12 +12,13 @@ export default createRoute({
 })
 
 function Welcome() {
+  const toast = useToast()
   const navigate = useNavigate({ from: '/' })
 
   const createProfile = async () => {
     const { error } = await POST("/profile", {});
     if (error) {
-      console.error("Error occurred while trying to create new profile")
+      toast.error({ message: "Error occured while trying to create new profile" })
       console.error(error)
       return
     }

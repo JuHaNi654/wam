@@ -7,6 +7,7 @@ import { For, Index, createResource, Suspense } from "solid-js"
 import { useNotification } from "../utils/notification"
 import { Button } from "../components/elements/button"
 import Badge from "../components/elements/badge"
+import { useToast } from "../components/toast"
 
 type Response = {
   items: Array<TProviderModels>,
@@ -26,6 +27,7 @@ const fetchProviders = async () => {
 }
 
 function LLM() {
+  const toast = useToast()
   const [result, { mutate }] = createResource(true, fetchProviders, {
     initialValue: { status: 0, data: { in_use: "", items: [] } }
   })
@@ -66,7 +68,6 @@ function LLM() {
   })
 
   useNotification<TModelToggleEvent>(NotificationLLMModelEnabled, (event) => {
-    console.log("ModelEnabled: ", event)
     mutate((prev) => {
       if (!prev) return prev
 
@@ -77,7 +78,7 @@ function LLM() {
   const loadModel = async (provider: string, model: string) => {
     const { error } = await POST(`/llm/providers/${provider}/load`, { model })
     if (error) {
-      console.error("Unabled load selected model")
+      toast.error({ message: "Unabled load selected model" })
       console.error(error)
     }
 
@@ -86,7 +87,7 @@ function LLM() {
   const unloadModel = async (provider: string, model: string) => {
     const { error } = await POST(`/llm/providers/${provider}/unload`, { model })
     if (error) {
-      console.error("Unabled unload selected model")
+      toast.error({ message: "Unabled unload selected model" })
       console.error(error)
     }
   }
@@ -94,7 +95,7 @@ function LLM() {
   const useModel = async (provider: string, model: string) => {
     const { error } = await POST(`/llm/providers/${provider}/toggle`, { model })
     if (error) {
-      console.error("Unabled enable selected model")
+      toast.error({ message: "Unabled toggle selected model" })
       console.error(error)
       return
     }

@@ -7,6 +7,7 @@ import SelectField from "../components/input/SelectField"
 import PageHeading from "../components/page-heading"
 import { Button } from "../components/elements/button"
 import { POST } from "../utils/api"
+import { useToast } from "../components/toast"
 
 export default createRoute({
   getParentRoute: () => ApplicationLayout,
@@ -29,6 +30,7 @@ const defaultValues: TApplication = {
 }
 
 function NewApplication() {
+  const toast = useToast()
   const navigate = useNavigate({ from: '/applications/new' })
   const form = createForm(() => ({
     defaultValues: defaultValues,
@@ -38,7 +40,7 @@ function NewApplication() {
     onSubmit: async ({ value }) => {
       const result = await POST<TSavedApplication>('/applications', value)
       if (result.error) {
-        console.error("Error occurred while trying to create new application")
+        toast.error({ message: "Error occurred while trying to create new application" })
         console.error(result.error)
         return
       }

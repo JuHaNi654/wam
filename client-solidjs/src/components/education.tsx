@@ -9,11 +9,13 @@ import { Button, IconButton } from "./elements/button";
 import { POST, DELETE } from "../utils/api";
 import { renderDate } from "../utils/date";
 import { DeleteConfirmationDialog } from "./alert-dialog";
+import { useToast } from "./toast";
 
 type Props = {
   data: Array<TSavedEducation>
 }
 export default function Education(props: Props) {
+  const toast = useToast()
   const [educations, setEducations] = createSignal(props.data)
   const [showModal, setShowModal] = createSignal(false)
   const form = createForm(() => ({
@@ -28,15 +30,16 @@ export default function Education(props: Props) {
     },
     onSubmit: async ({ value }) => {
       const result = await POST<TSavedEducation>('/profile/education', value)
-      console.log(result)
 
       if (result.error) {
+        toast.error({ message: "Error occurred while trying to create new education entry" })
         console.error(result.error)
         return
       }
 
       if (result.response && result.response.data) {
         setEducations([...educations(), result.response.data])
+        toast.success({ message: "Education entry created" })
       }
     }
   }))
@@ -51,11 +54,13 @@ export default function Education(props: Props) {
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/profile/education/${id}`, null)
     if (error) {
+      toast.error({ message: "Error occurred while trying to delete education entry" })
       console.error(error)
       return
     }
 
     setEducations(educations().filter((item) => item.id !== id))
+    toast.success({ message: "Education entry deleted" })
   }
 
   return (

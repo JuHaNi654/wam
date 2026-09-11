@@ -7,6 +7,7 @@ import Documents from "../components/documents"
 import Tags from "../components/skills"
 import Actions from "../components/actions"
 import SelectField from "../components/input/SelectField"
+import { useToast } from "../components/toast"
 
 type Response = {
   application: TSavedApplication;
@@ -22,24 +23,29 @@ const applicationRoute = createRoute({
 })
 
 function Application() {
+  const toast = useToast()
   const result = applicationRoute.useLoaderData()
 
   const updateTags = async (tags: Array<TSkill>) => {
     const { error } = await POST(`/applications/${result().response!.data.application.id}/skills`, { skills: tags })
     if (error) {
-      console.error("Error occured while trying to save skills")
+      toast.error({ message: "Error occured while trying to save skills" })
       console.error(error)
       return
     }
+
+    toast.success({ message: "Skills updated" })
   }
 
   const handleUpdate = async (item: { [k: string]: any }) => {
     const { error } = await PUT(`/applications/${result().response!.data.application.id}`, item)
     if (error) {
-      console.error("Error occurred while trying to update entry")
+      toast.error({ message: "Error while trying to update application information" })
       console.error(error)
       return
     }
+
+    toast.success({ message: "Application updated" })
   }
 
   return (

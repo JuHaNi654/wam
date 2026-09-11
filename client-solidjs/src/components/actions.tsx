@@ -11,12 +11,14 @@ import TextareaField from "./input/TextareaField";
 import DateField from "./input/DateField";
 import { DELETE, POST, PUT } from "../utils/api"
 import { useParams } from "@tanstack/solid-router"
+import { useToast } from "./toast"
 
 type Props = {
   actions: Array<TSavedAction>
 }
 
 export default function Actions(props: Props) {
+  const toast = useToast()
   const [actions, setActions] = createSignal(props.actions)
   const [showModal, setShowModal] = createSignal<{ [k: string]: boolean }>({})
 
@@ -27,11 +29,13 @@ export default function Actions(props: Props) {
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/actions/${id}`, null)
     if (error) {
+      toast.error({ message: "Error occurred while trying to delete action" })
       console.error("Error occurred while trying to delete action")
       console.error(error)
     }
 
     setActions(actions().filter((action) => action.id !== id))
+    toast.success({ message: "Action entry deleted" })
   }
 
   const saveActionItem = (item: TSavedAction) => {
@@ -97,6 +101,7 @@ const defaultActionValues: TAction = {
 }
 
 function FormAction(props: FormActionProps) {
+  const toast = useToast()
   const applicationID = useParams({
     from: '/layout/applications/$applicationId',
     select: (params) => params.applicationId
@@ -111,20 +116,22 @@ function FormAction(props: FormActionProps) {
       if (props.action === 'create') {
         const result = await POST<TSavedAction>(`/applications/${applicationID()}/actions`, value)
         if (result.error) {
-          console.error("Error occurrred while trying to create action")
+          toast.error({ message: "Error occurred while trying to create action" })
           console.error(result.error)
         }
 
         if (props.onSuccess) props.onSuccess(result!.response!.data)
+        toast.error({ message: "Action created" })
       } else {
         const { id, ...data } = value as TSavedAction
         const result = await PUT(`/actions/${id}`, data)
         if (result.error) {
-          console.error("Error occurred while trying to update action")
+          toast.error({ message: "Error occurred while trying to update action" })
           console.error(result.error)
         }
 
         if (props.onSuccess) props.onSuccess(value as TSavedAction)
+        toast.error({ message: "Action updated" })
       }
     }
   }))
