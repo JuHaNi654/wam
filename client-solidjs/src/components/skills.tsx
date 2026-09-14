@@ -112,6 +112,35 @@ export default function Tags(props: Props) {
     if (props.onUpdate) props.onUpdate(selectedTags())
   }
 
+  const handleKeydown = (e: KeyboardEvent) => {
+    console.log("KeyDownEvent: ", e)
+    console.log("Value: ", inputRef.value)
+    switch (e.key) {
+      case "Escape":
+        console.log("Escape")
+        break
+      case "Backspace":
+        if (inputRef.value.length !== 0) return
+
+        setSelectedTags((prev) => {
+          prev.pop()
+          return [...prev]
+        })
+
+        break
+      default:
+        break
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener("keydown", handleKeydown)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener("keydown", handleKeydown)
+  })
+
 
   return (
     <div class="flex flex-col gap-2 ring-1 ring-white/20 bg-zinc-800 rounded-lg p-4">
@@ -140,7 +169,7 @@ export default function Tags(props: Props) {
       <div ref={popoverRef} role="listbox" aria-multiselectable="true"
         onMouseDown={handlePopoverMouseDown}
         style={`width: anchor-size(width); position-anchor:--${popoverId}; top: anchor(--${popoverId} bottom); left: anchor(left);`}
-        class={`overflow-scroll rounded-t-sm rounded-b-xl fixed h-50 bg-zinc-800 ring-1 ring-white/20 ${showPopover() ? 'block' : 'hidden'}`}>
+        class={`z-50 overflow-scroll rounded-t-sm rounded-b-xl fixed max-h-50 bg-zinc-800 ring-1 ring-white/20 ${showPopover() ? 'block' : 'hidden'}`}>
         <ErrorBoundary fallback={<div>Error loading data</div>}>
           <For each={filteredItems()}>
             {(item) => {

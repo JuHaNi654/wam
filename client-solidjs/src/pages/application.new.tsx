@@ -40,7 +40,9 @@ function NewApplication() {
     onSubmit: async ({ value }) => {
       const result = await POST<TSavedApplication>('/applications', value)
       if (result.error) {
-        toast.error({ message: "Error occurred while trying to create new application" })
+        toast.error({
+          message: result.error.message || "error occurred while trying to create new application"
+        })
         console.error(result.error)
         return
       }
