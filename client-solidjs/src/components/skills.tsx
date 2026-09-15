@@ -113,12 +113,30 @@ export default function Tags(props: Props) {
   }
 
   const handleKeydown = (e: KeyboardEvent) => {
-    console.log("KeyDownEvent: ", e)
-    console.log("Value: ", inputRef.value)
     switch (e.key) {
       case "Escape":
-        console.log("Escape")
+        if (!showPopover()) return
+        closePopover()
+        e.preventDefault()
         break
+      case "ArrowDown":
+      case "ArrowUp": {
+        const target = e.target as Node
+        if (!showPopover() || (target !== inputRef && !popoverRef.contains(target))) return
+
+        const options = Array.from(popoverRef.querySelectorAll<HTMLElement>('[role="option"]'))
+        if (options.length === 0) return
+
+        const currentIndex = options.indexOf(document.activeElement as HTMLElement)
+        const direction = e.key === "ArrowDown" ? 1 : -1
+        const nextIndex = currentIndex === -1
+          ? (direction === 1 ? 0 : options.length - 1)
+          : Math.max(0, Math.min(options.length - 1, currentIndex + direction))
+
+        options[nextIndex].focus()
+        e.preventDefault()
+        break
+      }
       case "Backspace":
         if (inputRef.value.length !== 0) return
 
@@ -176,7 +194,7 @@ export default function Tags(props: Props) {
               const selected = checkSelected(item.item, selectedTags())
 
               return (
-                <div aria-selected={selected} role="option" onClick={() => toggleSelected(item.item)}
+                <div aria-selected={selected} role="option" tabIndex={-1} onClick={() => toggleSelected(item.item)}
                   class={twMerge(
                     "text-sm px-3 py-2 hover:bg-zinc-400/10 focus:bg-zinc-400/10 hover:text-white focus:text-white cursor-pointer",
                   )}>
