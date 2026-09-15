@@ -1,100 +1,49 @@
-import { cn } from "@/lib/utils"
-import { NavLink } from "react-router"
-import { useQuery } from "@tanstack/react-query";
-import type { AIAgentStatus } from "@/types/api.types";
-import { GET } from "@/lib/api";
-import Loading from "./loading";
-import { Avatar, AvatarBadge } from "./ui/avatar";
-import { RiAddBoxLine, RiHome2Line, RiRobot2Fill, RiSettings2Fill, RiUserFill } from "@remixicon/react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { useNotification } from "../context/notification";
-import { useEffect } from "react";
-import { NotificationLLMModelEnabled } from "@/types/notification.types";
+import { For } from "solid-js"
+import { Link, useLocation } from "@tanstack/solid-router"
+
 
 type Links = {
   label: string;
   path: string;
-  icon: React.ReactElement;
 }
 const items: Links[] = [
   {
-    label: "Home",
-    path: "/dashboard",
-    icon: <RiHome2Line />
+    label: "Applications",
+    path: "/applications",
   },
   {
     label: "New application",
     path: "/applications/new",
-    icon: <RiAddBoxLine />
   },
   {
     label: "Profile",
     path: "/profile",
-    icon: <RiUserFill />
   },
   {
     label: "Settings",
     path: "/settings",
-    icon: <RiSettings2Fill />
+  },
+  {
+    label: "LLM",
+    path: "/models",
   }
 ]
 
 export default function Sidemenu() {
+  const location = useLocation()
+
   return (
-    <aside className="flex flex-col items-stretch justify-between col-span-1 border rounded-lg p-4 border-gray-200">
-      <ul className="flex flex-col items-center justify-center gap-2">
-        {items.map((item, i) => (
-          <li key={i}>
-            <NavLink aria-label={item.label} to={item.path} className={({ isActive }) => cn(
-              "p-3 aspect-square flex items-center rounded-full text-sm border border-transparent hover:border-gray-300",
-              (isActive && "bg-gray-200")
-            )}>
-              {item.icon}
-            </NavLink>
-          </li>
-        ))}
+    <aside class="m-2 rounded-md bg-zinc-900 ring-1 ring-white/[.07] shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_24px_48px_-24px_rgba(0,0,0,.95)] flex flex-col items-stretch justify-between p-2">
+      <ul class="flex flex-col items-stretch gap-2">
+        <For each={items}>
+          {(item) => (
+            <li>
+              <Link data-page={location().pathname === item.path} to={item.path} class="block rounded-lg sidenav-btn">
+                <span class="text-sm font-semibold">{item.label}</span>
+              </Link>
+            </li>)}
+        </For>
       </ul>
-      <AIStatus />
     </aside>
-  )
-}
-
-function AIStatus() {
-  const notification = useNotification()
-  const { data, isSuccess, isFetching, refetch } = useQuery({
-    queryKey: ["llm-status"],
-    queryFn: async () => {
-      const result = await GET<AIAgentStatus>('/api/llm/status', null)
-      if (result.error) throw result.error
-      return result.response?.data
-    },
-  })
-
-  useEffect(() => {
-    if (notification.type === NotificationLLMModelEnabled) {
-      refetch()
-    }
-  }, [notification, refetch])
-
-  if (!isSuccess || !data) return null
-
-  return (
-    <div className="mx-auto">
-      <Loading isLoading={isFetching}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink aria-label="Go ai settings page" to="/models">
-              <Avatar>
-                <RiRobot2Fill className="m-auto" />
-                <AvatarBadge className={data.available ? "bg-green-600" : "bg-red-600"} />
-              </Avatar>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{data.available ? data.in_use : "Unavilable"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </Loading>
-    </div>
   )
 }

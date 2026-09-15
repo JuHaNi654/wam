@@ -1,106 +1,120 @@
-import { cn } from "@/lib/utils"
-import { RiCloseLine } from "@remixicon/react"
-import { useEffect, useRef, useState } from "react"
-import type { ReactNode } from "react";
+import type { JSX } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
+import { twMerge } from "tailwind-merge"
+import { IconButton } from "./elements/button";
 
 const DEFAULT_W = 16 * 40
-const DEFAULT_H = 9 * 40
+const DEFAULT_H = 9 * 60
 
-type ModalProps = {
+type Props = {
+  subTitle?: string;
   title: string;
-  children: ReactNode;
+  children: JSX.Element;
   onClose: () => void;
+  footer?: JSX.Element;
 }
 
-export default function Modal(props: ModalProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const modalRef = useRef<HTMLDivElement>(null);
-  const dragOffset = useRef({ x: 0, y: 0 })
-  const dragPos = useRef({
-    x: window.innerWidth / 2 - DEFAULT_W / 2,
-    y: window.innerHeight / 2 - DEFAULT_H / 2
-  })
+export function Modal(props: Props) {
+  const [isDragging, setIsDragging] = createSignal(false);
+  const dragOffset = { x: 0, y: 0 }
+  const dragPos = {
+    x: (window.innerWidth - DEFAULT_W) / 2,
+    y: (window.innerHeight - DEFAULT_H) / 2
+  }
 
-  useEffect(() => {
-    if (!modalRef.current) return;
+  let modalRef!: HTMLDivElement
 
-    modalRef.current.addEventListener("mousedown", focusModal)
-    document.addEventListener("mousedown", blurModal)
+  const focusModal = () => {
+    if (!modalRef) return
+    modalRef.style.zIndex = '40'
 
-    return () => {
-      if (!modalRef.current) return
+    modalRef.style.setProperty("--drag-position-x", `${dragPos.x}px`)
+    modalRef.style.setProperty("--drag-position-y", `${dragPos.y}px`)
+  }
 
-      document.removeEventListener("mousedown", blurModal)
-      modalRef.current.removeEventListener("mousedown", focusModal)
-    }
-  }, [modalRef.current])
-
-  const focusModal = useRef(() => {
-    if (!modalRef.current) return
-    modalRef.current.style.zIndex = '99'
-  }).current
-
-  const blurModal = useRef((e: any) => {
-    if (!e.target || !modalRef.current) return
+  const blurModal = (e: MouseEvent) => {
+    if (!e.target || !modalRef) return
     const target = e.target as HTMLElement
 
-    if (!modalRef.current.contains(target)) {
-      modalRef.current.style.zIndex = ''
+    if (!modalRef.contains(target)) {
+      modalRef.style.zIndex = ''
     }
-  }).current
+  }
 
-  const handleMouseUp = useRef(() => {
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!modalRef) return
+    dragPos.x = e.clientX - dragOffset.x
+    dragPos.y = e.clientY - dragOffset.y
+
+    modalRef.style.setProperty("--drag-position-x", `${dragPos.x}px`)
+    modalRef.style.setProperty("--drag-position-y", `${dragPos.y}px`)
+    modalRef.style.transform = `translate3d(${dragPos.x}px, ${dragPos.y}px, 0)`
+  }
+
+  const handleMouseUp = () => {
     setIsDragging(false)
     document.removeEventListener("mousemove", handleMouseMove)
-  }).current
+  }
 
-  const handleMouseMove = useRef((e: MouseEvent) => {
-    if (!modalRef.current) return
-    const x = e.clientX - dragOffset.current.x;
-    const y = e.clientY - dragOffset.current.y;
-
-    dragPos.current = { x, y }
-    modalRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`
-  }).current
-
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: MouseEvent) => {
     e.preventDefault()
     const target = e.target as HTMLElement
     if (target.closest("button")) return;
 
-    dragOffset.current = {
-      x: e.clientX - dragPos.current.x,
-      y: e.clientY - dragPos.current.y
-    }
+    dragOffset.x = e.clientX - dragPos.x
+    dragOffset.y = e.clientY - dragPos.y
 
     setIsDragging(true)
+
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp, { once: true })
   }
 
+  onMount(() => {
+    modalRef.addEventListener("mousedown", focusModal)
+    document.addEventListener("mousedown", blurModal)
+  })
+
+  onCleanup(() => {
+    modalRef.removeEventListener("mousedown", focusModal)
+    document.removeEventListener("mousedown", blurModal)
+  })
+
   return (
     <div ref={modalRef}
       style={{
-        left: 0,
-        top: 0,
-        transform: `translate3d(${dragPos.current.x}px, ${dragPos.current.y}px, 0)`,
-        width: DEFAULT_W,
-        height: DEFAULT_H
+        left: 0, top: 0,
+        width: `${DEFAULT_W}px`,
+        height: `${DEFAULT_H}px`,
+        transform: `translate3d(${dragPos.x}px, ${dragPos.y}px, 0)`
       }}
-      className="flex flex-col z-20 fixed border border-border rounded-lg bg-background shadow-lg overflow-hidden">
-      <div onMouseDown={handleMouseDown} className={cn(
-        "flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40 select-none",
-        isDragging && "bg-muted/60 cursor-grabbing",
-        !isDragging && "cursor-grab hover:bg-muted/50 transition-colors"
-      )}>
-        <h2 className="text-sm font-semibold flex-1">{props.title}</h2>
-        <button
-          onClick={props.onClose}
-          className="cursor-pointer inline-flex items-center justify-center w-6 h-6 rounded hover:bg-muted/70 transition-colors/">
-          <RiCloseLine size={16} />
-        </button>
-      </div>
-      <div className="flex-1 p-4 overflow-auto">{props.children}</div>
+      class="bg-zinc-800 ring-1 ring-white/10 flex flex-col z-20 fixed rounded-xl overflow-hidden">
+      <header onMouseDown={handleMouseDown}
+        class={twMerge(
+          "flex items-center justify-start p-4 border-b border-white/10 bg-muted/40 select-none",
+          isDragging() ? "cursor-grabbing" : "cursor-grab"
+        )}>
+
+        <i class="ri-draggable text-2xl text-zinc-500"></i>
+        <div class="flex flex-col ml-2 mr-auto">
+          {props.subTitle && <span class="block text-xs font-semibold text-zinc-500">{props.subTitle}</span>}
+          <h2 class="text-md uppercase font-display font-semibold flex-1">{props.title}</h2>
+        </div>
+        <IconButton size="sm" label="close" onClick={props.onClose} icon="ri-close-line" />
+      </header>
+      <div class="flex-1 p-4 overflow-auto">{props.children}</div>
+      {props.footer && props.footer}
     </div>
+  )
+}
+
+type ModalFooterProps = {
+  children: JSX.Element;
+}
+export function ModalFooter(props: ModalFooterProps) {
+  return (
+    <footer class="bg-zinc-900 flex justify-end gap-4 py-4 px-6 border-t border-white/10">
+      {props.children}
+    </footer>
   )
 }

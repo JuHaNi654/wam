@@ -13,6 +13,41 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func listProviderModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	providers := llm.GetInstance().Providers()
+	list := []map[string]any{}
+
+	for _, provider := range providers {
+		if !provider.Available {
+			list = append(list, map[string]any{
+				"provider": provider,
+				"models":   []any{},
+			})
+		} else {
+			models, err := llm.GetInstance().ListModels(provider.Name)
+			if err != nil {
+				logger.GetInstance().Error(err.Error())
+				return &ErrorResponse{StatusCode: http.StatusInternalServerError}
+			}
+
+			list = append(list, map[string]any{
+				"provider": provider,
+				"models":   models,
+			})
+		}
+	}
+
+	ctx.JSON(http.StatusOK, Response{
+		StatusCode: http.StatusOK,
+		Data: gin.H{
+			"items":  list,
+			"in_use": llm.GetInstance().Selected(),
+		},
+	})
+
+	return nil
+}
+
 func listProviders(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: http.StatusOK,
@@ -111,8 +146,10 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		llm.GetInstance().ClearSelected()
 
 		instance.Send(notification.Payload{
-			Type:    notification.NotificationLLMModelEnabled,
-			Content: llm.GetInstance().Selected(),
+			Type: notification.NotificationLLMModelEnabled,
+			Content: map[string]any{
+				"model": llm.GetInstance().Selected(),
+			},
 		})
 		ctx.Status(http.StatusNoContent)
 		return nil
@@ -131,8 +168,10 @@ func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	}
 
 	instance.Send(notification.Payload{
-		Type:    notification.NotificationLLMModelEnabled,
-		Content: llm.GetInstance().Selected(),
+		Type: notification.NotificationLLMModelEnabled,
+		Content: map[string]any{
+			"model": llm.GetInstance().Selected(),
+		},
 	})
 	ctx.Status(http.StatusNoContent)
 	return nil

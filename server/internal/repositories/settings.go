@@ -1,13 +1,20 @@
 package repositories
 
 import (
+	"errors"
 	"server/internal/models"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-const settingsKey = "settings"
+const (
+	settingsKey = "settings"
+)
+
+var (
+	ErrSettingsNotInitialized = errors.New("Settings is not initialized")
+)
 
 type SettingsRepository struct {
 	db *gorm.DB
@@ -20,6 +27,10 @@ func NewSettingsRepository(db *gorm.DB) *SettingsRepository {
 func (r *SettingsRepository) Get() (*models.Settings, error) {
 	item := new(models.Settings)
 	result := r.db.First(&item, "id = ?", settingsKey)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return item, ErrSettingsNotInitialized
+	}
+
 	return item, result.Error
 }
 

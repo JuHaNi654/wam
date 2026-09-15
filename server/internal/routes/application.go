@@ -8,6 +8,7 @@ import (
 	"server/internal/llm/skills"
 	"server/internal/logger"
 	"server/internal/models"
+	"server/internal/repositories"
 	"server/internal/scraper"
 	"server/internal/services"
 
@@ -47,7 +48,12 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		settings, err := s.SettingsRepository.Get()
 		if err != nil {
 			logger.GetInstance().Error(err.Error())
-			return &ErrorResponse{StatusCode: http.StatusInternalServerError}
+			if errors.Is(err, repositories.ErrSettingsNotInitialized) {
+				return &ErrorResponse{
+					StatusCode: http.StatusBadRequest,
+					Message:    "Settings needs to be initialized before creating new applications",
+				}
+			}
 		}
 
 		ad, err := scraper.Scrape(&scraper.Config{

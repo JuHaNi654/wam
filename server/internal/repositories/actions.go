@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"server/internal/models"
-	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -26,7 +25,6 @@ func (r *ActionRepository) GetByApplicationID(jobID string) ([]models.SavedActio
 func (r *ActionRepository) Create(action *models.Action) (models.SavedAction, error) {
 	savedAction := models.SavedAction{
 		ID:     uuid.New().String(),
-		Date:   time.Now().Unix(),
 		Action: *action,
 	}
 	return savedAction, r.db.Create(savedAction).Error

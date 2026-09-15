@@ -1,127 +1,210 @@
-import type { Skill } from "@/types/api.types"
-import { useQuery } from "@tanstack/react-query";
-import { GET, POST } from "@/lib/api";
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxValue,
-  useComboboxAnchor,
-} from "@/components/ui/combobox"
-import { Fragment, useState } from "react";
-import { RiAddLine } from "@remixicon/react";
-import { toast } from "sonner"
+import { For, createUniqueId, createSignal, createResource, createMemo, ErrorBoundary, onMount, onCleanup } from "solid-js"
+import { TSkill } from "../models/models"
+import { GET } from "../utils/api"
+import { twMerge } from "tailwind-merge"
+import Fuse from 'fuse.js'
 
 type Props = {
-  skills: Skill[];
-  update(skills: Skill[]): void
+  data: Array<TSkill>
+  onUpdate?: (items: Array<TSkill>) => void
 }
 
-type ListView = {
-  creatable?: boolean
-} & Skill
+// https://www.solidjs.com/tutorial/bindings_directives
 
-function listItems(input: string, skills?: Array<Skill>): Array<ListView> {
-  const transformed = input.trim().toLowerCase()
-  if (transformed.length === 0) return skills as ListView[]
+const fetchSkills = async () => {
+  const { response, error } = await GET<Array<TSkill>>('/skills', null);
 
-  const newItem: ListView = { name: input, creatable: true, id: `create:${transformed}` }
-  if (!skills || skills.length === 0) return [newItem]
-
-  const exists = skills.some((skill) => skill.name.toLowerCase().trim() === transformed)
-  return exists ? skills : [newItem, ...skills]
+  if (error) throw error
+  return response
 }
 
-export default function Skills(props: Props) {
-  const anchor = useComboboxAnchor()
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>(props.skills)
-  const [inputValue, setInputValue] = useState("")
-  const { data, isSuccess } = useQuery({
-    queryKey: ["skills"],
-    queryFn: async () => {
-      const result = await GET<Skill[]>('/api/skills', null)
-      if (result.error) throw result.error
-      return result.response?.data
-    },
-    retry: 0,
+const checkSelected = (item: TSkill, items: Array<TSkill>) => {
+  return items.some((i) => i.id === item.id)
+}
+
+export default function Tags(props: Props) {
+  const [selectedTags, setSelectedTags] = createSignal(props.data)
+  const [data] = createResource(true, fetchSkills)
+  const [query, setQuery] = createSignal("")
+  const [showPopover, setShowpopover] = createSignal(false)
+
+  let toolbarRef!: HTMLDivElement
+  let popoverRef!: HTMLDivElement
+  let inputRef!: HTMLInputElement
+  const popoverId = `tags-popover-${createUniqueId()}`
+
+  const filteredItems = createMemo(() => {
+    if (!data()) return []
+
+    const fuse = new Fuse(data()!.data, {
+      keys: ['name'],
+      threshold: 0.2
+    })
+
+    return fuse.search(query())
   })
 
-  if (!isSuccess) return null
+  const handleFocus = () => {
+    inputRef.focus()
+    setShowpopover(true)
+  }
 
-  const createNewTag = async (name: string) => {
-    const result = await POST<Skill>('/api/skills', { name })
-    if (result.error) {
-      console.error(result.error)
-      toast.error("Something went wrong, while trying to create new skill", { position: "bottom-right" })
+  const closePopover = () => {
+    setShowpopover(false)
+    setQuery("")
+    inputRef.value = ""
+  }
+
+  // Only mousedowns that land outside both the toolbar and the popover
+  // should close the popover. Mousedown/click on either of those areas is
+  // handled by the guarded onMouseDown handlers below, which stop the
+  // browser from blurring the input in the first place.
+  const handleOutsideMouseDown = (e: MouseEvent) => {
+    const target = e.target as Node
+    if (toolbarRef.contains(target) || popoverRef.contains(target)) return
+    closePopover()
+  }
+
+  onMount(() => {
+    document.addEventListener("mousedown", handleOutsideMouseDown)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener("mousedown", handleOutsideMouseDown)
+  })
+
+  // Prevents the input from losing focus when the user mousedowns on the
+  // toolbar (e.g. a remove-tag button), while still allowing native
+  // mousedown behavior (caret placement, text selection) when the
+  // mousedown target is the input itself.
+  const handleToolbarMouseDown = (e: MouseEvent) => {
+    if (e.target !== inputRef) e.preventDefault()
+  }
+
+  // Prevents the input from losing focus when the user mousedowns on a
+  // popover option, so selecting a skill doesn't blur/close things first.
+  const handlePopoverMouseDown = (e: MouseEvent) => {
+    e.preventDefault()
+  }
+
+  const handleInput = (e: InputEvent) => {
+    if (!showPopover()) setShowpopover(true)
+    const target = e.target as HTMLInputElement
+    setQuery(target.value)
+  }
+
+  const removeSelcted = (item: TSkill) => {
+    const filteredList = selectedTags().filter((tag) => tag !== item)
+    setSelectedTags(filteredList)
+    if (props.onUpdate) props.onUpdate(filteredList)
+  }
+
+  const toggleSelected = (item: TSkill) => {
+    const selected = selectedTags()
+
+    if (!checkSelected(item, selected)) {
+      setSelectedTags([...selected, item])
+      if (props.onUpdate) props.onUpdate(selectedTags())
       return
     }
 
-    const skill = result.response?.data as Skill
-    setSelectedSkills((prev) => [...prev, skill])
-    props.update([...selectedSkills, skill])
+    setSelectedTags(selected.filter((tag) => tag.id !== item.id))
+    if (props.onUpdate) props.onUpdate(selectedTags())
   }
 
-  const handleUpdate = async (items: Array<ListView | Skill>) => {
-    const newSkill = items.find((item: ListView) => item.creatable)
-    if (newSkill) {
-      createNewTag(newSkill.name)
-      return
+  const handleKeydown = (e: KeyboardEvent) => {
+    switch (e.key) {
+      case "Escape":
+        if (!showPopover()) return
+        closePopover()
+        e.preventDefault()
+        break
+      case "ArrowDown":
+      case "ArrowUp": {
+        const target = e.target as Node
+        if (!showPopover() || (target !== inputRef && !popoverRef.contains(target))) return
+
+        const options = Array.from(popoverRef.querySelectorAll<HTMLElement>('[role="option"]'))
+        if (options.length === 0) return
+
+        const currentIndex = options.indexOf(document.activeElement as HTMLElement)
+        const direction = e.key === "ArrowDown" ? 1 : -1
+        const nextIndex = currentIndex === -1
+          ? (direction === 1 ? 0 : options.length - 1)
+          : Math.max(0, Math.min(options.length - 1, currentIndex + direction))
+
+        options[nextIndex].focus()
+        e.preventDefault()
+        break
+      }
+      case "Backspace":
+        if (inputRef.value.length !== 0) return
+
+        setSelectedTags((prev) => {
+          prev.pop()
+          return [...prev]
+        })
+
+        break
+      default:
+        break
     }
-
-    setSelectedSkills(items)
-    props.update(items)
   }
+
+  onMount(() => {
+    document.addEventListener("keydown", handleKeydown)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener("keydown", handleKeydown)
+  })
+
 
   return (
-    <Combobox
-      multiple
-      autoHighlight
-      items={listItems(inputValue, data)}
-      value={selectedSkills}
-      itemToStringLabel={(item) => item.name}
-      itemToStringValue={(item) => item.id}
-      isItemEqualToValue={(item, value) => item.id === value.id}
-      onValueChange={(value) => handleUpdate(value)}
-      onInputValueChange={setInputValue}
-    >
-      <ComboboxChips ref={anchor} className="w-full">
-        <ComboboxValue>
-          {(values) => (
-            <Fragment>
-              {values.map((value: Skill) => (
-                <ComboboxChip key={value.id}>{value.name}</ComboboxChip>
-              ))}
-              <ComboboxChipsInput />
-            </Fragment>
+    <div class="flex flex-col gap-2 ring-1 ring-white/20 bg-zinc-800 rounded-lg p-4">
+      <header class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold uppercase tracking-wide">Skills</h3>
+      </header>
+      <div role="toolbar" ref={toolbarRef}
+        onClick={handleFocus}
+        onMouseDown={handleToolbarMouseDown}
+        style={`anchor-name:--${popoverId}`}
+        class="flex flex-wrap gap-2 ring-1 ring-white/20 p-3 rounded-lg bg-zinc-950 focus-within:ring-2 focus-within:ring-emerald-500">
+        <For each={selectedTags()}>
+          {(item) => (
+            <div class="text-xs px-3 py-1 ring-1 flex gap-2 rounded">
+              <span>{item.name}</span>
+              <button onClick={() => removeSelcted(item)} class="aspect-square cursor-pointer">
+                <i class="ri-close-large-line"></i>
+              </button>
+            </div>
           )}
-        </ComboboxValue>
-      </ComboboxChips>
-      <ComboboxContent anchor={anchor}>
-        <ComboboxEmpty>
-          No Results
-        </ComboboxEmpty>
-        <ComboboxList>
-          {(item: ListView) => (
-            !item.creatable ? (
-              <ComboboxItem key={item.id} value={item}>
-                {item.name}
-              </ComboboxItem>
-            ) : (
-              <ComboboxItem key={item.id} value={item}>
-                <span className="flex gap-2 items-center">
-                  <RiAddLine />
-                  Create ({item.name}) skill
-                </span>
-              </ComboboxItem>
-            )
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
+        </For>
+        <input type="text" id="tag-input" name="tag-input" ref={inputRef}
+          onInput={handleInput}
+          class="h-auto text-xs flex-1 min-w-1/2 w-full outline-none" placeholder="Add a skill" />
+      </div>
+      <div ref={popoverRef} role="listbox" aria-multiselectable="true"
+        onMouseDown={handlePopoverMouseDown}
+        style={`width: anchor-size(width); position-anchor:--${popoverId}; top: anchor(--${popoverId} bottom); left: anchor(left);`}
+        class={`z-50 overflow-scroll rounded-t-sm rounded-b-xl fixed max-h-50 bg-zinc-800 ring-1 ring-white/20 ${showPopover() ? 'block' : 'hidden'}`}>
+        <ErrorBoundary fallback={<div>Error loading data</div>}>
+          <For each={filteredItems()}>
+            {(item) => {
+              const selected = checkSelected(item.item, selectedTags())
+
+              return (
+                <div aria-selected={selected} role="option" tabIndex={-1} onClick={() => toggleSelected(item.item)}
+                  class={twMerge(
+                    "text-sm px-3 py-2 hover:bg-zinc-400/10 focus:bg-zinc-400/10 hover:text-white focus:text-white cursor-pointer",
+                  )}>
+                  {item.item.name}
+                </div>
+              )
+            }}
+          </For>
+        </ErrorBoundary>
+      </div>
+    </div>
   )
 }

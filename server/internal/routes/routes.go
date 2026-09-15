@@ -60,6 +60,7 @@ func Routes(s *services.Service) *gin.Engine {
 	// llm endpoints
 	r.GET("/api/llm/status", Handler(s, llmStatus))
 	r.GET("/api/llm/providers", Handler(s, listProviders))
+	r.GET("/api/llm/providers-models", Handler(s, listProviderModels))
 	r.GET("/api/llm/providers/:provider/models", Handler(s, listModels))
 	r.POST("/api/llm/providers/:provider/load", Handler(s, loadModel))
 	r.POST("/api/llm/providers/:provider/unload", Handler(s, unloadModel))
