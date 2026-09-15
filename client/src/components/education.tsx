@@ -1,78 +1,151 @@
-import type { Education } from "@/types/api.types"
-import { Button } from "./ui/button"
-import { renderDate } from "@/lib/date"
-import EducationForm, { type SavedEducation } from "./form/education"
-import { DeleteConfirmationDialog } from "./dialog/alert-dialog"
-import { useState } from "react"
-import { DELETE } from "@/lib/api"
-import { toast } from "sonner"
-import { createPortal } from "react-dom"
-import Modal from "./modal"
+import { Modal, ModalFooter } from "./modal"
+import { createSignal, Show, For, } from "solid-js"
+import { Portal } from "solid-js/web";
+import { createForm } from "@tanstack/solid-form"
+import { educationSchema, TSavedEducation } from "../models/models"
+import InputField from "../components/input/InputField"
+import DateField from "./input/DateField";
+import { Button, IconButton } from "./elements/button";
+import { POST, DELETE } from "../utils/api";
+import { renderDate } from "../utils/date";
+import { DeleteConfirmationDialog } from "./alert-dialog";
+import { useToast } from "./toast";
 
 type Props = {
-  data: Education[]
+  data: Array<TSavedEducation>
 }
 export default function Education(props: Props) {
-  const [showFormModal, setShowModalForm] = useState(false)
-  const [educations, setEducations] = useState(props.data)
+  const toast = useToast()
+  const [educations, setEducations] = createSignal(props.data)
+  const [showModal, setShowModal] = createSignal(false)
+  const form = createForm(() => ({
+    defaultValues: {
+      school: "",
+      program: "",
+      start_date: 0,
+      end_date: 0,
+    },
+    validators: {
+      onSubmit: educationSchema
+    },
+    onSubmit: async ({ value }) => {
+      const result = await POST<TSavedEducation>('/profile/education', value)
+
+      if (result.error) {
+        toast.error({ message: "Error occurred while trying to create new education entry" })
+        console.error(result.error)
+        return
+      }
+
+      if (result.response && result.response.data) {
+        setEducations([...educations(), result.response.data])
+        toast.success({ message: "Education entry created" })
+      }
+    }
+  }))
+
+  const handleSubmit = async () => {
+    await form.handleSubmit()
+    if (form.state.isValid) {
+      setShowModal(false)
+    }
+  }
 
   const handleDelete = async (id: string) => {
-    const { error } = await DELETE(`/api/profile/education/${id}`, null)
+    const { error } = await DELETE(`/profile/education/${id}`, null)
     if (error) {
+      toast.error({ message: "Error occurred while trying to delete education entry" })
       console.error(error)
-      toast.success("Something went wrong while trying to delete education", { position: "bottom-right" })
       return
     }
 
-    setEducations((prev) => prev.filter((item) => item.id !== id))
-    toast.success("Selected education deleted successfully", { position: "bottom-right" })
+    setEducations(educations().filter((item) => item.id !== id))
+    toast.success({ message: "Education entry deleted" })
   }
 
   return (
-    <div className="bg-card border rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Education
-        </h3>
-        <Button variant="outline" size="sm" onClick={() => setShowModalForm(true)}>
-          + Add education
-        </Button>
-        {showFormModal && createPortal(
-          <Modal title="New education" onClose={() => setShowModalForm(false)}>
-            <EducationForm
-              onCancel={() => setShowModalForm(false)}
-              onSubmit={(data: SavedEducation) => {
-                setEducations((prev) => [...prev, data])
-                setShowModalForm(false)
-              }} />
-          </Modal>, document.body
-        )}
-      </div>
+    <div class="flex flex-col gap-2 p-4 rounded-lg ring-1 ring-white/20 bg-zinc-800">
+      <header class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold uppercase tracking-wide">Education</h3>
+        <IconButton label="New education entry" icon="ri-add-line" size="sm" onClick={() => setShowModal(true)} />
+        <Show when={showModal()}>
+          <Portal>
+            <Modal subTitle="Education" title="New entry"
+              footer={(
+                <ModalFooter>
+                  <Button onClick={() => setShowModal(false)} variant="outline" label="Cancel" />
+                  <Button onClick={handleSubmit} variant="primary" label="Save entry" />
+                </ModalFooter>
+              )}
+              onClose={() => setShowModal(false)}>
+              <form id="education-form" onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}>
+                <form.Field name="school"
+                  children={(field) => (
+                    <InputField label="School" name={field().name}
+                      value={field().state.value}
+                      onInput={(e) => field().handleChange(e.currentTarget.value)}
+                      onBlur={field().handleBlur}
+                      errors={field().state.meta.errors.map((err) => err?.message || "")}
+                    />
+                  )} />
 
-      {educations.length === 0 && (
-        <p className="text-sm text-muted-foreground">No education saved</p>
-      )}
+                <form.Field name="program"
+                  children={(field) => (
+                    <InputField label="Program" name={field().name}
+                      value={field().state.value}
+                      onInput={(e) => field().handleChange(e.currentTarget.value)}
+                      onBlur={field().handleBlur}
+                      errors={field().state.meta.errors.map((err) => err?.message || "")}
+                    />
+                  )} />
 
-      {educations.length > 0 && (
-        <div className="space-y-3">
-          {educations.map((education) => (
-            <div key={education.id} className="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
-              <div className="flex-1">
-                <h3 className="font-semibold">{education.program}</h3>
-                <span>{education.school}</span>
+                <div class="flex gap-4">
+                  <form.Field name="start_date"
+                    children={(field) => (
+                      <DateField label="Start date" name={field().name} value={field().state.value}
+                        onChange={(e) => field().handleChange(e)}
+                        onBlur={field().handleBlur}
+                        errors={field().state.meta.errors.map((err) => err?.message || "")}
+                      />
+                    )} />
+
+                  <form.Field name="end_date"
+                    children={(field) => (
+                      <DateField label="End date" name={field().name} value={field().state.value}
+                        onChange={(e) => field().handleChange(e)}
+                        onBlur={field().handleBlur}
+                        errors={field().state.meta.errors.map((err) => err?.message || "")}
+                      />
+                    )} />
+                </div>
+              </form>
+            </Modal>
+          </Portal>
+        </Show>
+      </header>
+      <ul class="flex flex-col gap-2">
+        <For each={educations()}>
+          {(item) => (
+            <li class="flex items-center gap-4 text-sm border-l-2 border-border pl-4">
+              <div class="flex-1">
+                <h3 class="font-semibold">{item.program}</h3>
+                <span class="block">{item.school}</span>
               </div>
               <div>
-                <span>{renderDate(education.start_date)} - {renderDate(education.end_date)}</span>
+                <span>{renderDate(item.start_date)} - {renderDate(item.end_date)}</span>
               </div>
-              <DeleteConfirmationDialog buttonLabel="Delete education"
+              <DeleteConfirmationDialog id="delete-application"
                 title="Are you sure, you want to delete selected item"
-                description={`You are currently deleting (${education.school} - ${education.program}).`}
-                onConfirmation={() => handleDelete(education.id as string)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+                description={`You are currently deleting (${item.program}).`}
+                onCancel={() => { }} onConfirmation={() => handleDelete(item.id)} />
+
+            </li>
+          )}
+        </For>
+      </ul>
     </div>
   )
 }

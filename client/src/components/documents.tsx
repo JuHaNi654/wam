@@ -1,74 +1,83 @@
-import { Button } from "./ui/button";
-import type { Application } from "@/types/api.types";
-import { useState } from "react";
-import { Textarea } from "./ui/textarea";
-import { createPortal } from "react-dom";
-import Modal from "./modal";
+import { createSignal, Match, Show, Switch } from "solid-js"
+import { TSavedApplication } from "../models/models"
+import { Portal } from "solid-js/web"
+import { Modal, ModalFooter } from "./modal"
+import { Button } from "./elements/button"
 
-type DocumentProps = {
-  name?: string
-  editable?: boolean
-  content?: string
-  update?: (content: { [key: string]: string }) => void
-}
-function Document(props: DocumentProps) {
-  const [content, setContent] = useState(props.content ?? "No content yet")
-
-  if (!props.editable) {
-    return (
-      <div className="space-y-3 h-full flex flex-col">
-        <div className="max-w-none text-sm flex-1">
-          {content}
-        </div>
-      </div>
-    )
-  }
-
-  const handleSave = () => {
-    if (props.update && props.name) props.update({ [props.name]: content })
-  }
-
-  return (
-    <div className="space-y-3 h-full flex flex-col">
-      <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed flex-1">
-        <Textarea className="h-full" rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
-      </div>
-      <div className="flex justify-end">
-        <Button variant="default" onClick={handleSave}>Save</Button>
-      </div>
-    </div>
-  )
-}
-
-type DocumentsProps = {
-  application: Application
+type Props = {
+  application: TSavedApplication
   onUpdate: (data: { [key: string]: string }) => void
 }
 
-export default function Documents(props: DocumentsProps) {
-  const [showAd, setShowAd] = useState(false)
-  const [showApplication, setShowApplication] = useState(false)
+export default function Documents(props: Props) {
+  const [showAd, setShowAd] = createSignal(false)
+  const [showApplication, setShowApplication] = createSignal(false)
+  const [data, setData] = createSignal({
+    application: ""
+  })
+
+  const handleChange = (key: string, value: string) => {
+    setData({ ...data(), [key]: value })
+  }
 
   return (
-    <div className="bg-card border rounded-lg p-6">
-      <h3 className="text-sm font-semibold mb-3 text-muted-foreground 
-        uppercase tracking-wide">
-        Documents
-      </h3>
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={() => setShowAd(true)}>View Job ad</Button>
-        {showAd && createPortal(
-          <Modal onClose={() => setShowAd(false)} title="Job ad">
-            <Document content={props.application.ad} />
-          </Modal>, document.body
-        )}
-        <Button variant="outline" onClick={() => setShowApplication(true)}>View Job application</Button>
-        {showApplication && createPortal(
-          <Modal onClose={() => setShowApplication(false)} title="Job application">
-            <Document name="application" update={props.onUpdate} content={props.application.application} editable />
-          </Modal>, document.body
-        )}
+    <section class="ring-1 ring-white/20 bg-zinc-800 rounded-lg p-4">
+      <header class="mb-3">
+        <h3 class="text-sm font-semibold uppercase tracking-wide">Documents</h3>
+      </header>
+      <div class="flex gap-3">
+        <Button variant="outline" label="Job ad" onClick={() => setShowAd(true)} />
+        <Show when={showAd()}>
+          <Portal>
+            <Modal subTitle="View" title="Job ad" onClose={() => setShowAd(false)}>
+              <Document name="ad" content={props.application.ad} />
+            </Modal>
+          </Portal>
+        </Show>
+        <Button variant="outline" label="Job application" onClick={() => setShowApplication(true)} />
+        <Show when={showApplication()}>
+          <Portal>
+            <Modal subTitle="View" title="Job application" onClose={() => setShowApplication(false)}
+              footer={(
+                <ModalFooter>
+                  <Button onClick={() => setShowApplication(false)} variant="outline" label="Cancel" />
+                  <Button onClick={() => props.onUpdate(data())} variant="primary" label="Save entry" />
+                </ModalFooter>
+              )}>
+              <Document name="application" content={props.application.application}
+                editable={true} onUpdate={handleChange} />
+            </Modal>
+          </Portal>
+        </Show>
       </div>
+    </section>
+  )
+}
+
+type DocumentProps = {
+  name: string;
+  editable?: boolean;
+  content?: string;
+  onUpdate?: (key: string, value: string) => void
+}
+
+function Document(props: DocumentProps) {
+  return (
+    <div class="spac-y-3 h-full flex flex-col">
+      <Switch>
+        <Match when={props.editable}>
+          <div class="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed flex-1">
+            <textarea class="textarea w-full" rows={10} value={props.content || "No content yet"}
+              onChange={(e) => props.onUpdate && props.onUpdate(props.name, e.target.value)} />
+          </div>
+        </Match>
+        <Match when={!props.editable}>
+          <div class="max-w-none text-sm flex-1">
+            {props.content || "No content yet"}
+          </div>
+        </Match>
+      </Switch>
+
     </div>
   )
 }

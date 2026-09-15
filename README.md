@@ -11,7 +11,7 @@ Local web app for tracking job applications through their full lifecycle, with A
 | Dependency | Notes |
 |---|---|
 | Go 1.25+ | A C compiler is required (CGO — used by the SQLite driver) |
-| Bun | Client package manager |
+| npm | Client package manager |
 
 **Steps**
 
@@ -25,11 +25,11 @@ go run . start-server
 
 # 3. In a second terminal — install client deps and start the dev server
 cd client
-bun install
-bun run dev
+npm install
+npm run dev
 ```
 
-Open `http://localhost:5173`. On first launch you will be redirected to the welcome screen — create a profile to proceed.
+Open `http://localhost:3000`. On first launch you will be redirected to the welcome screen — create a profile to proceed.
 
 ---
 
@@ -59,10 +59,10 @@ The file is gitignored. A missing file is non-fatal; the server starts with buil
 
 | Command | Purpose |
 |---|---|
-| `bun run dev` | Vite dev server with HMR |
-| `bun run build` | Type-check (`tsc -b`) then build |
-| `bun run lint` | ESLint over all `.ts`/`.tsx` files |
-| `bun run preview` | Preview the production build |
+| `npm run dev` | Vite dev server with HMR on port 3000 |
+| `npm run build` | Build the production bundle, then type-check |
+| `npm run serve` | Preview the production build |
+| `npm start` | Start the Vite development server |
 
 ---
 
@@ -94,5 +94,5 @@ AI is used to extract hard technical skills from stored job ad text.
 | Layer | Technologies |
 |---|---|
 | Server | Go, Gin, GORM, SQLite (CGO), Firebase Genkit |
-| Client | React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui, TanStack Query |
+| Client | SolidJS, TypeScript, Vite, Tailwind CSS v4, DaisyUI, TanStack Solid Router/Form |
 | AI | llama.cpp-compatible server (OpenAI API) |
