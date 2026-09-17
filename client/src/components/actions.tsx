@@ -30,8 +30,8 @@ export default function Actions(props: Props) {
     const { error } = await DELETE(`/actions/${id}`, null)
     if (error) {
       toast.error({ message: "Error occurred while trying to delete action" })
-      console.error("Error occurred while trying to delete action")
       console.error(error)
+      return
     }
 
     setActions(actions().filter((action) => action.id !== id))
@@ -118,20 +118,22 @@ function FormAction(props: FormActionProps) {
         if (result.error) {
           toast.error({ message: "Error occurred while trying to create action" })
           console.error(result.error)
+          return
         }
 
         if (props.onSuccess) props.onSuccess(result!.response!.data)
-        toast.error({ message: "Action created" })
+        toast.success({ message: "Action created" })
       } else {
         const { id, ...data } = value as TSavedAction
         const result = await PUT(`/actions/${id}`, data)
         if (result.error) {
           toast.error({ message: "Error occurred while trying to update action" })
           console.error(result.error)
+          return
         }
 
         if (props.onSuccess) props.onSuccess(value as TSavedAction)
-        toast.error({ message: "Action updated" })
+        toast.success({ message: "Action updated" })
       }
     }
   }))

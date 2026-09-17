@@ -113,9 +113,10 @@ export default function Tags(props: Props) {
   }
 
   const handleKeydown = (e: KeyboardEvent) => {
+    if (!showPopover()) return
+
     switch (e.key) {
       case "Escape":
-        if (!showPopover()) return
         closePopover()
         e.preventDefault()
         break

@@ -45,16 +45,16 @@ export default function ScrapeTargetListing(props: Props) {
   }
 
   return (
-    <div class="flex flex-col gap-2 rounded-lg p-4 ring-1 rint-white/20 bg-zinc-800">
-      <header class="flex items-center justify-between">
+    <div class="overflow-hidden flex flex-col gap-2 rounded-lg ring-1 ring-white/20 bg-zinc-900">
+      <header class="flex items-center justify-between bg-zinc-800 p-4">
         <h3 class="text-sm font-semibold uppercase tracking-wide">Website scrape targets</h3>
         <IconButton icon="ri-save-line" label="Save settings" size="sm" onClick={() => save()} />
       </header>
       <table class="table">
         <thead>
           <tr>
-            <th>Website</th>
-            <th>Target class (CSS)</th>
+            <th class="text-zinc-500 text-xs uppercase">Website</th>
+            <th class="text-zinc-500 text-xs uppercase">Target class (CSS)</th>
             <th></th>
           </tr>
         </thead>
