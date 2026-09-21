@@ -28,8 +28,8 @@ export type TPropertyError = {
 }
 
 export type TApiResult<T> = {
-  response: TApiResponse<T> | null
-  error: TApiErrorResponse | null
+  response?: TApiResponse<T>
+  error?: TApiErrorResponse
 }
 
 // Application types

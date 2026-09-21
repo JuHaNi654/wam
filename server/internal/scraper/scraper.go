@@ -167,6 +167,7 @@ func fetchDocument(url *url.URL) (*html.Node, error) {
 
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
+		logger.GetInstance().Debug(fmt.Sprintf("Document request status code: %d", res.StatusCode))
 		return nil, ErrInvalidStatusCode
 	}
 

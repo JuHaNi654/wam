@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"os"
 
 	"gorm.io/gorm"
@@ -12,11 +11,13 @@ func Migrate(db *gorm.DB, sqlFile string) error {
 	if err != nil {
 		return err
 	}
-	result := db.Exec(string(query))
+	return ApplySQL(db, string(query))
+}
+
+func ApplySQL(db *gorm.DB, query string) error {
+	result := db.Exec(query)
 	if result.Error != nil {
 		return result.Error
 	}
-
-	fmt.Printf("Applied %s\n", sqlFile)
 	return nil
 }

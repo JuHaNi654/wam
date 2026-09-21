@@ -29,8 +29,14 @@ export default function Documents(props: Props) {
         <Button variant="outline" label="Job ad" onClick={() => setShowAd(true)} />
         <Show when={showAd()}>
           <Portal>
-            <Modal subTitle="View" title="Job ad" onClose={() => setShowAd(false)}>
-              <Document name="ad" content={props.application.ad} />
+            <Modal subTitle="View" title="Job ad" onClose={() => setShowAd(false)}
+              footer={(
+                <ModalFooter>
+                  <Button onClick={() => setShowApplication(false)} variant="outline" label="Cancel" />
+                  <Button onClick={() => props.onUpdate(data())} variant="primary" label="Save entry" />
+                </ModalFooter>
+              )}>
+              <Document onUpdate={handleChange} editable={true} name="ad" content={props.application.ad} />
             </Modal>
           </Portal>
         </Show>

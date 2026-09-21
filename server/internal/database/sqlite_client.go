@@ -9,9 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var databasePath = ".local/share/wam"
-var databaseName = "sqlite.db"
-
 type SQLiteClient struct {
 	Filename     string
 	DatabasePath string
@@ -40,7 +37,7 @@ func (client *SQLiteClient) Connect() error {
 
 	_, err := os.Stat(client.DatabasePath)
 	if errors.Is(err, os.ErrNotExist) {
-		if err := os.Mkdir(client.DatabasePath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(client.DatabasePath, 0o755); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -58,10 +55,21 @@ func (client *SQLiteClient) Connect() error {
 
 func NewSQLiteClient() *SQLiteClient {
 	homeDir, _ := os.UserHomeDir()
+	databasePath := os.Getenv("SQLITE_PATH")
+	if databasePath == "" {
+		databasePath = filepath.Join(homeDir, ".local/share/wam")
+	} else if !filepath.IsAbs(databasePath) {
+		databasePath = filepath.Join(homeDir, databasePath)
+	}
+
+	databaseName := os.Getenv("SQLITE_NAME")
+	if databaseName == "" {
+		databaseName = "sqlite.db"
+	}
 
 	client := &SQLiteClient{
 		Filename:     databaseName,
-		DatabasePath: filepath.Join(homeDir, databasePath),
+		DatabasePath: databasePath,
 	}
 
 	return client

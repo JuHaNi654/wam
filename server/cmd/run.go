@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"server/internal/database"
 	"server/internal/llm"
@@ -43,7 +44,7 @@ func Run(prompts fs.FS) error {
 	)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: routes.Routes(service),
+		Handler: routes.Routes(service, os.Getenv("PUBLIC_DIR")),
 	}
 
 	fmt.Printf("Server is running on port %s\n", PORT)
