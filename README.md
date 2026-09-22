@@ -25,7 +25,7 @@ go run . start-server
 
 # 3. In a second terminal — install client deps and start the dev server
 cd client
-npm ci
+npm install
 npm run dev
 ```
 
@@ -52,7 +52,7 @@ Open `http://localhost:8000`. On its first start against an empty volume, the co
 To enable the LLM provider, provide its URL and model at runtime:
 
 ```bash
-docker run --rm -p 8000:8000 -v wam-data:/data \
+docker run --rm -p 8000:8000 -v <host-mount-directory>:/data \
   --add-host=host.docker.internal:host-gateway \
   -e LLAMA_URL=http://host.docker.internal:8001 \
   wam:latest
@@ -69,7 +69,6 @@ The file is gitignored. A missing file is non-fatal; the server starts with buil
 | Variable | Default | Description |
 |---|---|---|
 | `LLAMA_URL` | `http://127.0.0.1:8001/v1` | Base URL of the llama.cpp-compatible OpenAI API server |
-| `LLAMA_DEFAULT_MODEL` | — | Model name shown in the `/models` UI on startup |
 
 ---
 
