@@ -35,7 +35,7 @@ export const POST: ApiFunction = async <T>(endpoint: string, body: unknown) => {
       return { error: err }
     }
 
-    if (response.status == 204) return { response: { status: 204 } }
+    if (response.status == 204) return { response: { status: 204 } as TApiResponse<T> }
 
     const data = await response.json() as TApiResponse<T>
     return { response: data }
@@ -58,7 +58,7 @@ export const PUT: ApiFunction = async <T>(endpoint: string, body: unknown) => {
       return { error: err }
     }
 
-    if (response.status == 204) return { response: { status: 204 } }
+    if (response.status == 204) return { response: { status: 204 } as TApiResponse<T> }
 
     const data = await response.json() as TApiResponse<T>
     return { response: data }
@@ -81,7 +81,7 @@ export const PATCH: ApiFunction = async <T>(endpoint: string, body: unknown) => 
       return { error: err }
     }
 
-    if (response.status == 204) return { response: { status: 204 } }
+    if (response.status == 204) return { response: { status: 204 } as TApiResponse<T> }
 
     const data = await response.json() as TApiResponse<T>
     return { response: data }
@@ -103,7 +103,7 @@ export const DELETE: ApiFunction = async <T>(endpoint: string) => {
       return { error: err }
     }
 
-    if (response.status == 204) return { response: { status: 204 } }
+    if (response.status == 204) return { response: { status: 204 } as TApiResponse<T> }
 
     const data = await response.json() as TApiResponse<T>
     return { response: data }

@@ -3,8 +3,10 @@ package routes
 
 import (
 	"fmt"
+	"path/filepath"
 	"server/internal/models"
 	"server/internal/services"
+	"server/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -17,63 +19,73 @@ func Routes(s *services.Service) *gin.Engine {
 	r := gin.Default()
 	r.Use(headers)
 
+	{
+		v1 := r.Group("/api")
+
+		// Profile
+		v1.GET("/profile/initialized", Handler(s, checkProfile))
+		v1.GET("/profile", Handler(s, getProfile))
+		v1.POST("/profile", Handler(s, createProfile))
+		v1.PUT("/profile", Handler(s, updateProfile))
+		v1.POST("/profile/skills", Handler(s, saveProfileSkills))
+
+		// Settings
+		v1.GET("/settings", Handler(s, getSettings))
+		v1.POST("/settings", Handler(s, saveSettings))
+
+		// History
+		v1.POST("/profile/history", Handler(s, createWorkHistory))
+		v1.PUT("/profile/history/:id", Handler(s, updateHistory))
+		v1.DELETE("/profile/history/:id", Handler(s, deleteHistory))
+
+		// Skills
+		v1.GET("/skills", Handler(s, listAllSkills))
+		v1.POST("/skills", Handler(s, createSkill))
+
+		// Education
+		v1.POST("/profile/education", Handler(s, createEducation))
+		v1.DELETE("/profile/education/:id", Handler(s, deleteEducation))
+
+		// Applications
+		v1.GET("/applications", Handler(s, listApplications))
+		v1.POST("/applications", Handler(s, createApplication))
+		v1.GET("/applications/:id", Handler(s, getApplicationByID))
+		v1.PUT("/applications/:id", Handler(s, updateApplication))
+		v1.DELETE("/applications/:id", Handler(s, deleteApplication))
+		v1.POST("/applications/:id/skills", Handler(s, addSkillsToTheApplication))
+		v1.POST("/applications/:id/actions", Handler(s, createAction))
+
+		// Actions
+		v1.PUT("/actions/:id", Handler(s, updateAction))
+		v1.DELETE("/actions/:id", Handler(s, deleteAction))
+
+		// llm endpoints
+		v1.GET("/llm/status", Handler(s, llmStatus))
+		v1.GET("/llm/providers", Handler(s, listProviders))
+		v1.GET("/llm/providers-models", Handler(s, listProviderModels))
+		v1.GET("/llm/providers/:provider/models", Handler(s, listModels))
+		v1.POST("/llm/providers/:provider/load", Handler(s, loadModel))
+		v1.POST("/llm/providers/:provider/unload", Handler(s, unloadModel))
+		v1.POST("/llm/providers/:provider/toggle", Handler(s, toggleModel))
+
+		// Agent skill endpoints
+		v1.GET("/llm/agent/hardskills", Handler(s, agentListSkills))
+
+		// SSE endpoints
+		v1.GET("/events", Handler(s, sseHandler))
+	}
+
+	//r.NoRoute(noRoute)
+	{
+		assets := r.Group("/assets")
+		path, _ := utils.GetApplicationPath()
+		assets.Static("/", filepath.Join(path, "dist/assets"))
+	}
+
 	// System
-	r.GET("/ping", Handler(s, ping))
-
-	// Profile
-	r.GET("/api/profile/initialized", Handler(s, checkProfile))
-	r.GET("/api/profile", Handler(s, getProfile))
-	r.POST("/api/profile", Handler(s, createProfile))
-	r.PUT("/api/profile", Handler(s, updateProfile))
-	r.POST("/api/profile/skills", Handler(s, saveProfileSkills))
-
-	// Settings
-	r.GET("/api/settings", Handler(s, getSettings))
-	r.POST("/api/settings", Handler(s, saveSettings))
-
-	// History
-	r.POST("/api/profile/history", Handler(s, createWorkHistory))
-	r.PUT("/api/profile/history/:id", Handler(s, updateHistory))
-	r.DELETE("/api/profile/history/:id", Handler(s, deleteHistory))
-
-	// Skills
-	r.GET("/api/skills", Handler(s, listAllSkills))
-	r.POST("/api/skills", Handler(s, createSkill))
-
-	// Education
-	r.POST("/api/profile/education", Handler(s, createEducation))
-	r.DELETE("/api/profile/education/:id", Handler(s, deleteEducation))
-
-	// Applications
-	r.GET("/api/applications", Handler(s, listApplications))
-	r.POST("/api/applications", Handler(s, createApplication))
-	r.GET("/api/applications/:id", Handler(s, getApplicationByID))
-	r.PUT("/api/applications/:id", Handler(s, updateApplication))
-	r.DELETE("/api/applications/:id", Handler(s, deleteApplication))
-	r.POST("/api/applications/:id/skills", Handler(s, addSkillsToTheApplication))
-	r.POST("/api/applications/:id/actions", Handler(s, createAction))
-
-	// Actions
-	r.PUT("/api/actions/:id", Handler(s, updateAction))
-	r.DELETE("/api/actions/:id", Handler(s, deleteAction))
-
-	// llm endpoints
-	r.GET("/api/llm/status", Handler(s, llmStatus))
-	r.GET("/api/llm/providers", Handler(s, listProviders))
-	r.GET("/api/llm/providers-models", Handler(s, listProviderModels))
-	r.GET("/api/llm/providers/:provider/models", Handler(s, listModels))
-	r.POST("/api/llm/providers/:provider/load", Handler(s, loadModel))
-	r.POST("/api/llm/providers/:provider/unload", Handler(s, unloadModel))
-	r.POST("/api/llm/providers/:provider/toggle", Handler(s, toggleModel))
-
-	// Agent skill endpoints
-	r.GET("/api/llm/agent/hardskills", Handler(s, agentListSkills))
-
-	// SSE endpoints
-	r.GET("/events", Handler(s, sseHandler))
-
-	// Return 404 from invalid endpoint
-	r.NoRoute(noRoute)
+	//r.GET("/ping", Handler(s, ping))
+	r.GET("/", Handler(s, serveClient))
+	r.GET("/:path", Handler(s, serveClient))
 
 	return r
 }

@@ -2,13 +2,13 @@ import { Outlet, Link, redirect } from "@tanstack/solid-router";
 import { createRootRoute } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from '@tanstack/solid-router-devtools';
 import { NotificationProvider } from "../../utils/notification";
-import { SSE_URL } from "../../utils/constants";
+import { API_URL } from "../../utils/constants";
 import { GET } from "../../utils/api";
 import { ToastProvider } from "../../components/toast";
 
 export default createRootRoute({
   beforeLoad: async ({ location }) => {
-    const { error } = await GET<any>('/profile/initialized', null)
+    const { error } = await GET('/profile/initialized', null)
 
     if (!error) {
       if (location.href === "/") {
@@ -47,7 +47,7 @@ function NotFoundComponent() {
 
 function RootComponent() {
   return (
-    <NotificationProvider url={SSE_URL}>
+    <NotificationProvider url={`${API_URL}/events`}>
       <ToastProvider count={1}>
         <Outlet />
       </ToastProvider>

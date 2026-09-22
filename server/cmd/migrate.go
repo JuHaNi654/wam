@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"server/internal/database"
+	"server/internal/utils"
 )
 
 var sqlFiles = []string{
@@ -23,7 +23,7 @@ func Migrate() error {
 		return fmt.Errorf("failed to initialize database\n %w", err)
 	}
 
-	applicationPath, err := getApplicationRootPath()
+	applicationPath, err := utils.GetApplicationPath()
 	if err != nil {
 		return err
 	}
@@ -39,15 +39,29 @@ func Migrate() error {
 	return nil
 }
 
-func getApplicationRootPath() (string, error) {
-	if false { // TODO: fix this
-		ex, err := os.Executable()
-		if err != nil {
-			return "", err
-		}
-
-		return filepath.Dir(ex), nil
+// InitializeDatabase applies the production schema only when the database does
+// not already exist. It is safe to run each time the container starts.
+func InitializeDatabase() error {
+	client := database.NewSQLiteClient()
+	if client.FileIsExists() {
+		fmt.Printf("Database already exists at %s\n", client.GetFilePath())
+		return nil
 	}
 
-	return os.Getwd()
+	if err := client.Connect(); err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+
+	applicationPath, err := utils.GetApplicationPath()
+	if err != nil {
+		return err
+	}
+
+	schemaPath := filepath.Join(applicationPath, "sql", "init.sql")
+	if err := database.Migrate(client.GetSession(), schemaPath); err != nil {
+		return fmt.Errorf("apply initial schema: %w", err)
+	}
+
+	fmt.Printf("Initialized empty database at %s\n", client.GetFilePath())
+	return nil
 }
