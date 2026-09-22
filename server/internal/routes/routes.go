@@ -14,7 +14,7 @@ import (
 
 var validate *validator.Validate
 
-func Routes(s *services.Service, publicDir string) *gin.Engine {
+func Routes(s *services.Service) *gin.Engine {
 	initalizeValidator()
 	r := gin.Default()
 	r.Use(headers)
