@@ -14,6 +14,7 @@ export const GET: ApiFunction = async <T>(endpoint: string) => {
       const err = await response.json() as TApiErrorResponse
       return { error: err }
     }
+
     const data = await response.json() as TApiResponse<T>
     return { response: data }
   } catch (err: unknown) {

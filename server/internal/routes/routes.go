@@ -75,7 +75,6 @@ func Routes(s *services.Service) *gin.Engine {
 		v1.GET("/events", Handler(s, sseHandler))
 	}
 
-	//r.NoRoute(noRoute)
 	{
 		assets := r.Group("/assets")
 		path, _ := utils.GetApplicationPath()
@@ -86,6 +85,7 @@ func Routes(s *services.Service) *gin.Engine {
 	//r.GET("/ping", Handler(s, ping))
 	r.GET("/", Handler(s, serveClient))
 	r.GET("/:path", Handler(s, serveClient))
+	r.NoRoute(noRoute)
 
 	return r
 }
