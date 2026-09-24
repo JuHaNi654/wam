@@ -130,7 +130,6 @@ function NewApplication() {
             />
           </div>
 
-          {/* TODO: Button state change isnt showing when user submitting */}
           <div class="w-full flex justify-end bg-zinc-900 py-4 px-6 border-t border-white/10">
             <form.Subscribe
               selector={(state) => ({
@@ -139,10 +138,9 @@ function NewApplication() {
               })}
               children={(state) => (
                 <Button type="submit" variant={state().canSubmit ? 'primary' : 'disabled'}
-                  label={state().isSubmitting ? '...' : 'Create'}
+                  label="Create" loading={state().isSubmitting}
                   disabled={!state().canSubmit} />
-              )}
-            />
+              )} />
           </div>
         </form>
       </div>

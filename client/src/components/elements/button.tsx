@@ -1,4 +1,4 @@
-import type { ComponentProps, JSX } from "solid-js"
+import { splitProps, type ComponentProps, type JSX } from "solid-js"
 import { twMerge } from "tailwind-merge"
 import { Link, type LinkProps } from "@tanstack/solid-router"
 
@@ -19,17 +19,21 @@ const iconSize = {
 type Props = {
   icon?: JSX.Element,
   variant: keyof typeof buttonVariants;
-  label: string
+  label: string,
+  loading?: boolean
 } & ComponentProps<"button">
-export function Button({ icon, variant, label, class: styles, ...props }: Props) {
+export function Button(props: Props) {
+  const [local, rest] = splitProps(props, ["icon", "variant", "label", "class"])
   return (
     <button class={twMerge(
       "relative flex items-center justify-center gap-4 cursor-pointer",
       "px-8 py-2 rounded-md font-semibold",
-      buttonVariants[variant], styles
-    )} {...props}>
-      {icon ? icon : null}
-      <span class=" text-sm">{label}</span>
+      buttonVariants[local.variant], local.class
+    )} {...rest}>
+      {local.icon ? local.icon : null}
+      {props.loading ? (
+        <span class="loading loading-dots loading-sm"></span>
+      ) : <span class="text-sm">{local.label}</span>}
     </button>
   )
 }
