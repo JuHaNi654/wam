@@ -5,7 +5,7 @@ type Props = {
   title: string;
   description?: string;
   onConfirmation: () => void;
-  onCancel: () => void
+  onCancel?: () => void
 }
 export function DeleteConfirmationDialog(props: Props) {
   let element!: HTMLDialogElement
@@ -24,7 +24,7 @@ export function DeleteConfirmationDialog(props: Props) {
           </div>
           <div class="modal-action">
             <form class="w-full flex justify-end gap-4 bg-zinc-900 py-4 px-6 border-t border-white/10" method="dialog">
-              <Button variant="outline" onClick={() => props.onCancel()} label="Cancel" />
+              <Button variant="outline" onClick={() => props.onCancel && props.onCancel()} label="Cancel" />
               <Button variant="danger" onClick={() => props.onConfirmation()} label="Delete" />
             </form>
           </div>

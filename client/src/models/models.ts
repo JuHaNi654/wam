@@ -11,9 +11,15 @@ const dateInUnix = (label: string) => {
 }
 
 // Server types
+export type TApiPagination = {
+  current: number;
+  total_pages: number;
+  previous: number;
+  next: number;
+}
 export type TApiResponse<T> = T extends void
   ? { status: number }
-  : { status: number; data: T }
+  : { status: number; data: T; pagination?: TApiPagination }
 
 export type TApiErrorResponse = {
   status: number;
@@ -64,6 +70,10 @@ export type TSavedApplication = {
 export type TSkill = {
   id: string;
   name: string;
+}
+
+export type TSkillExtended = TSkill & {
+  in_use: number
 }
 
 // Action types

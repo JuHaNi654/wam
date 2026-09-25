@@ -35,13 +35,13 @@ INSERT INTO skill (id, name) VALUES
 
 -- application_skill (linking jobs and skills)
 INSERT INTO application_skill (id, application_id, skill_id) VALUES
-  ('app-skill-1', 'job-1', 'skill-1'),
-  ('app-skill-2', 'job-1', 'skill-2'),
-  ('app-skill-3', 'job-1', 'skill-3'),
-  ('app-skill-4', 'job-2', 'skill-4'),
-  ('app-skill-5', 'job-2', 'skill-5'),
-  ('app-skill-6', 'job-2', 'skill-6'),
-  ('app-skill-7', 'job-3', 'skill-7'),
-  ('app-skill-8', 'job-3', 'skill-8'),
-  ('app-skill-9', 'job-4', 'skill-9'),
-  ('app-skill-10', 'job-4', 'skill-10');
+  ('job-1', 'skill-1'),
+  ('job-1', 'skill-2'),
+  ('job-1', 'skill-3'),
+  ('job-2', 'skill-4'),
+  ('job-2', 'skill-5'),
+  ('job-2', 'skill-6'),
+  ('job-3', 'skill-7'),
+  ('job-3', 'skill-8'),
+  ('job-4', 'skill-9'),
+  ('job-4', 'skill-10');

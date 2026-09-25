@@ -64,7 +64,7 @@ function ApplicationsList(props: ApplicationsListProps) {
         <tbody class="bg-zinc-900">
           <For
             each={items()}
-            fallback={<tr><td>Empty list</td></tr>}>
+            fallback={<tr><td colspan={4}>Empty list</td></tr>}>
             {(item) => (
               <tr>
                 <td>

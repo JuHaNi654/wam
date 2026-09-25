@@ -28,7 +28,7 @@ export function Button(props: Props) {
     <button class={twMerge(
       "relative flex items-center justify-center gap-4 cursor-pointer",
       "px-8 py-2 rounded-md font-semibold",
-      buttonVariants[local.variant], local.class
+      buttonVariants[props.disabled ? "disabled" : local.variant], local.class
     )} {...rest}>
       {local.icon ? local.icon : null}
       {props.loading ? (

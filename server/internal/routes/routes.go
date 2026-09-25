@@ -41,6 +41,7 @@ func Routes(s *services.Service) *gin.Engine {
 		// Skills
 		v1.GET("/skills", Handler(s, listAllSkills))
 		v1.POST("/skills", Handler(s, createSkill))
+		v1.DELETE("/skills/:id", Handler(s, deleteSkill))
 
 		// Education
 		v1.POST("/profile/education", Handler(s, createEducation))

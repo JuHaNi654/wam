@@ -9,17 +9,6 @@ CREATE TABLE profile (
   introduction TEXT
 );
 
--- profile_skill
-CREATE TABLE profile_skill (
-  profile_id  TEXT, 
-  skill_id    TEXT,
-
-  PRIMARY KEY (profile_id, skill_id),
-
-  FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
-  FOREIGN KEY (skill_id) REFERENCES skill(id) ON DELETE CASCADE
-);
-
 -- history
 CREATE TABLE history (
   id          TEXT PRIMARY KEY,
@@ -68,10 +57,26 @@ CREATE TABLE actions (
   application_id      TEXT NOT NULL REFERENCES application(id) ON DELETE CASCADE
 );
 
+-- application_skill
 CREATE TABLE application_skill (
-  id              TEXT PRIMARY KEY,
-  application_id  TEXT NOT NULL REFERENCES application(id) on DELETE CASCADE,
-  skill_id        TEXT NOT NULL REFERENCES skill(id) ON DELETE CASCADE
+  application_id  TEXT,
+  skill_id        TEXT,
+
+  PRIMARY KEY (application_id, skill_id),
+
+  FOREIGN KEY (application_id) REFERENCES application(id) ON DELETE CASCADE,
+  FOREIGN KEY (skill_id) REFERENCES skill(id) ON DELETE CASCADE
+);
+
+-- profile_skill
+CREATE TABLE profile_skill (
+  profile_id  TEXT, 
+  skill_id    TEXT,
+
+  PRIMARY KEY (profile_id, skill_id),
+
+  FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE,
+  FOREIGN KEY (skill_id) REFERENCES skill(id) ON DELETE CASCADE
 );
 
 -- skill
@@ -81,3 +86,4 @@ CREATE TABLE skill (
 );
 
 CREATE UNIQUE INDEX uq_skill_name_normalized ON skill (lower(trim(name)));
+CREATE UNIQUE INDEX uq_application_skill ON application_skill (application_id, skill_id);

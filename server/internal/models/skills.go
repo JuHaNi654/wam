@@ -5,6 +5,11 @@ type Skill struct {
 	Name string `json:"name"`
 }
 
+type SkillExtended struct {
+	Skill
+	InUse int `json:"in_use"`
+}
+
 func (Skill) TableName() string {
 	return "skill"
 }

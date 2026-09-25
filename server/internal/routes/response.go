@@ -6,9 +6,37 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type Pagination struct {
+	Current    int `json:"current"`
+	TotalPages int `json:"total_pages"`
+	Previous   int `json:"previous"`
+	Next       int `json:"next"`
+}
+
+func NewPagination(currentPage, totalItems, perPage int) Pagination {
+	totalPages := (totalItems + perPage - 1) / perPage
+	p := Pagination{
+		Current:    currentPage,
+		TotalPages: totalPages,
+		Previous:   1,
+		Next:       totalPages,
+	}
+
+	if currentPage < totalPages {
+		p.Next = currentPage + 1
+	}
+
+	if currentPage > 1 {
+		p.Previous = currentPage - 1
+	}
+
+	return p
+}
+
 type Response struct {
-	StatusCode int `json:"status"`
-	Data       any `json:"data,omitempty"`
+	StatusCode int        `json:"status"`
+	Data       any        `json:"data,omitempty"`
+	Pagination Pagination `json:"pagination,omitempty"`
 }
 
 type ErrorResponse struct {

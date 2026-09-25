@@ -75,7 +75,7 @@ export default function WorkHistory(props: Props) {
                       action="update" toggleVisibility={() => toggleTargetModal(item.id, false)} item={item} />
                   </Portal>
                 </Show>
-                <DeleteConfirmationDialog id="delete-application"
+                <DeleteConfirmationDialog id="delete-work-history"
                   title="Are you sure, you want to delete selected item"
                   description={`You are currently deleting (${item.title}).`}
                   onCancel={() => toggleTargetModal(item.id, false)}
