@@ -27,7 +27,8 @@ var (
 	header = http.Header{
 		"User-Agent": {"Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0"},
 	}
-	whitespaceRe = regexp.MustCompile(`\s+`)
+	whitespaceRe  = regexp.MustCompile(`\s+`)
+	extraNewlines = regexp.MustCompile(`\n{3,}`)
 )
 
 type Config struct {
@@ -68,7 +69,14 @@ func extractContent(config *Config, node *html.Node) (string, error) {
 		return "", err
 	}
 
-	return b.String(), nil
+	return cleanText(b.String()), nil
+}
+
+func cleanText(text string) string {
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+	text = strings.ReplaceAll(text, "\r", "\n")
+	text = extraNewlines.ReplaceAllString(text, "\n\n")
+	return strings.TrimSpace(text)
 }
 
 func scan(b *strings.Builder, node *html.Node, target models.Target) error {
