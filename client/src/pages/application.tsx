@@ -1,13 +1,17 @@
 import { createRoute } from "@tanstack/solid-router"
 import ApplicationLayout from "./layouts/application"
 import { GET, PUT, POST } from "../utils/api"
-import { ApplicationStatus, TSavedAction, TSavedApplication, TSkill } from "../models/models"
+import { ApplicationStatus, TSavedAction, TSavedApplication, TSkill, TSkillExtended, TSKilLSearch } from "../models/models"
 import { renderDate } from "../utils/date"
 import Documents from "../components/documents"
-import Tags from "../components/skills"
+import Skills from "../components/skills"
 import Actions from "../components/actions"
 import SelectField from "../components/input/SelectField"
 import { useToast } from "../components/toast"
+import { Button, IconButton } from "../components/elements/button"
+import { createSignal, For, Show } from "solid-js"
+import { Portal } from "solid-js/web"
+import { Modal, ModalFooter } from "../components/modal"
 
 type Response = {
   application: TSavedApplication;
@@ -96,9 +100,66 @@ function Application() {
         </div>
       </section>
       <Documents application={result().response!.data.application} onUpdate={handleUpdate} />
-      <Tags data={result().response?.data.skills || []} onUpdate={updateTags} />
+      <Skills data={result().response?.data.skills || []} onUpdate={updateTags}>
+        <header class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold uppercase tracking-wide">Skills</h3>
+          <AISkill applicationID={result().response!.data.application.id} />
+        </header>
+      </Skills>
       <Actions actions={result().response?.data.actions || []} />
     </div>
+  )
+}
+
+type AISkillProps = {
+  applicationID: string;
+}
+
+function AISkill(props: AISkillProps) {
+  const toast = useToast()
+  const [showModal, setshowModal] = createSignal(false)
+  const [tags, setTags] = createSignal<Array<TSKilLSearch>>([])
+  const [loading, setLoading] = createSignal(false)
+
+  const generate = async () => {
+    setLoading(true)
+    const result = await GET<Array<TSKilLSearch>>(`/llm/flow/hardskill?applicationId=${props.applicationID}`, null)
+    setLoading(false)
+    if (result.error) {
+      console.error(result.error)
+      toast.error({ message: "Something went wrong while trying to generate skills" })
+      return
+    }
+
+    setTags(() => result.response!.data)
+  }
+
+
+  return (
+    <>
+      <IconButton icon="ri-ai" label="AI skills popup" size="sm" onClick={() => setshowModal(true)} />
+      <Show when={showModal()}>
+        <Portal>
+          <Modal subTitle="AI" title="Generate skills"
+            onClose={() => setshowModal(false)}
+            footer={(
+              <ModalFooter>
+                <Button onClick={generate} variant="outline" label="Generate" loading={loading()} disabled={loading()} />
+              </ModalFooter>
+            )}>
+            <div class="flex flex-wrap gap-2 ring-1 ring-white/20 p-3 rounded-md bg-zinc-950">
+              <For each={tags()}>
+                {(item) => (
+                  <div class="text-xs px-3 py-1 ring-1 flex gap-2 rounded">
+                    <span>{item.name}</span>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Modal>
+        </Portal>
+      </Show>
+    </>
   )
 }
 

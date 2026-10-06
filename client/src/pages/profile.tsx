@@ -6,7 +6,7 @@ import ToggleEdit from "../components/toggle-edit"
 import Education from "../components/education"
 import WorkHistory from "../components/work-history"
 import PageHeading from "../components/page-heading"
-import Tags from "../components/skills"
+import Skills from "../components/skills"
 import { useToast } from "../components/toast"
 
 
@@ -54,7 +54,11 @@ function Profile() {
     <div class="flex flex-col gap-4">
       <PageHeading title="Profile" />
       <ToggleEdit name="introduction" handleSave={handleSave} label="Introduction" text={profile().response?.data?.profile.introduction} />
-      <Tags data={profile().response?.data?.skills || []} onUpdate={updateTags} />
+      <Skills data={profile().response?.data?.skills || []} onUpdate={updateTags}>
+        <header datatype="foo" class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold uppercase tracking-wide">Skills</h3>
+        </header>
+      </Skills>
       <Education data={profile().response?.data?.education || []} />
       <WorkHistory data={profile().response?.data?.history || []} />
     </div>

@@ -1,15 +1,13 @@
 package routes
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"net/http"
-	"server/internal/llm"
-	"server/internal/llm/skills"
+	llmflows "server/internal/llm-flows"
 	"server/internal/logger"
 	"server/internal/models"
 	"server/internal/repositories"
-	"server/internal/scraper"
 	"server/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -34,71 +32,48 @@ func listApplications(ctx *gin.Context, s *services.Service) *ErrorResponse {
 func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.Application)
 
-	if err := ctx.ShouldBindJSON(requestBody); err != nil {
+	if errResponse := bindAndValidateJSON(ctx, requestBody); errResponse != nil {
+		return errResponse
+	}
+
+	if err := services.ApplicationFetchAdText(requestBody, s); err != nil {
 		logger.GetInstance().Error(err.Error())
-		return &ErrorResponse{StatusCode: http.StatusBadRequest}
-	}
 
-	if errors, isValid := validateStruct(requestBody); !isValid {
-		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
-	}
-
-	// If job add link not received, then skip content scraping
-	if requestBody.Link != nil {
-		settings, err := s.SettingsRepository.Get()
-		if err != nil {
-			logger.GetInstance().Error(err.Error())
-			if errors.Is(err, repositories.ErrSettingsNotInitialized) {
-				return &ErrorResponse{
-					StatusCode: http.StatusBadRequest,
-					Message:    "Settings needs to be initialized before creating new applications",
-				}
+		if errors.Is(err, repositories.ErrSettingsNotInitialized) {
+			return &ErrorResponse{
+				StatusCode: http.StatusBadRequest,
+				Message:    "Settings needs to be initialized before creating new applications",
 			}
 		}
-
-		ad, err := scraper.Scrape(&scraper.Config{
-			URL:              *requestBody.Link,
-			AvailableTargets: settings.Targets,
-		})
-
-		if err != nil {
-			logger.GetInstance().Error(err.Error())
-		} else {
-			requestBody.Ad = ad
-		}
 	}
+
 	savedApplication, err := s.ApplicationRepository.Create(*requestBody)
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	if llm.GetInstance() != nil && llm.GetInstance().Selected() != "" {
-		c := context.Background()
-		result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
-			Ad: savedApplication.Ad,
-		})
+	if s.LLMInstance != nil {
+		skills, err := llmflows.HardskillFlow.Run(ctx, llmflows.HardSkillInput{Text: savedApplication.Ad})
+		logger.GetInstance().Debug("Hardskillflow returned list of skills")
+		logger.GetInstance().Debug(fmt.Sprintf("%+v", skills))
 
 		if err != nil {
 			logger.GetInstance().Error(err.Error())
-		} else { // TODO Should this be inside transaction
-			savedSkills := []models.Skill{}
-			for _, skill := range result.Skills {
-				savedSkill := &models.Skill{
-					Name: skill,
-				}
+		} else {
+			list := []models.Skill{}
+			for _, skill := range skills {
+				if (skill.Status) == models.NewSkillType {
+					if err := s.SkillRepository.Create(&skill.Skill); err != nil {
+						logger.GetInstance().Error(err.Error())
+						continue
+					}
 
-				err := s.SkillRepository.Create(savedSkill)
-				if err != nil {
-					logger.GetInstance().Error(err.Error())
-					continue
+					list = append(list, skill.Base())
 				}
-
-				savedSkills = append(savedSkills, *savedSkill)
 			}
 
-			_, err = s.ApplicationRepository.SetSkills(savedSkills, savedApplication.ID)
-			if err != nil {
+			if err = s.ApplicationRepository.SetSkills(list, savedApplication.ID); err != nil {
 				logger.GetInstance().Error(err.Error())
 			}
 		}
@@ -159,9 +134,7 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	skills, err := s.ApplicationRepository.SetSkills(requestBody.Skills, applicationID)
-
-	if err != nil {
+	if err := s.ApplicationRepository.SetSkills(requestBody.Skills, applicationID); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
@@ -170,7 +143,7 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 		StatusCode: http.StatusOK,
 		Data: gin.H{
 			"id":     applicationID,
-			"skills": skills,
+			"skills": requestBody.Skills,
 		},
 	})
 

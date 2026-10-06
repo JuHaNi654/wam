@@ -22,7 +22,6 @@ func (SavedApplication) TableName() string {
 }
 
 type ApplicationSkill struct {
-	ID            string `gorm:"primaryKey" json:"id"`
 	ApplicationID string `gorm:"column:application_id" json:"application_id"`
 	SkillID       string `gorm:"column:skill_id" json:"skill_id"`
 }

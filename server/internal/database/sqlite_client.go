@@ -4,10 +4,20 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+var (
+	instance *SQLiteClient
+	once     sync.Once
+)
+
+func GetInstance() *SQLiteClient {
+	return instance
+}
 
 type SQLiteClient struct {
 	Filename     string
@@ -16,15 +26,15 @@ type SQLiteClient struct {
 	session *gorm.DB
 }
 
-func (client SQLiteClient) GetSession() *gorm.DB {
+func (client *SQLiteClient) GetSession() *gorm.DB {
 	return client.session
 }
 
-func (client SQLiteClient) GetFilePath() string {
+func (client *SQLiteClient) GetFilePath() string {
 	return filepath.Join(client.DatabasePath, client.Filename)
 }
 
-func (client SQLiteClient) FileIsExists() bool {
+func (client *SQLiteClient) FileIsExists() bool {
 	_, err := os.Stat(client.GetFilePath())
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return false
@@ -53,24 +63,25 @@ func (client *SQLiteClient) Connect() error {
 	return nil
 }
 
-func NewSQLiteClient() *SQLiteClient {
-	homeDir, _ := os.UserHomeDir()
-	databasePath := os.Getenv("SQLITE_PATH")
-	if databasePath == "" {
-		databasePath = filepath.Join(homeDir, ".local/share/wam")
-	} else if !filepath.IsAbs(databasePath) {
-		databasePath = filepath.Join(homeDir, databasePath)
-	}
+func InitSQLLite() {
+	once.Do(func() {
+		homeDir, _ := os.UserHomeDir()
+		databasePath := os.Getenv("SQLITE_PATH")
+		if databasePath == "" {
+			databasePath = filepath.Join(homeDir, ".local/share/wam")
+		} else if !filepath.IsAbs(databasePath) {
+			databasePath = filepath.Join(homeDir, databasePath)
+		}
 
-	databaseName := os.Getenv("SQLITE_NAME")
-	if databaseName == "" {
-		databaseName = "sqlite.db"
-	}
+		databaseName := os.Getenv("SQLITE_NAME")
+		if databaseName == "" {
+			databaseName = "sqlite.db"
+		}
 
-	client := &SQLiteClient{
-		Filename:     databaseName,
-		DatabasePath: databasePath,
-	}
+		instance = &SQLiteClient{
+			Filename:     databaseName,
+			DatabasePath: databasePath,
+		}
 
-	return client
+	})
 }

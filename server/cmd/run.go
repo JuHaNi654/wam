@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os/signal"
 	"server/internal/database"
-	"server/internal/llm"
+	llm "server/internal/llm"
+	llmflows "server/internal/llm-flows"
+	llmtools "server/internal/llm-tools"
 	"server/internal/logger"
 	"server/internal/notification"
 	"server/internal/routes"
@@ -19,28 +21,33 @@ import (
 
 const PORT = "8000"
 
-func Run(prompts fs.FS) error {
-	// Initialize services
-	logger.Init(logger.Echo{})
-	notification.Init()
-	llm.Init(prompts)
+func initLLM(ctx context.Context, prompts fs.FS, s *services.Service) {
+	llm.Init(ctx, prompts)
+	llmtools.Mount(llm.GetInstance(), s)
+	llmflows.Mount(llm.GetInstance())
+	s.LLMInstance = llm.GetInstance()
+}
 
-	fmt.Printf("Starting server on port %s...\n", PORT)
-	ctx, stop := signal.NotifyContext(
+func Run(prompts fs.FS) error {
+	notifyCtx, stop := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT,
 		syscall.SIGTERM,
 	)
 	defer stop()
 
-	client := database.NewSQLiteClient()
-	if err := client.Connect(); err != nil {
+	// Services
+	logger.Init(logger.Echo{})
+	notification.Init()
+	database.InitSQLLite()
+	if err := database.GetInstance().Connect(); err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
+	service := services.NewService(database.GetInstance().GetSession())
+	initLLM(notifyCtx, prompts, service)
 
-	service := services.NewService(
-		client.GetSession(),
-	)
+	fmt.Printf("Starting server on port %s...\n", PORT)
+
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),
 		Handler: routes.Routes(service),
@@ -53,13 +60,12 @@ func Run(prompts fs.FS) error {
 		}
 	}()
 
-	<-ctx.Done()
+	<-notifyCtx.Done()
 	stop()
 	log.Println("Shutting down gracefully, press ctrl+c again to force")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	notification.GetInstance().Close()
-	llm.GetInstance().Close()
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		return err

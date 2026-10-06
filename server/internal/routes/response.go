@@ -2,7 +2,10 @@ package routes
 
 import (
 	"fmt"
+	"net/http"
+	"server/internal/logger"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -13,14 +16,13 @@ type Pagination struct {
 	Next       int `json:"next"`
 }
 
-func NewPagination(currentPage, totalItems, perPage int) Pagination {
+func NewPagination(currentPage, totalItems, perPage int) *Pagination {
 	totalPages := (totalItems + perPage - 1) / perPage
-	p := Pagination{
-		Current:    currentPage,
-		TotalPages: totalPages,
-		Previous:   1,
-		Next:       totalPages,
-	}
+	p := new(Pagination)
+	p.Current = currentPage
+	p.TotalPages = totalPages
+	p.Previous = 1
+	p.Next = totalPages
 
 	if currentPage < totalPages {
 		p.Next = currentPage + 1
@@ -34,9 +36,9 @@ func NewPagination(currentPage, totalItems, perPage int) Pagination {
 }
 
 type Response struct {
-	StatusCode int        `json:"status"`
-	Data       any        `json:"data,omitempty"`
-	Pagination Pagination `json:"pagination,omitempty"`
+	StatusCode int         `json:"status"`
+	Data       any         `json:"data,omitempty"`
+	Pagination *Pagination `json:"pagination,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -53,6 +55,19 @@ type PropertyError struct {
 
 func (e *ErrorResponse) Error(path string) string {
 	return fmt.Sprintf("Path: %s - Message: %s", path, e.Message)
+}
+
+func bindAndValidateJSON[model any](ctx *gin.Context, requestBody *model) *ErrorResponse {
+	if err := ctx.ShouldBindJSON(requestBody); err != nil {
+		logger.GetInstance().Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+	}
+
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
+	}
+
+	return nil
 }
 
 func getPropertyErrorMessage(tag, param string) string {

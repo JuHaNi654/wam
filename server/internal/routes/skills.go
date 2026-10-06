@@ -106,3 +106,27 @@ func deleteSkill(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.Status(http.StatusNoContent)
 	return nil
 }
+
+func searchSkill(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	query := ctx.DefaultQuery("q", "")
+	if len(query) == 0 {
+		return &ErrorResponse{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid value for query parameter 'q'",
+		}
+	}
+
+	skills, err := s.SkillRepository.SearchByName(query)
+	if err != nil {
+		return &ErrorResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    "Something went wrong",
+		}
+	}
+
+	ctx.JSON(http.StatusCreated, Response{
+		StatusCode: http.StatusCreated,
+		Data:       skills,
+	})
+	return nil
+}

@@ -1,33 +1,35 @@
 ---
+tools: [searchSavedSkills]
 input:
   schema:
-    ad: string
-output:
-  schema:
-    skills(array): string
+    text: string
 ---
 You are a technical parsing agent specializing in recruitment data cleaning.
-I will give you a raw job ad text. Extract every specific, hard technical tool or skill mentioned anywhere in the text.
 
-Return only valid JSON that matches this shape exactly:
-{
-  "skills": ["skill1", "skill2"]
-}
+STEP 1 - EXTRACT
+Find every specific, hard technical tool or skill in the job ad below.
+- Scan the ENTIRE text including parenthetical examples (e.g. "esim. X, Y" or "(e.g. X)").
+- Include skills whether required or "nice to have".
+- Include programming languages, frameworks and libraries, API paradigms (REST, GraphQL), cloud platforms and devops tools, databases, editors/IDEs/AI tools, and runtime environments (JVM).
+- Exclude soft skills, generic phrases, job titles and company names.
+- Use concise canonical names ("TypeScript" not "TypeScript-kieli"). No duplicates.
 
-Rules:
-- Scan the ENTIRE text including parenthetical examples (e.g. "esim. X, Y" or "(e.g. X)") — these MUST be included.
-- Include skills regardless of whether they are required or listed as "nice to have" / bonus.
-- Include programming languages (e.g. "TypeScript", "JavaScript", "Clojure", "Kotlin").
-- Include frameworks and libraries (e.g. "React", "Node.js").
-- Include API paradigms (e.g. "REST", "GraphQL").
-- Include cloud platforms and devops tools (e.g. "AWS", "GCP", "Docker").
-- Include databases (e.g. "PostgreSQL", "relational databases").
-- Include editors, IDEs, and AI tools (e.g. "Cursor", "Claude Code", "VS Code").
-- Include runtime environments and platforms (e.g. "JVM").
-- Exclude soft skills, generic phrases, job titles, and company names.
-- Use concise, canonical names (e.g. "TypeScript" not "TypeScript-kieli").
-- Do not return duplicate values.
-- If nothing is found, return {"skills": []}.
+STEP 2 - LOOK UP
+Call searchSavedSkills once for EACH extracted skill. Do not write the final answer until every skill has been looked up.
+- If a result is the same skill (ignoring case, spacing and punctuation, e.g. "NodeJS" = "Node.js"): use the saved skill's id as a STRING and its name exactly as returned.
+- A result that merely contains the search text is NOT a match ("Java" is not "JavaScript", "SQL" is not "PostgreSQL").
+- If there is no result or no true match, the skill is new: id is "" and name is your canonical name.
+- Never invent an id. Every non-empty id must come from a tool result.
+
+STEP 3 - FINAL ANSWER
+After all lookups are done, your final message must be ONLY a JSON array:
+- It starts with [ and ends with ] with no text before or after it.
+- No markdown code fences, no comments, no explanations, no trailing commas.
+- Every element has exactly two keys, "id" and "name", and both values are strings in double quotes. Write numeric ids as strings, like "42".
+- If no skills were found, answer [].
+
+Example of a valid final message:
+[{"id": "42", "name": "TypeScript"}, {"id": "", "name": "Clojure"}]
 
 Job ad:
-{{ ad }}
+{{ text }}

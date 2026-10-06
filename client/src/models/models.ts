@@ -73,7 +73,12 @@ export type TSkill = {
 }
 
 export type TSkillExtended = TSkill & {
-  in_use: number
+  in_use?: number
+  status?: "SAVED" | "NEW"
+}
+
+export type TSKilLSearch = TSkill & {
+  status: "SAVED" | "NEW" | ""
 }
 
 // Action types

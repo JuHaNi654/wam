@@ -11,9 +11,9 @@ const buttonVariants = {
 }
 
 const iconSize = {
-  lg: "w-8 h-8",
-  md: "w-7 h-7",
-  sm: "w-5 h-5",
+  lg: "w-8 h-8 text-lg",
+  md: "w-7 h-7 text-md",
+  sm: "w-5 h-5 text-sm",
 }
 
 type Props = {

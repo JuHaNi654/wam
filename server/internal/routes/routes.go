@@ -41,6 +41,7 @@ func Routes(s *services.Service) *gin.Engine {
 		// Skills
 		v1.GET("/skills", Handler(s, listAllSkills))
 		v1.POST("/skills", Handler(s, createSkill))
+		v1.GET("/skills/search", Handler(s, searchSkill))
 		v1.DELETE("/skills/:id", Handler(s, deleteSkill))
 
 		// Education
@@ -61,16 +62,15 @@ func Routes(s *services.Service) *gin.Engine {
 		v1.DELETE("/actions/:id", Handler(s, deleteAction))
 
 		// llm endpoints
-		v1.GET("/llm/status", Handler(s, llmStatus))
 		v1.GET("/llm/providers", Handler(s, listProviders))
-		v1.GET("/llm/providers-models", Handler(s, listProviderModels))
+		v1.POST("/llm/select", Handler(s, setSelectedModel))
 		v1.GET("/llm/providers/:provider/models", Handler(s, listModels))
-		v1.POST("/llm/providers/:provider/load", Handler(s, loadModel))
-		v1.POST("/llm/providers/:provider/unload", Handler(s, unloadModel))
-		v1.POST("/llm/providers/:provider/toggle", Handler(s, toggleModel))
+		v1.POST("/llm/providers/:provider/enable", Handler(s, enableModel))
+		v1.POST("/llm/providers/:provider/disable", Handler(s, disableModel))
 
 		// Agent skill endpoints
-		v1.GET("/llm/agent/hardskills", Handler(s, agentListSkills))
+		v1.GET("/llm/flow/hardskill", Handler(s, flowListSkills))
+		//v1.POST("/llm/flow/hardskill", gin.WrapH(genkit.Handler(llmflows.HardskillFlow)))
 
 		// SSE endpoints
 		v1.GET("/events", Handler(s, sseHandler))

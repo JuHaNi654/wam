@@ -1,11 +1,9 @@
 package routes
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"server/internal/llm"
-	"server/internal/llm/skills"
+	llmflows "server/internal/llm-flows"
 	"server/internal/logger"
 	"server/internal/services"
 
@@ -13,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
+func flowListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	applicationID := ctx.Query("applicationId")
 
 	application, err := s.ApplicationRepository.GetByID(applicationID)
@@ -29,10 +27,7 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	c := context.Background()
-	result, err := skills.ListAdHardSkills(&c, llm.GetInstance(), skills.ApplicationInput{
-		Ad: application.Ad,
-	})
+	skills, err := llmflows.HardskillFlow.Run(ctx, llmflows.HardSkillInput{Text: application.Ad})
 
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
@@ -41,7 +36,7 @@ func agentListSkills(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: http.StatusOK,
-		Data:       result,
+		Data:       skills,
 	})
 	return nil
 }

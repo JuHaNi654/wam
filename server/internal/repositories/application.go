@@ -42,8 +42,8 @@ func (r *ApplicationRepository) GetByID(applicationID string) (*models.SavedAppl
 	return item, result.Error
 }
 
-func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID string) ([]models.Skill, error) {
-	err := r.db.Transaction(func(tx *gorm.DB) error {
+func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
 		ctx := context.Background()
 		_, err := gorm.G[models.ApplicationSkill](tx).Where("application_id = ?", applicationID).Delete(ctx)
 		if err != nil {
@@ -53,7 +53,6 @@ func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID s
 		savedSkills := make([]models.ApplicationSkill, 0, len(skills))
 		for _, skill := range skills {
 			savedSkills = append(savedSkills, models.ApplicationSkill{
-				ID:            uuid.New().String(),
 				ApplicationID: applicationID,
 				SkillID:       skill.ID,
 			})
@@ -69,11 +68,6 @@ func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID s
 
 		return nil
 	})
-
-	if err != nil {
-		return nil, err
-	}
-	return skills, nil
 }
 
 func (r *ApplicationRepository) Update(id string, data map[string]any) error {

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"server/internal/llm"
 	"server/internal/repositories"
 
 	"gorm.io/gorm"
@@ -14,6 +15,8 @@ type Service struct {
 	HistoryRepository     *repositories.HistoryRepository
 	EducationRepository   *repositories.EducationRepository
 	SettingsRepository    *repositories.SettingsRepository
+
+	LLMInstance *llm.LLMManager
 }
 
 func NewService(db *gorm.DB) *Service {

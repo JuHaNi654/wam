@@ -3,63 +3,75 @@ package routes
 import (
 	"errors"
 	"net/http"
-	"server/internal/llm"
+	llm "server/internal/llm"
 	"server/internal/logger"
 	"server/internal/models"
-	"server/internal/notification"
 	"server/internal/services"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func listProviderModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	providers := llm.GetInstance().Providers()
-	list := []map[string]any{}
+func listProviders(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	viewType := ctx.DefaultQuery("view", "basic")
 
-	for _, provider := range providers {
-		if !provider.Available {
-			list = append(list, map[string]any{
-				"provider": provider,
-				"models":   []any{},
-			})
-		} else {
-			models, err := llm.GetInstance().ListModels(provider.Name)
-			if err != nil {
-				logger.GetInstance().Error(err.Error())
-				return &ErrorResponse{StatusCode: http.StatusInternalServerError}
+	if viewType == "basic" {
+		ctx.JSON(http.StatusOK, Response{
+			StatusCode: http.StatusOK,
+			Data:       llm.GetInstance().ListProviders(),
+		})
+
+		return nil
+	}
+
+	if viewType == "extended" {
+		items := []gin.H{}
+		providers := llm.GetInstance().ListProviders()
+
+		for _, provider := range providers {
+			if !provider.Available {
+				items = append(items, gin.H{
+					"provider": provider,
+					"models":   []any{},
+				})
+				continue
 			}
 
-			list = append(list, map[string]any{
+			models, err := llm.GetInstance().ListProviderModels(provider.Name)
+			if err != nil {
+				logger.GetInstance().Error(err.Error())
+				items = append(items, gin.H{
+					"provider": provider,
+					"models":   []any{},
+				})
+				continue
+			}
+
+			items = append(items, gin.H{
 				"provider": provider,
 				"models":   models,
 			})
 		}
+
+		ctx.JSON(http.StatusOK, Response{
+			StatusCode: http.StatusOK,
+			Data: gin.H{
+				"items":  items,
+				"in_use": llm.GetInstance().Active(),
+			},
+		})
+
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, Response{
-		StatusCode: http.StatusOK,
-		Data: gin.H{
-			"items":  list,
-			"in_use": llm.GetInstance().Selected(),
-		},
-	})
-
-	return nil
-}
-
-func listProviders(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	ctx.JSON(http.StatusOK, Response{
-		StatusCode: http.StatusOK,
-		Data:       llm.GetInstance().Providers(),
-	})
-
-	return nil
+	return &ErrorResponse{
+		StatusCode: http.StatusBadRequest,
+		Message:    "Invalid value for query parameter 'view'",
+	}
 }
 
 func listModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	provider := ctx.Param("provider")
-	models, err := llm.GetInstance().ListModels(provider)
+	models, err := llm.GetInstance().ListProviderModels(provider)
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
@@ -70,13 +82,13 @@ func listModels(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		Data: gin.H{
 			"provider": provider,
 			"models":   models,
-			"in_use":   llm.GetInstance().Selected(),
+			"in_use":   llm.GetInstance().Active(),
 		},
 	})
 	return nil
 }
 
-func loadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
+func enableModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	provider := ctx.Param("provider")
 	requestBody := new(models.HandleModel)
 
@@ -89,7 +101,7 @@ func loadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
 	}
 
-	if err := llm.GetInstance().LoadModel(provider, requestBody.Model); err != nil {
+	if err := llm.GetInstance().EnableModel(provider, requestBody.Model); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
@@ -105,7 +117,7 @@ func loadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	return nil
 }
 
-func unloadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
+func disableModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	provider := ctx.Param("provider")
 	requestBody := new(models.HandleModel)
 
@@ -114,7 +126,11 @@ func unloadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	if err := llm.GetInstance().UnloadModel(provider, requestBody.Model); err != nil {
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
+	}
+
+	if err := llm.GetInstance().DisableModel(provider, requestBody.Model); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
@@ -122,71 +138,37 @@ func unloadModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	ctx.JSON(http.StatusCreated, Response{
 		StatusCode: http.StatusCreated,
 		Data: gin.H{
-			"model":    requestBody.Model,
 			"provider": provider,
+			"model":    requestBody.Model,
 		},
 	})
+
 	return nil
 }
 
-func toggleModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
-	provider := ctx.Param("provider")
-	requestBody := new(models.HandleModel)
-	instance := notification.GetInstance()
+func setSelectedModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
+	requestBody := new(models.ActiveModel)
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
 		return &ErrorResponse{StatusCode: http.StatusBadRequest}
 	}
 
-	// NOTE: can accidentally match if multiple models have same enough suffix
-	// (e.g. "large" only would match "model-large"), might be small use
-	// case, but possible
-	if strings.HasSuffix(llm.GetInstance().Selected(), requestBody.Model) {
-		llm.GetInstance().ClearSelected()
-
-		instance.Send(notification.Payload{
-			Type: notification.NotificationLLMModelEnabled,
-			Content: map[string]any{
-				"model": llm.GetInstance().Selected(),
-			},
-		})
-		ctx.Status(http.StatusNoContent)
-		return nil
+	if errors, isValid := validateStruct(requestBody); !isValid {
+		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
 	}
 
-	err := llm.GetInstance().Select(provider, requestBody.Model)
+	err := llm.GetInstance().SetActive(requestBody.Provider, requestBody.Model)
 	if err != nil {
 		logger.GetInstance().Error(err.Error())
-		if errors.Is(err, llm.ErrModelNotLoaded) {
-			return &ErrorResponse{
-				StatusCode: http.StatusBadRequest,
-				Message:    err.Error(),
-			}
+
+		if errors.Is(err, llm.ErrProviderNotAvailable) {
+			return &ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()}
 		}
+
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	instance.Send(notification.Payload{
-		Type: notification.NotificationLLMModelEnabled,
-		Content: map[string]any{
-			"model": llm.GetInstance().Selected(),
-		},
-	})
 	ctx.Status(http.StatusNoContent)
-	return nil
-}
-
-func llmStatus(ctx *gin.Context, _ *services.Service) *ErrorResponse {
-	ok, _ := llm.GetInstance().ProviderAvailability()
-
-	ctx.JSON(http.StatusOK, Response{
-		StatusCode: http.StatusOK,
-		Data: gin.H{
-			"in_use":    llm.GetInstance().Selected(),
-			"available": ok,
-		},
-	})
-
 	return nil
 }

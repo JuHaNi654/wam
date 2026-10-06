@@ -21,7 +21,7 @@ cd server
 go run . migrate
 
 # 2. Start the API server (port 8000)
-go run . start-server
+go run -tags sqlite_fts5 . start-server
 
 # 3. In a second terminal — install client deps and start the dev server
 cd client
@@ -104,6 +104,9 @@ The file is gitignored. A missing file is non-fatal; the server starts with buil
 ```bash
 rm ~/.local/share/wam/sqlite.db
 cd server && go run . migrate
+
+### Database links 
+- https://sqlite.org/fts5.html
 ```
 
 ---

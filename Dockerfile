@@ -13,7 +13,7 @@ RUN npm run build
 
 #---------
 
-FROM golang:1.25-alpine AS server-builder
+FROM golang:1.26-alpine AS server-builder
 WORKDIR /build/server
 
 RUN apk add --no-cache gcc musl-dev
@@ -22,7 +22,7 @@ COPY server/go.mod server/go.sum ./
 RUN go mod download
 
 COPY server/ ./
-RUN CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o /out/wam .
+RUN CGO_ENABLED=1 go build -tags sqlite_fts5 -trimpath -ldflags="-s -w" -o /out/wam .
 
 #---------
 

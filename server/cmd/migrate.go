@@ -13,7 +13,8 @@ var sqlFiles = []string{
 }
 
 func Migrate() error {
-	client := database.NewSQLiteClient()
+	database.InitSQLLite()
+	client := database.GetInstance()
 
 	if client.FileIsExists() {
 		return fmt.Errorf("override migration is currently disabled on existing sqlite file (path: %s)", client.GetFilePath())
@@ -42,7 +43,9 @@ func Migrate() error {
 // InitializeDatabase applies the production schema only when the database does
 // not already exist. It is safe to run each time the container starts.
 func InitializeDatabase() error {
-	client := database.NewSQLiteClient()
+	database.InitSQLLite()
+	client := database.GetInstance()
+
 	if client.FileIsExists() {
 		fmt.Printf("Database already exists at %s\n", client.GetFilePath())
 		return nil

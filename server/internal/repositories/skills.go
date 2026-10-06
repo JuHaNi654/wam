@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"server/internal/models"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -130,4 +131,20 @@ func (r *SkillRepository) Delete(id string, ctx *context.Context) error {
 
 		return nil
 	})
+}
+
+// NOTE: If query returns error check first that application is running with
+// `-tags sqlite_fts5` flag
+func (r *SkillRepository) SearchByName(value string) ([]models.SkillSearch, error) {
+	const query = `
+		SELECT
+			id,
+			name
+		FROM skill_fts
+		WHERE skill_fts MATCH ?
+		ORDER BY RANK`
+
+	return gorm.G[models.SkillSearch](r.db).
+		Raw(query, strconv.Quote(value)).
+		Find(context.Background())
 }

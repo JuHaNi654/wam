@@ -3,7 +3,8 @@ import Layout from "./layouts/base"
 import PageHeading from "../components/page-heading"
 import { NotificationLLMModelEnabled, NotificationLLMStatusChange, TLlamaStatusEvent, TModelToggleEvent, TProviderModels } from "../models/models"
 import { GET, POST } from "../utils/api"
-import { For, Index, createResource, Suspense } from "solid-js"
+import { For, Index, createResource, Suspense, type Signal } from "solid-js"
+import { createStore, produce } from "solid-js/store"
 import { useNotification } from "../utils/notification"
 import { Button } from "../components/elements/button"
 import Badge from "../components/elements/badge"
@@ -21,62 +22,59 @@ const llmRoute = createRoute({
 })
 
 const fetchProviders = async () => {
-  const { response, error } = await GET<Response>("/llm/providers-models", null)
+  const { response, error } = await GET<Response>("/llm/providers?view=extended", null)
   if (error) throw error
   return response
+}
+
+// createResource backs its value with a plain signal by default, which only
+// notifies subscribers when the reference changes (Object.is check). `produce`
+// mutates the resource's cached object in place and returns the same
+// reference, so plain-signal storage silently swallows those updates and the
+// UI never re-renders. Backing the resource with a store instead gives it
+// key-level reactivity, so `mutate(produce(...))` calls actually propagate.
+function createDeepSignal<T>(value: T): Signal<T> {
+  const [store, setStore] = createStore({ value })
+  return [
+    () => store.value,
+    (v: T | ((prev: T) => T)) => {
+      const next = typeof v === "function" ? (v as (prev: T) => T)(store.value) : v
+      setStore("value", next as Exclude<T, Function>)
+      return store.value
+    }
+  ] as Signal<T>
 }
 
 function LLM() {
   const toast = useToast()
   const [result, { mutate }] = createResource(true, fetchProviders, {
-    initialValue: { status: 0, data: { in_use: "", items: [] } }
+    initialValue: { status: 0, data: { in_use: "", items: [] } },
+    storage: createDeepSignal
   })
 
-
   useNotification<TLlamaStatusEvent>(NotificationLLMStatusChange, (event) => {
-    // TODO: Rewrite ugly solution
-    // TODO https://www.solidjs.com/tutorial/stores_mutation
-    mutate((prev) => {
-      if (!prev) return prev
-
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          items: prev.data.items.map((provider) => {
-            if (provider.provider.name !== event.content.provider) {
-              return provider
+    console.log("Event: ", event)
+    mutate(produce((state) => {
+      state!.data.items.forEach((provider) => {
+        if (provider.provider.name === event.content.provider) {
+          provider.models.forEach((model) => {
+            if (model.id === event.content.model) {
+              model.status = event.content.data.status
             }
-
-            return {
-              ...provider,
-              models: provider.models.map((model) => {
-                if (model.id !== event.content.model) {
-                  return model
-                }
-
-                return {
-                  ...model,
-                  status: event.content.data.status,
-                }
-              }),
-            }
-          }),
-        },
-      }
-    })
+          })
+        }
+      })
+    }))
   })
 
   useNotification<TModelToggleEvent>(NotificationLLMModelEnabled, (event) => {
-    mutate((prev) => {
-      if (!prev) return prev
-
-      return { ...prev, data: { ...prev.data, in_use: event.content.model } }
-    })
+    mutate(produce((state) => {
+      state!.data.in_use = event.content.model
+    }))
   })
 
   const loadModel = async (provider: string, model: string) => {
-    const { error } = await POST(`/llm/providers/${provider}/load`, { model })
+    const { error } = await POST(`/llm/providers/${provider}/enable`, { model })
     if (error) {
       toast.error({ message: "Unabled load selected model" })
       console.error(error)
@@ -85,7 +83,7 @@ function LLM() {
   }
 
   const unloadModel = async (provider: string, model: string) => {
-    const { error } = await POST(`/llm/providers/${provider}/unload`, { model })
+    const { error } = await POST(`/llm/providers/${provider}/disable`, { model })
     if (error) {
       toast.error({ message: "Unabled unload selected model" })
       console.error(error)
@@ -93,7 +91,7 @@ function LLM() {
   }
 
   const useModel = async (provider: string, model: string) => {
-    const { error } = await POST(`/llm/providers/${provider}/toggle`, { model })
+    const { error } = await POST(`/llm/select`, { provider, model })
     if (error) {
       toast.error({ message: "Unabled toggle selected model" })
       console.error(error)
@@ -144,7 +142,7 @@ function LLM() {
                               </td>
                               <td class="w-20 text-center">
                                 <input onChange={() => useModel(item().provider.name, model.id)} type="checkbox"
-                                  checked={result()!.data.in_use.includes(model.id)}
+                                  checked={result()!.data.in_use?.includes(model.id)}
                                   disabled={model.status !== "loaded"}
                                   class="toggle border-0 ring-1 ring-white/20 bg-zinc-500 checked:bg-emerald-400 text-zinc-800 checked:text-zinc-950" />
                               </td>

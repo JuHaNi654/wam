@@ -85,5 +85,19 @@ CREATE TABLE skill (
   name   TEXT NOT NULL
 );
 
+CREATE VIRTUAL TABLE skill_fts USING fts5(id UNINDEXED, name, tokenize='trigram');
+INSERT INTO skill_fts(id, name) SELECT id, name FROM skill;
+
+CREATE TRIGGER skill_ai AFTER INSERT ON skill BEGIN
+  INSERT INTO skill_fts(id, name) VALUES (new.id, new.name);
+END;
+CREATE TRIGGER skill_ad AFTER DELETE ON skill BEGIN
+  DELETE FROM skill_fts WHERE id = old.id;
+END;
+CREATE TRIGGER skill_au AFTER UPDATE ON skill BEGIN
+  DELETE FROM skill_fts WHERE id = old.id;
+  INSERT INTO skill_fts(id, name) VALUES (new.id, new.name);
+END;
+
 CREATE UNIQUE INDEX uq_skill_name_normalized ON skill (lower(trim(name)));
 CREATE UNIQUE INDEX uq_application_skill ON application_skill (application_id, skill_id);

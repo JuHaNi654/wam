@@ -1,4 +1,4 @@
-import { For, createUniqueId, createSignal, createResource, createMemo, ErrorBoundary, onMount, onCleanup, Show } from "solid-js"
+import { JSX, For, createUniqueId, createSignal, createResource, createMemo, onMount, onCleanup, Show, children } from "solid-js"
 import { TSkill } from "../models/models"
 import { GET, POST } from "../utils/api"
 import { twMerge } from "tailwind-merge"
@@ -8,6 +8,7 @@ import { useToast } from "./toast"
 type Props = {
   data: Array<TSkill>
   onUpdate?: (items: Array<TSkill>) => void
+  children?: JSX.Element
 }
 
 const fetchSkills = async () => {
@@ -19,6 +20,7 @@ const checkSelected = (item: TSkill, items: Array<TSkill>) => {
 }
 
 export default function Tags(props: Props) {
+  const resolved = children(() => props.children).toArray()
   const toast = useToast()
   const [selectedTags, setSelectedTags] = createSignal(props.data)
   const [result, { mutate }] = createResource(true, fetchSkills)
@@ -127,9 +129,9 @@ export default function Tags(props: Props) {
   return (
     <Show when={result() && result()!.response}>
       <div class="flex flex-col gap-2 ring-1 ring-white/20 bg-zinc-800 rounded-lg p-4">
-        <header class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold uppercase tracking-wide">Skills</h3>
-        </header>
+        <Show when={resolved[0] && (resolved[0] as HTMLDivElement)!.tagName == "HEADER"}>
+          {resolved[0]}
+        </Show>
         <div onMouseDown={handleMouseDown}>
           <div role="toolbar" ref={toolbarRef}
             style={`anchor-name:--${popoverId}`}
