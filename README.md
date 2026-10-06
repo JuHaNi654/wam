@@ -80,7 +80,7 @@ The file is gitignored. A missing file is non-fatal; the server starts with buil
 |---|---|
 | `go run . migrate` | Create the SQLite DB and apply schema + seed data |
 | `go run . init-db` | Create an empty SQLite database if none exists |
-| `go run . start-server` | Start the API on port 8000 |
+| `go run -tags sqlite_fts5 . start-server` | Start the API on port 8000 |
 | `go test ./...` | Run all tests |
 | `go build .` | Compile the binary |
 
