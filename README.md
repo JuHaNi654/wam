@@ -44,7 +44,7 @@ docker build -t wam .
 Run it with a named volume so the SQLite database survives container replacement:
 
 ```bash
-docker run --rm -p 8000:8000 -v wam-data:/data wam
+docker run --rm -p 8000:8000 -v <path>:/data wam
 ```
 
 Open `http://localhost:8000`. On its first start against an empty volume, the container creates `/data/sqlite.db` with the empty production schema. Existing databases in the volume are never changed.
@@ -68,7 +68,12 @@ The file is gitignored. A missing file is non-fatal; the server starts with buil
 
 | Variable | Default | Description |
 |---|---|---|
+| `MODE` | `development,production` ||
 | `LLAMA_URL` | `http://127.0.0.1:8001/v1` | Base URL of the llama.cpp-compatible OpenAI API server |
+| `CLIENT_URL` | `htp://127.0.0.1:3000` | Running client port on development mode |
+| `PUBLIC_DIR` | `/path/to/dir` | Path to client build files to server from endpoint |
+| `SQLITE_PATH` | `path/to/file` |  |
+| `SQLITE_NAME` | `sqlite.db` | |
 
 ---
 
