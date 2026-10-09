@@ -66,10 +66,8 @@ func (m *Llama) GetMetaInfo() ProviderMeta {
 }
 
 func (m *Llama) ListModels() ([]ProviderModelMeta, error) {
-	var (
-		requestBody LlamaAPIModels
-		models      []ProviderModelMeta
-	)
+	var requestBody LlamaAPIModels
+	models := []ProviderModelMeta{}
 
 	api := fmt.Sprintf("%s/models", m.BaseURL)
 	statusCode, err := utils.GetRequest(api, &requestBody)

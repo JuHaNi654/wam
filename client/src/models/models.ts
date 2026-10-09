@@ -106,7 +106,7 @@ export const workHistorySchema = z.object({
   title: z.string().nonempty(),
   description: z.string().nonempty(),
   start_date: dateInUnix("Start date"),
-  end_date: dateInUnix("End date"),
+  end_date: z.number(),
   current: z.boolean()
 })
 

@@ -148,6 +148,7 @@ func disableModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 func setSelectedModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 	requestBody := new(models.ActiveModel)
+	instance := llm.GetInstance()
 
 	if err := ctx.ShouldBindJSON(requestBody); err != nil {
 		logger.GetInstance().Error(err.Error())
@@ -158,17 +159,26 @@ func setSelectedModel(ctx *gin.Context, s *services.Service) *ErrorResponse {
 		return &ErrorResponse{StatusCode: http.StatusBadRequest, Validation: errors}
 	}
 
-	err := llm.GetInstance().SetActive(requestBody.Provider, requestBody.Model)
-	if err != nil {
-		logger.GetInstance().Error(err.Error())
+	if requestBody.Model == instance.Active() {
+		instance.ClearActive()
+	} else {
+		err := instance.SetActive(requestBody.Provider, requestBody.Model)
+		if err != nil {
+			logger.GetInstance().Error(err.Error())
 
-		if errors.Is(err, llm.ErrProviderNotAvailable) {
-			return &ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()}
+			if errors.Is(err, llm.ErrProviderNotAvailable) {
+				return &ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()}
+			}
+
+			return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 		}
-
-		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
-	ctx.Status(http.StatusNoContent)
+	ctx.JSON(http.StatusOK, Response{
+		StatusCode: http.StatusOK,
+		Data: gin.H{
+			"in_use": instance.Active(),
+		},
+	})
 	return nil
 }
