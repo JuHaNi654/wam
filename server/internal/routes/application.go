@@ -55,22 +55,21 @@ func createApplication(ctx *gin.Context, s *services.Service) *ErrorResponse {
 
 	if s.LLMInstance != nil {
 		skills, err := llmflows.HardskillFlow.Run(ctx, llmflows.HardSkillInput{Text: savedApplication.Ad})
-		logger.GetInstance().Debug("Hardskillflow returned list of skills")
-		logger.GetInstance().Debug(fmt.Sprintf("%+v", skills))
-
 		if err != nil {
 			logger.GetInstance().Error(err.Error())
 		} else {
 			list := []models.Skill{}
 			for _, skill := range skills {
+				logger.GetInstance().Debug(fmt.Sprintf("%+v", skill))
+
 				if (skill.Status) == models.NewSkillType {
 					if err := s.SkillRepository.Create(&skill.Skill); err != nil {
 						logger.GetInstance().Error(err.Error())
 						continue
 					}
-
-					list = append(list, skill.Base())
 				}
+
+				list = append(list, skill.Base())
 			}
 
 			if err = s.ApplicationRepository.SetSkills(list, savedApplication.ID); err != nil {

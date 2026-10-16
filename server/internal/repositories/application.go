@@ -50,19 +50,19 @@ func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID s
 			return err
 		}
 
-		savedSkills := make([]models.ApplicationSkill, 0, len(skills))
+		relations := make([]models.ApplicationSkill, 0, len(skills))
 		for _, skill := range skills {
-			savedSkills = append(savedSkills, models.ApplicationSkill{
+			relations = append(relations, models.ApplicationSkill{
 				ApplicationID: applicationID,
 				SkillID:       skill.ID,
 			})
 		}
 
-		if len(savedSkills) == 0 {
+		if len(relations) == 0 {
 			return nil
 		}
 
-		if result := tx.Create(&savedSkills); result.Error != nil {
+		if result := tx.Create(&relations); result.Error != nil {
 			return result.Error
 		}
 

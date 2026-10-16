@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"server/internal/models"
-	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -136,15 +136,33 @@ func (r *SkillRepository) Delete(id string, ctx *context.Context) error {
 // NOTE: If query returns error check first that application is running with
 // `-tags sqlite_fts5` flag
 func (r *SkillRepository) SearchByName(value string) ([]models.SkillSearch, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil, nil
+	}
+
+	if utf8.RuneCountInString(value) >= 3 {
+		value = `"` + strings.ReplaceAll(value, `"`, `""`) + `"`
+		const query = `
+			SELECT id, name 
+			FROM skill_fts
+			WHERE skill_fts MATCH ?
+			ORDER BY rank`
+
+		return gorm.G[models.SkillSearch](r.db).
+			Raw(query, value).
+			Find(context.Background())
+	}
+
+	value = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(value)
+	value = "%" + value + "%"
+
 	const query = `
-		SELECT
-			id,
-			name
+		SELECT id,name
 		FROM skill_fts
-		WHERE skill_fts MATCH ?
-		ORDER BY RANK`
+		WHERE name like ? ESCAPE '\'`
 
 	return gorm.G[models.SkillSearch](r.db).
-		Raw(query, strconv.Quote(value)).
+		Raw(query, value).
 		Find(context.Background())
 }
