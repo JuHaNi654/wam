@@ -78,6 +78,12 @@ function Application() {
             <h4 class="font-semibold tracking-wide">Created</h4>
             <span class="text-sm font-semibold text-zinc-500">{renderDate(result().response!.data.application.create_date)}</span>
           </div>
+          {result().response!.data.application.closing_date && (
+            <div class="text-sm">
+              <h4 class="font-semibold uppercase tracking-wide">Application closing date</h4>
+              <span class="text-sm font-semibold text-zinc-500">{renderDate(result().response!.data.application.closing_date)}</span>
+            </div>
+          )}
 
           <div class="text-sm">
             <h4 class="font-semibold uppercase tracking-wide">Company</h4>

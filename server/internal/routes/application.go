@@ -138,6 +138,11 @@ func addSkillsToTheApplication(ctx *gin.Context, s *services.Service) *ErrorResp
 		return &ErrorResponse{StatusCode: http.StatusInternalServerError}
 	}
 
+	if err := s.ApplicationRepository.UpdateModifiedDate(applicationID); err != nil {
+		logger.GetInstance().Error(err.Error())
+		return &ErrorResponse{StatusCode: http.StatusBadRequest}
+	}
+
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: http.StatusOK,
 		Data: gin.H{

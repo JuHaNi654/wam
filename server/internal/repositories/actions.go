@@ -16,10 +16,16 @@ func NewActionRepository(db *gorm.DB) *ActionRepository {
 	return &ActionRepository{db: db}
 }
 
-func (r *ActionRepository) GetByApplicationID(jobID string) ([]models.SavedAction, error) {
+func (r *ActionRepository) GetByApplicationID(applicationID string) ([]models.SavedAction, error) {
 	var items []models.SavedAction
-	result := r.db.Where("application_id = ?", jobID).Find(&items)
+	result := r.db.Where("application_id = ?", applicationID).Find(&items)
 	return items, result.Error
+}
+
+func (r *ActionRepository) GetByID(actionID string) (*models.SavedAction, error) {
+	item := new(models.SavedAction)
+	result := r.db.First(item, "id = ?", actionID)
+	return item, result.Error
 }
 
 func (r *ActionRepository) Create(action *models.Action) (models.SavedAction, error) {

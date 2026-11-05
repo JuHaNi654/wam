@@ -17,10 +17,16 @@ func NewApplicationRepository(db *gorm.DB) *ApplicationRepository {
 	return &ApplicationRepository{db: db}
 }
 
+func (r *ApplicationRepository) UpdateModifiedDate(applicationID string) error {
+	data := map[string]any{"update_date": time.Now().Unix()}
+	_, err := gorm.G[map[string]any](r.db).Table("application").Where("id = ?", applicationID).Updates(context.Background(), data)
+	return err
+}
+
 func (r *ApplicationRepository) List() (*[]models.SavedApplication, error) {
 	items := new([]models.SavedApplication)
 	result := r.db.Model(&models.SavedApplication{}).
-		Select([]string{"id", "name", "company", "status", "create_date"}).
+		Select([]string{"id", "name", "company", "status", "create_date", "update_date"}).
 		Find(items)
 
 	return items, result.Error
@@ -30,6 +36,7 @@ func (r *ApplicationRepository) Create(application models.Application) (*models.
 	newApplication := &models.SavedApplication{
 		ID:          uuid.New().String(),
 		CreateDate:  time.Now().Unix(),
+		UpdateDate:  time.Now().Unix(),
 		Application: application,
 	}
 	err := r.db.Create(newApplication).Error
@@ -49,7 +56,6 @@ func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID s
 		if err != nil {
 			return err
 		}
-
 		relations := make([]models.ApplicationSkill, 0, len(skills))
 		for _, skill := range skills {
 			relations = append(relations, models.ApplicationSkill{
@@ -66,13 +72,13 @@ func (r *ApplicationRepository) SetSkills(skills []models.Skill, applicationID s
 			return result.Error
 		}
 
-		return nil
+		return err
 	})
 }
 
 func (r *ApplicationRepository) Update(id string, data map[string]any) error {
 	ctx := context.Background()
-
+	data["update_date"] = time.Now().Unix()
 	_, err := gorm.G[map[string]any](r.db).Table("application").Where("id = ?", id).Updates(ctx, data)
 	return err
 }

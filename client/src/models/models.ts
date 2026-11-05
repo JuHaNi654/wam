@@ -55,6 +55,7 @@ export const applicationSchema = z.object({
   position: z.string().nonempty(),
   homepage: z.string().nonempty(),
   link: z.string().nonempty(),
+  closing_date: z.number(),
   status: ApplicationStatusEnum
 })
 
@@ -62,6 +63,7 @@ export type TApplication = z.infer<typeof applicationSchema>
 export type TSavedApplication = {
   id: string;
   create_date: number;
+  update_date: number;
   ad?: string;
   application?: string;
 } & TApplication

@@ -8,6 +8,7 @@ import PageHeading from "../components/page-heading"
 import { Button } from "../components/elements/button"
 import { POST } from "../utils/api"
 import { useToast } from "../components/toast"
+import DateField from "../components/input/DateField"
 
 export default createRoute({
   getParentRoute: () => ApplicationLayout,
@@ -26,6 +27,7 @@ const defaultValues: TApplication = {
   position: "",
   homepage: "",
   link: "",
+  closing_date: 0,
   status: ApplicationStatus.Saved
 }
 
@@ -63,7 +65,7 @@ function NewApplication() {
           <div class="px-4 py-6">
             <form.Field name="name"
               children={(field) => (
-                <InputField label="Name"
+                <InputField label="Name" required={true}
                   name={field().name} id={field().name} value={field().state.value}
                   onInput={(e) => field().handleChange(e.currentTarget.value)}
                   onBlur={field().handleBlur}
@@ -73,7 +75,7 @@ function NewApplication() {
             <div class="flex gap-4 w-full">
               <form.Field name="company"
                 children={(field) => (
-                  <InputField label="Company"
+                  <InputField label="Company" required={true}
                     name={field().name} id={field().name} value={field().state.value}
                     onInput={(e) => field().handleChange(e.currentTarget.value)}
                     onBlur={field().handleBlur}
@@ -83,7 +85,7 @@ function NewApplication() {
 
               <form.Field name="position"
                 children={(field) => (
-                  <InputField label="Company position"
+                  <InputField label="Company position" required={true}
                     name={field().name} id={field().name} value={field().state.value}
                     onInput={(e) => field().handleChange(e.currentTarget.value)}
                     onBlur={field().handleBlur}
@@ -95,7 +97,7 @@ function NewApplication() {
             <div class="flex gap-4 w-full">
               <form.Field name="homepage"
                 children={(field) => (
-                  <InputField label="Company homepage"
+                  <InputField label="Company homepage" required={true}
                     name={field().name} id={field().name} value={field().state.value}
                     onInput={(e) => field().handleChange(e.currentTarget.value)}
                     onBlur={field().handleBlur} placeholder="https://"
@@ -105,7 +107,7 @@ function NewApplication() {
 
               <form.Field name="link"
                 children={(field) => (
-                  <InputField label="Job ad post"
+                  <InputField label="Job ad post" required={true}
                     name={field().name} id={field().name} value={field().state.value}
                     onInput={(e) => field().handleChange(e.currentTarget.value)}
                     onBlur={field().handleBlur} placeholder="https://"
@@ -113,6 +115,16 @@ function NewApplication() {
                 )}
               />
             </div>
+
+
+            <form.Field name="closing_date"
+              children={(field) => (
+                <DateField label="Application closing date" name={field().name} value={field().state.value}
+                  onChange={(e) => field().handleChange(e)}
+                  onBlur={field().handleBlur}
+                  errors={field().state.meta.errors.map((err) => err?.message || "")}
+                />
+              )} />
 
             <form.Field name="status"
               children={(field) => (

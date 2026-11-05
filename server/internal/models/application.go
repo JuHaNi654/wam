@@ -7,6 +7,7 @@ type Application struct {
 	Homepage    *string           `json:"homepage,omitempty" validate:"omitempty,https_url,url"`
 	Link        *string           `json:"link,omitempty" validate:"omitempty,https_url,url"`
 	Status      ApplicationStatus `json:"status,omitempty" validate:"required,validate_status"`
+	ClosingDate int64             `json:"closing_date,omitempty" gorm:"column:closing_date"`
 	Ad          string            `json:"ad,omitempty"`
 	Application string            `json:"application,omitempty"`
 }
@@ -14,6 +15,7 @@ type Application struct {
 type SavedApplication struct {
 	ID         string `json:"id,omitempty" gorm:"primaryKey"`
 	CreateDate int64  `json:"create_date,omitempty" gorm:"column:create_date"`
+	UpdateDate int64  `json:"update_date,omitempty" gorm:"column:update_date"`
 	Application
 }
 

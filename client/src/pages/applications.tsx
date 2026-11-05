@@ -10,7 +10,7 @@ import { IconLink } from "../components/elements/button"
 import Badge from "../components/elements/badge"
 import { useToast } from "../components/toast"
 
-type Application = Pick<TSavedApplication, "id" | "name" | "company" | "status" | "create_date">
+type Application = Pick<TSavedApplication, "id" | "name" | "company" | "status" | "create_date" | "update_date">
 
 const applicationsRoute = createRoute({
   getParentRoute: () => ApplicationLayout,
@@ -37,7 +37,6 @@ function ApplicationsList(props: ApplicationsListProps) {
   const toast = useToast()
   const [items, setItems] = createSignal(props.items)
 
-
   const handleDelete = async (id: string) => {
     const { error } = await DELETE(`/applications/${id}`, null)
     if (error) {
@@ -58,6 +57,7 @@ function ApplicationsList(props: ApplicationsListProps) {
             <th>Name</th>
             <th>Status</th>
             <th>Created</th>
+            <th>Updated</th>
             <th></th>
           </tr>
         </thead>
@@ -76,6 +76,9 @@ function ApplicationsList(props: ApplicationsListProps) {
                 </td>
                 <td>
                   {renderDate(item.create_date)}
+                </td>
+                <td>
+                  {renderDate(item.update_date)}
                 </td>
                 <td class="w-12">
                   <div class="flex gap-2 items-center justify-end">

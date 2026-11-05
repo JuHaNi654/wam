@@ -55,7 +55,7 @@ class NotificationClient {
   }
 
   #onError = (event: Event) => {
-    console.log("Event error: ", event)
+    console.error("Event error: ", event)
     this.#cleanupEventSource()
     this.#scheduleReconnect()
   }

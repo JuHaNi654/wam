@@ -1,12 +1,14 @@
 import "cally"
 import { createUniqueId, onCleanup, onMount } from "solid-js"
 import { renderDate } from "../../utils/date"
+import type { JSX } from "solid-js"
 
 type InputProps = {
   disabled?: boolean
   label: string
   name: string
   value: number
+  required?: boolean
   errors?: string[]
   onChange?: (value: number) => void
   onBlur?: () => void
@@ -19,8 +21,18 @@ type CalendarDateElement = HTMLElement & {
 export default function DateField(props: InputProps) {
   let calendar!: CalendarDateElement
   let calendarBtnRef!: HTMLButtonElement
-
   const popoverId = `cally-popover-${createUniqueId()}`
+
+  // style={`position-anchor:--${popoverId}; transform: translate3d(var(--drag-position-x), var(--drag-position-y), 0); top: anchor(--${popoverId} bottom); left: anchor(left);`}
+  const calendarCSSProperties: JSX.CSSProperties = {
+    'position-anchor': `--${popoverId}`,
+    'top': `anchor(--${popoverId} bottom)`,
+    'left': `anchor(left)`
+  }
+
+  if (navigator.userAgent.includes('Firefox')) {
+    calendarCSSProperties['transform'] = 'translate3d(var(--drag-position-x), var(--drag-position-y), 0)'
+  }
 
   const handleChange = (event: any) => {
     let dateInUnix = new Date(event.target.value).getTime() / 1000
@@ -50,7 +62,10 @@ export default function DateField(props: InputProps) {
 
   return (
     <fieldset class="fieldset relative w-full">
-      <legend class="fieldset-legend text-sm">{props.label}</legend>
+      <legend class="fieldset-legend text-sm">
+        {props.label}
+        {props.required && <span>*</span>}
+      </legend>
       <input type="hidden" name={props.name} value={props.value ?? ""} />
       <button disabled={props.disabled} ref={calendarBtnRef} type="button" style={`anchor-name:--${popoverId}`} popovertarget={popoverId} class="input w-full justify-start text-left">
         {props.value > 0 ? renderDate(props.value) : "Pick a date"}
@@ -59,7 +74,7 @@ export default function DateField(props: InputProps) {
         popover
         id={popoverId}
         class="border border-base-300 bg-base-100"
-        style={`position-anchor:--${popoverId}; transform: translate3d(var(--drag-position-x), var(--drag-position-y), 0); top: anchor(--${popoverId} bottom); left: anchor(left);`}
+        style={calendarCSSProperties}
       >
         <calendar-date class="cally"
           ref={calendar}

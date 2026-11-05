@@ -6,6 +6,7 @@ type Props = ComponentProps<"select"> & {
   label?: string;
   children: JSX.Element
   class?: string
+  required?: boolean
 }
 export default function SelectField({ label, class: style, children: c, ...props }: Props) {
   const resolved = children(() => c)
@@ -19,7 +20,11 @@ export default function SelectField({ label, class: style, children: c, ...props
 
   return (
     <fieldset class="fieldset">
-      {label && <legend class="fieldset-legend text-sm">{label}</legend>}
+      {label && (
+        <legend class="fieldset-legend text-sm">
+          {label}
+          {props.required && <span>*</span>}
+        </legend>)}
       <select ref={selectRef} class={twMerge(
         "select w-full",
         style

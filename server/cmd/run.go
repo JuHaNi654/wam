@@ -49,7 +49,7 @@ func Run(prompts fs.FS) error {
 	fmt.Printf("Starting server on port %s...\n", PORT)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", PORT),
+		Addr:    fmt.Sprintf("0.0.0.0:%s", PORT),
 		Handler: routes.Routes(service),
 	}
 

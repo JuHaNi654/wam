@@ -140,7 +140,7 @@ export default function Tags(props: Props) {
             <For each={selectedTags()}>
               {(item) => (
                 <div class="text-xs px-3 py-1 ring-1 flex gap-2 rounded">
-                  <span>{item.name}</span>
+                  <span class="whitespace-nowrap">{item.name}</span>
                   <button onClick={() => removeSelcted(item)} class="aspect-square cursor-pointer">
                     <i class="ri-close-large-line"></i>
                   </button>

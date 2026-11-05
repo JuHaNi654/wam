@@ -43,6 +43,8 @@ CREATE TABLE application (
   link             TEXT,
   status           TEXT NOT NULL DEFAULT 'saved' CHECK (status IN ('saved', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn')),
   create_date      BIGINT NOT NULL,
+  update_date      BIGINT NOT NULL,
+  closing_date     BIGINT
   ad               TEXT,
   application      TEXT
 );
@@ -85,7 +87,7 @@ CREATE TABLE skill (
   name   TEXT NOT NULL
 );
 
-CREATE VIRTUAL TABLE skill_fts USING fts5(id UNINDEXED, name, tokenize='trigram');
+CREATE VIRTUAL TABLE skill_fts USING fts5(id UNINDEXED, name, tokenize="trigram");
 INSERT INTO skill_fts(id, name) SELECT id, name FROM skill;
 
 CREATE TRIGGER skill_ai AFTER INSERT ON skill BEGIN
